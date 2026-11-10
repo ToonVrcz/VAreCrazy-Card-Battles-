@@ -1,0 +1,192 @@
+[
+ {
+  "character_id": "SPL-001",
+  "name": "ลูกไฟเริ่มต้น",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-001.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "เล็กแต่ร้อน พอให้จำได้",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ดาเมจ 20 ใส่ตัวละครคู่ต่อสู้ 1 ตัว (คิดตัวคูณธาตุ)",
+    "action_text": "ดาเมจ 20",
+    "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-002",
+  "name": "น้ำบำบัด",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-002.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "หยดเดียว ก็พอให้ลุกขึ้นได้",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ฟื้นฟู HP 30 ให้ตัวละครฝ่ายเรา 1 ตัว",
+    "action_text": "ฟื้น HP 30",
+    "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-003",
+  "name": "โล่มนตร์",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-003.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "บางเหมือนอากาศ แข็งเหมือนหิน",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "DEF +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+    "action_text": "DEF +15",
+    "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+    "duration": "until_end_of_turn",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-004",
+  "name": "พลังผนึก",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-004.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ปลดผนึกแค่ชั่วครู่ ก็เกินพอ",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ATK +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+    "action_text": "ATK +15",
+    "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+    "duration": "until_end_of_turn",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-005",
+  "name": "จั่วปริศนา",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-005.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ไพ่ใบถัดไป อาจเป็นทุกอย่าง",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "จั่วการ์ด 2 ใบ",
+    "action_text": "จั่ว 2 ใบ",
+    "target_text": "ผู้ใช้",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-006",
+  "name": "เรียกคืนจากสุสาน",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-006.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ยังไม่จบ ถ้ายังมีคนจำได้",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "นำตัวละคร Lv.15 จากสุสาน 1 ใบขึ้นมือ",
+    "action_text": "ตัวละคร Lv.15 จากสุสานขึ้นมือ",
+    "target_text": "สุสานฝ่ายเรา",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-007",
+  "name": "ลมพัดสลับ",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-007.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ลมเปลี่ยนทิศ แนวรบก็เปลี่ยนตาม",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "สลับตำแหน่งตัวละครฝ่ายเรา 2 ตัวในสนาม",
+    "action_text": "สลับตำแหน่ง 2 ตัว",
+    "target_text": "ตัวละครฝ่ายเรา 2 ตัว",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-008",
+  "name": "พายุหยุดนิ่ง",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-008.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ตาพายุเงียบที่สุด",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ตัวละครคู่ต่อสู้ 1 ตัวโจมตีไม่ได้ 1 เทิร์น",
+    "action_text": "โจมตีไม่ได้ 1 เทิร์น",
+    "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+    "duration": "n_turns",
+    "duration_turns": 1,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-009",
+  "name": "พิษร้ายค่อยๆกัด",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-009.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ไม่ต้องรีบ พิษมีเวลา",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ตัวละครคู่ต่อสู้ 1 ตัวโดนดาเมจ 5 ต่อเทิร์น นาน 3 เทิร์น",
+    "action_text": "ดาเมจ 5 ต่อเทิร์น x3",
+    "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+    "duration": "n_turns",
+    "duration_turns": 3,
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "SPL-010",
+  "name": "ปัดป้องมนตร์",
+  "card_type": "spell",
+  "image_path": "assets/cards/SPL-010.jpg",
+  "rules_text": "ใช้จากมือ ผลทำงานทันทีแล้วการ์ดลงสุสาน (ช่วงที่ใช้ได้/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "รู้ทัน คือเวทที่ดีที่สุด",
+  "effects": [
+   {
+    "trigger": "on_cast",
+    "description": "ทำลายกับดักหน้าคว่ำของคู่ต่อสู้ 1 ใบ",
+    "action_text": "ทำลายกับดัก 1 ใบ",
+    "target_text": "กับดักหน้าคว่ำของคู่ต่อสู้",
+    "duration": "instant",
+    "duration_turns": null,
+    "use_limit": "none"
+   }
+  ]
+ }
+]

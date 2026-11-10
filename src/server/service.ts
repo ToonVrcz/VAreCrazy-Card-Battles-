@@ -29,7 +29,7 @@ const FLOW: Record<string, Record<string, string>> = {
   archived: { draft: 'publish' },
 };
 
-export const TRIGGERS = ['on_summon','on_evolve','on_attack','on_destroyed','turn_start','turn_end','to_graveyard','passive','combo'];
+export const TRIGGERS = ['on_summon','on_evolve','on_attack','on_destroyed','turn_start','turn_end','to_graveyard','passive','combo','on_cast'];
 const DURATIONS = ['instant','until_end_of_turn','n_turns','permanent'];
 const LIMITS = ['none','once_per_turn','once_per_game'];
 
