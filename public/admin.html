@@ -25,6 +25,7 @@ table{width:100%;font-size:12px;border-collapse:collapse}td{padding:4px;border-b
 <header><b>🃏 VAreCrazy Card CMS</b><span id="who"></span></header>
 <nav id="nav" style="display:flex;gap:6px;padding:8px 12px;background:#1b1329"></nav><main id="app"></main><div id="msg"></div>
 <script>
+let FR={};const DEFF='/assets/frame/frame.webp';const frameFor=(t,c)=>FR['card:'+c]||FR['type:'+t]||DEFF;async function loadFr(){try{FR=Object.fromEntries((await api('/frames')).map(f=>[f.scope,'/'+f.path]))}catch{FR={}}}
 let tok=sessionStorage.getItem('t')||'',me=null,cur=null,filter={status:'',q:''};
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -37,14 +38,14 @@ const can=p=>({super_admin:1,card_editor:['read','write','submit','import'],revi
 const img=c=>c.image_path?(c.image_path.startsWith('media/')?'/'+c.image_path:'/'+c.image_path):'';
 function login(){$('#who').textContent='';$('#nav').innerHTML='';app.innerHTML=`<h3>เข้าสู่ระบบ</h3><label>อีเมล</label><input id="e" type="email" style="width:100%"><label>รหัสผ่าน</label><input id="p" type="password" style="width:100%"><div class="row"><button class="pri" id="go">เข้าสู่ระบบ</button></div>`;
  $('#go').onclick=async()=>{try{const r=await api('/login',J('POST',{email:$('#e').value,password:$('#p').value}));tok=r.token;sessionStorage.setItem('t',tok);start()}catch(e){toast(e.message)}}}
-async function start(){try{me=await api('/me');$('#who').innerHTML=`${esc(me.email)} · ${me.role} · <a href="#" id="lo" style="color:#9cf">ออก</a>`;$('#lo').onclick=async e=>{e.preventDefault();await api('/logout',{method:'POST'});tok='';sessionStorage.removeItem('t');login()};nav();list()}catch{login()}}
+async function start(){try{me=await api('/me');$('#who').innerHTML=`${esc(me.email)} · ${me.role} · <a href="#" id="lo" style="color:#9cf">ออก</a>`;$('#lo').onclick=async e=>{e.preventDefault();await api('/logout',{method:'POST'});tok='';sessionStorage.removeItem('t');login()};await loadFr();nav();list()}catch{login()}}
 async function list(){
  const cs=await api(`/cards?status=${filter.status}&q=${encodeURIComponent(filter.q)}`);
  app.innerHTML=`<div class="row"><input id="q" placeholder="ค้นหาชื่อ/Character ID" value="${esc(filter.q)}"><select id="st"><option value="">ทุกสถานะ</option>${['draft','in_review','approved','published','archived'].map(s=>`<option ${filter.status===s?'selected':''}>${s}</option>`).join('')}</select>
  ${can('write')?'<button class="pri" id="new">+ การ์ดใหม่</button>':''}</div>
  <div id="items">${cs.map(c=>`<div class="card" data-id="${c.id}"><img src="${img(c)}" alt=""><div><div class="t">${esc(c.chain_name?c.chain_name+" · ":"")}${esc(c.name)}<span class="badge ${c.status}">${c.status}</span></div>
  <div class="s">${esc(c.character_id)} · Lv.${c.level??'-'} · ${c.card_type}</div><div class="s">❤ ${c.hp??'-'} 🔥 ${c.atk??'-'} 🛡 ${c.def??0}${c.has_combo?' · ⚡combo':''}</div></div></div>`).join('')||'<p>ยังไม่มีการ์ด</p>'}</div>
- <h4>นำเข้า / ส่งออก</h4><div class="row"><button id="xj">ส่งออก JSON</button><button id="xc">ส่งออก CSV</button>${can('import')?'<input type="file" id="imp" accept=".json,.csv"><button id="dry">ตรวจไฟล์ (ไม่บันทึก)</button><button class="pri" id="doimp">นำเข้า</button><button id="seed">นำเข้าการ์ดตัวอย่าง 48 ใบ</button><button id="seed2">นำเข้า Evolution + Fusion 20 ใบ</button><button id="seed3">นำเข้ากับดัก 10 ใบ</button><button id="seed4">นำเข้าเวทมนตร์ 10 ใบ</button>':''}</div><pre id="ir" hidden></pre>
+ <h4>นำเข้า / ส่งออก</h4><div class="row"><button id="xj">ส่งออก JSON</button><button id="xc">ส่งออก CSV</button>${can('import')?'<input type="file" id="imp" accept=".json,.csv"><button id="dry">ตรวจไฟล์ (ไม่บันทึก)</button><button class="pri" id="doimp">นำเข้า</button><button id="seed">นำเข้าการ์ดตัวอย่าง 48 ใบ</button><button id="seed2">นำเข้าการ์ดวิวัฒนาการ + ฟิวชั่น</button><button id="seed3">นำเข้ากับดัก 10 ใบ</button><button id="seed4">นำเข้าเวทมนตร์ 10 ใบ</button>':''}</div><pre id="ir" hidden></pre>
  <h4>ประวัติการแก้ไข</h4><table id="au"></table>`;
  $('#q').onchange=e=>{filter.q=e.target.value;list()};$('#st').onchange=e=>{filter.status=e.target.value;list()};
  if($('#new'))$('#new').onclick=()=>edit();
@@ -73,7 +74,9 @@ async function edit(id){
  <label>Flavor text</label><textarea data-k="flavor_text" rows="2" style="width:100%" ${ro?'disabled':''}>${esc(cur.flavor_text)}</textarea>
  <div class="sec"><label style="font-size:14px;color:#d9a93b">เอฟเฟกต์ (${(cur.effects||[]).length}/10)</label><div id="fx"></div>${!ro?'<button id="addfx">+ เพิ่มเอฟเฟกต์</button>':''}</div>
  <div class="sec" id="meta"></div>
+ ${id&&can('write')?`<div class="sec"><label style="font-size:14px;color:#d9a93b">🖼 กรอบเฉพาะใบนี้ ${FR['card:'+cur.character_id]?'(กำหนดเองอยู่)':'(ใช้กรอบตามประเภท)'}</label><div class="row"><input type="file" id="cfu" accept="image/png,image/webp,image/jpeg">${FR['card:'+cur.character_id]?'<button id="cfr">รีเซ็ต</button>':''}</div></div>`:''}
  <div class="row">${!ro?'<button class="pri" id="save">บันทึก</button>':''}${id&&cur.status==='draft'&&can('write')?'<button class="warn" id="del">🗑 ลบการ์ด</button>':''}${id?nx.filter(([to])=>can({in_review:'submit',approved:'review',draft:cur.status==='in_review'||cur.status==='approved'?'review':'publish',published:'publish',archived:'publish'}[to])).map(([to,l])=>`<button data-to="${to}" class="${to==='draft'?'warn':''}">${l}</button>`).join(''):''}</div>`;
+ if($('#cfu'))$('#cfu').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await upFrame('card:'+cur.character_id,f);toast('ตั้งกรอบแล้ว',1);edit(id)}catch(x){toast(x.message)}};if($('#cfr'))$('#cfr').onclick=async()=>{try{await api('/frames/card:'+cur.character_id,{method:'DELETE'});await loadFr();edit(id)}catch(x){toast(x.message)}};
  $('#back').onclick=list;renderFx(fx,ro);metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push({trigger:'on_summon',duration:'instant',use_limit:'none',description:''});renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
  const collect=()=>{const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.type==='checkbox'?e.checked:e.value);o.media_id=cur.media_id||null;o.effects=fx;return o};
  $('#up').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;try{const r=await api('/media',{method:'POST',headers:{'content-type':fl.type,'x-filename':fl.name,'x-render-mode':$('#rm').value},body:fl});cur.media_id=r.id;cur.image_path=r.storage_path;pvDraw();toast('อัปโหลดแล้ว (กดบันทึกเพื่อผูกกับการ์ด)',1)}catch(x){toast(x.message)}};
@@ -93,9 +96,9 @@ function renderFx(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).m
  box.querySelectorAll('[data-f]').forEach(el=>{el.oninput=el.onchange=()=>{fx[+el.dataset.i][el.dataset.f]=el.value}});
  box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{fx.splice(+b.dataset.del,1);renderFx(fx,ro)})}
 let metaC=null;
-function pvDraw(){const el=$('#pv');if(!el||typeof VCZ==='undefined')return;VCZ.ref.frame='/assets/frame/frame.webp';const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);
+function pvDraw(){const el=$('#pv');if(!el||typeof VCZ==='undefined')return;const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);
  const n=k=>+o[k]||0;const src=cur.image_path?'/'+cur.image_path:'';
- el.innerHTML=VCZ.svg({chain_name:o.chain_name||cur.chain_name||o.chain_key||o.name||'NAME',name:o.name||'CLASS',level:n('level')||15,hp:n('hp'),atk:n('atk'),def:n('def'),atk_icon:o.atk_icon||'fire',img:src},{})}
+ el.innerHTML=VCZ.svg({chain_name:o.chain_name||cur.chain_name||o.chain_key||o.name||'NAME',name:o.name||'CLASS',level:n('level')||15,hp:o.hp===''?null:n('hp'),atk:o.atk===''?null:n('atk'),def:n('def'),atk_icon:o.atk_icon||'fire',img:src,frame:frameFor(o.card_type||cur.card_type,o.character_id||cur.character_id)},{})}
 async function meta(id,ro){const [m,gs,af,chs]=await Promise.all([id?api(`/cards/${id}/meta`):{gender:null,affiliations:[],story_links:[],fusion_partners:[]},api('/genders'),api('/affiliations'),api('/chains')]);
  const mine=cur.chain_key,others=chs.filter(x=>x.key!==mine&&x.key!==(document.querySelector('[data-k=chain_key]')||{}).value);
  let sl=m.story_links.map(x=>({...x})),fp=m.fusion_partners.map(x=>({...x})),extra=[];const has=new Set(m.affiliations.map(x=>x.key));
@@ -125,8 +128,15 @@ async function meta(id,ro){const [m,gs,af,chs]=await Promise.all([id?api(`/cards
  draw();
  metaC=ro?null:()=>({gender:$('#mg').value||null,affiliations:[...$('#meta').querySelectorAll('[data-aff]:checked')].map(x=>x.dataset.aff),story_links:sl.filter(x=>x.partner),fusion_partners:fp.filter(x=>x.partner)})}
 const ROLES={super_admin:'Super Admin',card_editor:'Card Editor',reviewer:'Reviewer',publisher:'Publisher',viewer:'Viewer'};
-function nav(){$('#nav').innerHTML=`<button id="n1">🃏 การ์ด</button>${can('users')?'<button id="n2">👥 ผู้ใช้</button>':''}<button id="n4">⚙ ระบบเกม</button><button id="n3">🔑 บัญชีฉัน</button>`;$('#n4').onclick=sys;
+function nav(){$('#nav').innerHTML=`<button id="n1">🃏 การ์ด</button>${can('users')?'<button id="n2">👥 ผู้ใช้</button>':''}<button id="n5">🖼 กรอบการ์ด</button><button id="n4">⚙ ระบบเกม</button><button id="n3">🔑 บัญชีฉัน</button>`;$('#n4').onclick=sys;$('#n5').onclick=frames;
  $('#n1').onclick=list;if($('#n2'))$('#n2').onclick=users;$('#n3').onclick=account}
+const FT=[['character','ตัวละคร'],['evolution','วิวัฒนาการ'],['fusion','ฟิวชั่น'],['spell','เวทมนตร์'],['trap','กับดัก'],['item','ไอเท็ม/อื่นๆ']];
+async function upFrame(scope,file){const r=await api('/media',{method:'POST',headers:{'content-type':file.type,'x-filename':file.name,'x-render-mode':'art_only'},body:file});await api('/frames/'+scope,J('PUT',{media_id:r.id}));await loadFr()}
+async function frames(){await loadFr();const w=can('write');
+ app.innerHTML=`<h3>🖼 กรอบการ์ด</h3><p style="font-size:12px;color:#b9a">ใช้ไฟล์ PNG/WEBP พื้นหลังโปร่งใส ขนาด 1023×1538 (ช่องรูปอยู่ x60 y172 กว้าง903 สูง990) — ไม่อัปโหลด = ใช้กรอบตัวละครเดิม · ใบไหนตั้งกรอบเฉพาะใบ จะใช้ของใบนั้นก่อน (ตั้งในหน้าแก้การ์ด)</p>
+ <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">${FT.map(([t,l])=>`<div class="card" style="cursor:default;display:block;text-align:center"><div class="t">${l}</div><div class="s">${FR['type:'+t]?'กรอบกำหนดเอง':'ใช้กรอบเริ่มต้น'}</div><img src="${FR['type:'+t]||DEFF}" style="width:120px;height:auto;height:178px;object-fit:contain;background:#222;margin:6px 0"><div class="row" style="justify-content:center">${w?`<label class="warn" style="cursor:pointer;padding:6px 10px;background:#2a1244;border-radius:6px">อัปโหลด<input type="file" accept="image/png,image/webp,image/jpeg" data-fu="type:${t}" hidden></label>${FR['type:'+t]?`<button data-fr="type:${t}">รีเซ็ต</button>`:''}`:''}</div></div>`).join('')}</div>`;
+ document.querySelectorAll('[data-fu]').forEach(i=>i.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await upFrame(i.dataset.fu,f);toast('เปลี่ยนกรอบแล้ว',1);frames()}catch(x){toast(x.message)}});
+ document.querySelectorAll('[data-fr]').forEach(b=>b.onclick=async()=>{try{await api('/frames/'+b.dataset.fr,{method:'DELETE'});await loadFr();frames()}catch(x){toast(x.message)}})}
 function account(){app.innerHTML=`<h3>เปลี่ยนรหัสผ่านของฉัน</h3><label>รหัสผ่านเดิม</label><input id="po" type="password" style="width:100%"><label>รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</label><input id="pn" type="password" style="width:100%"><div class="row"><button class="pri" id="pg">เปลี่ยนรหัสผ่าน</button></div><p style="font-size:12px;color:#b9a">เซสชันบนอุปกรณ์อื่นจะถูกออกจากระบบ</p>`;
  $('#pg').onclick=async()=>{try{await api('/me/password',J('POST',{old:$('#po').value,new:$('#pn').value}));toast('เปลี่ยนรหัสผ่านแล้ว',1);$('#po').value=$('#pn').value=''}catch(e){toast(e.message)}}}
 async function users(){
