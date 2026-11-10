@@ -1,0 +1,96 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VAreCrazy Card Battle</title><script src="/card-renderer.js"></script><script src="/engine.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#120620;color:#f3e2b0;font:13px system-ui,sans-serif;touch-action:manipulation}
+#app{max-width:520px;margin:0 auto;padding:6px;display:flex;flex-direction:column;gap:5px;min-height:100vh}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#2a1244;border:1px solid #6b4a9a;border-radius:8px;padding:5px 8px}
+.lp{cursor:default;font-weight:700}.lp.tg{outline:2px solid #ffd54a;animation:pl 1s infinite}
+.row{display:grid;gap:3px;position:relative}.f{grid-template-columns:repeat(7,1fr)}.b{grid-template-columns:repeat(5,1fr);width:72%;margin:0 auto}
+.c{position:relative;aspect-ratio:2/3;background:#1e0d33;border:1px solid #4a3270;border-radius:5px;overflow:visible}
+.c img{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
+.c .st{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font-size:8px;white-space:nowrap;letter-spacing:-.5px;font-weight:700;background:#000b;padding:0 2px;border-radius:0 0 4px 4px}
+.c .lv{position:absolute;top:0;left:0;background:#000b;font-size:8px;padding:0 2px;border-radius:4px 0 4px 0}
+.c.sel{outline:2px solid #4fc3f7}.c.tg{outline:2px solid #ffd54a;animation:pl 1s infinite}.c.done{filter:grayscale(.7) brightness(.7)}.c.lock::after{content:"🔒";position:absolute;top:0;right:1px;font-size:10px}
+@keyframes pl{50%{outline-color:#fff}}.hand{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.hand .c{border-color:#e2b440}
+.fl{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-weight:900;font-size:15px;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none;animation:up 1.2s forwards;z-index:5}
+@keyframes up{to{top:-30%;opacity:0}}
+button{background:#5b2d90;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700}button.g{background:#2f7d3a}button.r{background:#a33}button:disabled{opacity:.4}
+.hint{text-align:center;background:#3b2a00;border:1px solid #e2b440;border-radius:8px;padding:6px}
+#md{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:20;padding:10px}#md.on{display:flex}
+.box{background:#1b0b2e;border:1px solid #6b4a9a;border-radius:12px;padding:10px;max-width:420px;width:100%;max-height:94vh;overflow:auto}
+.box svg{width:62%;display:block;margin:0 auto}.box p{margin:5px 0;font-size:12px}.acts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+#lg{font-size:11px;color:#bba;max-height:70px;overflow:auto;background:#0004;border-radius:6px;padding:3px 6px}
+.t{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#a33;color:#fff;padding:6px 12px;border-radius:8px;z-index:30}
+</style></head><body><div id="app"></div><div id="md"></div>
+<script>
+const E=VCZE.engine,DEFS=VCZE.defs,BY=Object.fromEntries(DEFS.map(d=>[d.id,d]));
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let G,mode=null,busy=false,snap=null,showLog=false,sel=null;
+const PH={main:'เฟสหลัก',battle:'เฟสต่อสู้'};
+const img=c=>BY[c.id]?.img||'';
+function deck(){const pick=a=>a[Math.floor(Math.random()*a.length)],ch=[...new Set(DEFS.filter(d=>d.type==='character').map(d=>d.chain))].sort(()=>Math.random()-.5).slice(0,7),d=[];
+ for(const k of ch){const f=lv=>DEFS.find(x=>x.chain===k&&x.level===lv);d.push(f(15),f(15));for(const lv of[40,70])if(f(lv))d.push(f(lv))}
+ const add=(ids,n)=>{for(let i=0;i<n;i++)d.push(BY[pick(ids)])};
+ add(['EVO-001'],3);add(DEFS.filter(x=>x.type==='spell').map(x=>x.id),4);add(DEFS.filter(x=>x.type==='trap').map(x=>x.id),3);
+ const l15=DEFS.filter(x=>x.type==='character'&&x.level===15);while(d.length<40)d.push(pick(l15));return d.slice(0,40).map(x=>({...x}))}
+function view(c,extra={}){const d=BY[c.id]||c;return{chain_name:d.chainName||d.name,name:d.name,level:d.level||'',hp:d.hp,atk:d.atk,def:d.def,img:d.img,...extra}}
+function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+function start(){G=E.createGame([deck(),deck()],Date.now()%1e9,Math.random()<.5?0:1);mode=null;sel=null;snap=take();render();if(G.active===1)bot()}
+function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk,u.def+u.bonusDef]})});return m}
+function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
+ [[0,'❤'],[1,'⚔'],[2,'🛡']].forEach(([k,ic])=>{const d=b[k]-a[k];if(d)fl(el,(d>0?'+':'')+d+ic,d>0?'#7dffa0':'#ff8a80')})});
+ [0,1].forEach(i=>{const d=n['lp'+i]-old['lp'+i];const el=document.querySelector('.lp[data-p="'+i+'"]');if(d&&el)fl(el,d,'#ff8a80')});snap=n}
+function fl(el,t,c){const s=document.createElement('span');s.className='fl';s.textContent=t;s.style.color=c;el.appendChild(s);setTimeout(()=>s.remove(),1200)}
+function cell(u,side,i,extra=''){if(!u)return`<div class="c ${extra}" data-z="f" data-s="${side}" data-i="${i}"></div>`;
+ const isSel=sel===i&&side===0,done=u.attacked||u.summonedTurn===G.turn,lock=G.turn<u.lockedUntil;
+ return`<div class="c ${extra} ${isSel?'sel':''} ${side===G.active&&G.phase==='battle'&&done?'done':''} ${lock?'lock':''}" data-z="f" data-s="${side}" data-i="${i}" data-uid="${u.uid}"><img src="${img(u.card)}"><span class="lv">${u.card.level||''}</span><span class="st"><b>♥${u.hp}</b><b style="color:${u.bonusAtk>0?'#7dffa0':'#fff'}">⚔${u.atk+u.bonusAtk}</b><b style="color:${u.bonusDef>0?"#7dffa0":"#fff"}">◈${u.def+u.bonusDef}</b></span></div>`}
+function targets(){const t={f1:[],f0:[],b1:[],lp1:false};if(!mode)return t;const en=G.players[1],me=G.players[0];
+ if(mode.k==='attack'){en.field.forEach((u,i)=>u&&t.f1.push(i));if(!t.f1.length)t.lp1=true}
+ if(mode.k==='cast'){const id=mode.id;if(['SPL-001','SPL-009'].includes(id))en.field.forEach((u,i)=>u&&t.f1.push(i));
+  else if(['SPL-002','SPL-003','SPL-004'].includes(id))me.field.forEach((u,i)=>u&&t.f0.push(i));
+  else if(id==='SPL-007')me.field.forEach((u,i)=>{if(mode.a===undefined?u:i!==mode.a)t.f0.push(i)});
+  else if(id==='SPL-010')en.back.forEach((b,i)=>b&&t.b1.push(i))}
+ if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&t.f0.push(i));return t}
+function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active===0&&!G.winner&&!busy;
+ const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${mode.sac.length}/${mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'เลือกตัวละครของคุณ':'เลือกช่องที่จะสลับ'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
+ $('#app').innerHTML=`<div class="bar"><span>เทิร์น ${G.turn} · ${G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]}</span><button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button></div>
+ <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">👾 ศัตรู LP ${en.lp}</span><span>มือ ${en.hand.length} · เด็ค ${en.deck.length} · สุสาน ${en.grave.length}</span></div>
+ <div class="row b">${en.back.map((b,i)=>`<div class="c ${T.b1.includes(i)?'tg':''}" data-z="b" data-s="1" data-i="${i}">${b?`<img src="/assets/card-back.jpg">`:''}</div>`).join('')}</div>
+ <div class="row f">${en.field.map((u,i)=>cell(u,1,i,T.f1.includes(i)?'tg':'')).join('')}</div>
+ <div class="row f">${me.field.map((u,i)=>cell(u,0,i,T.f0.includes(i)?'tg':'')).join('')}</div>
+ <div class="row b">${me.back.map((b,i)=>`<div class="c" data-z="b" data-s="0" data-i="${i}">${b?`<img src="${img(b.card)}" style="opacity:.8">`:''}</div>`).join('')}</div>
+ <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">🧑 คุณ LP ${me.lp}</span><span>เด็ค ${me.deck.length} · สุสาน ${me.grave.length}</span></div>
+ ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c" data-z="h" data-s="0" data-i="${i}"><img src="${img(c)}"></div>`).join('')}</div>
+ <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
+ ${showLog?`<div id="lg">${G.log.slice(-8).reverse().join('<br>')}</div>`:''}`;
+ if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2><button id="again">เล่นใหม่</button></div>`;$('#again').onclick=()=>{$('#md').className='';start()}}
+ if(snap)floats(snap)}
+function go(a){try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();return true}
+function detail(c,z,i){const d=BY[c.id]||c,card=view(c,{frame:'/assets/frame/frame.webp'});VCZ.ref.frame='/assets/frame/frame.webp';
+ const me=G.players[0],can=G.active===0&&!busy&&!G.winner,main=G.phase==='main',bt=G.phase==='battle',b=[];
+ if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
+  if(d.type==='trap'&&main)b.push(['วางกับดัก',()=>go({t:'set',hand:i})]);
+  if(d.type==='spell'&&main)b.push(['ใช้เวทมนตร์',()=>castStart(i,d.id)])}
+ if(can&&z==='f'){if(main){const u=me.field[i],nx={15:40,40:70,70:99}[u.card.level],e=me.hand.findIndex(x=>x.type==='evolution'),f=me.hand.findIndex(x=>x.type==='character'&&x.chain===u.card.chain&&x.level===nx);
+   if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:E.RULES.sacrifice[nx],sac:[]};closeM();render()}])}
+  if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
+ $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${(d.fx||[]).map(x=>`<p>• ${x}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
+ <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
+ $('#cl').onclick=closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
+function closeM(){$('#md').className='';$('#md').innerHTML=''}
+function castStart(h,id){const need=['SPL-001','SPL-002','SPL-003','SPL-004','SPL-007','SPL-009','SPL-010'].includes(id);
+ if(!need){go({t:'cast',hand:h});return}mode={k:'cast',hand:h,id};render()}
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-z]');
+ if(ev.target.id==='cx'){mode=null;render();return}if(ev.target.id==='nx'){go({t:'next'});if(G.active===1)bot();return}if(ev.target.id==='lgb'){showLog=!showLog;render();return}
+ if(!el||busy)return;const z=el.dataset.z,s=+el.dataset.s,i=+el.dataset.i;
+ if(mode){const T=targets(),k=mode.k;
+  if(k==='attack'){if(z==='f'&&s===1&&T.f1.includes(i))go({t:'attack',from:mode.from,to:i});else if(z==='lp'&&s===1&&T.lp1)go({t:'attack',from:mode.from,to:'player'});return}
+  if(k==='evo'){if(z==='f'&&s===0&&T.f0.includes(i)){mode.sac.push(i);if(mode.sac.length===mode.need)go({t:'evolve',slot:mode.slot,evo:mode.evo,form:mode.form,sacrifice:mode.sac});else render()}return}
+  if(k==='cast'){const id=mode.id;if(id==='SPL-007'){if(z==='f'&&s===0){if(mode.a===undefined){mode.a=i;render()}else go({t:'cast',hand:mode.hand,target:{slot:mode.a,slot2:i}})}else if(mode.a!==undefined&&z==='f'&&s===0){}return}
+   if((z==='f'&&((s===1&&T.f1.includes(i))||(s===0&&T.f0.includes(i))))||(z==='b'&&s===1&&T.b1.includes(i)))go({t:'cast',hand:mode.hand,target:{slot:i}});return}}
+ if(z==='h'){detail(G.players[0].hand[i],'h',i)}
+ else if(z==='f'){const u=G.players[s].field[i];if(u)detail(u.card,s===0?'f':'x',i)}
+ else if(z==='b'&&s===0){const b=G.players[0].back[i];if(b)detail(b.card,'x',i)}});
+async function bot(){busy=true;render();let n=0;while(G.active===1&&G.winner===null&&n++<40){await sleep(650);const a=E.botPick(G);try{G=E.act(G,a)}catch(e){G=E.act(G,{t:'next'})}render()}busy=false;render()}
+start();
+</script></body></html>

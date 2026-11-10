@@ -3,9 +3,29 @@
   "buildCommand": "",
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/", "destination": "/public/admin.html" },
-    { "source": "/card-renderer.js", "destination": "/public/card-renderer.js" },
-    { "source": "/api/:path*", "destination": "https://jcjqooeckoapoikcwpet.supabase.co/functions/v1/api/api/:path*" },
-    { "source": "/media/:path*", "destination": "https://jcjqooeckoapoikcwpet.supabase.co/storage/v1/object/public/card-media/media/:path*" }
+    {
+      "source": "/",
+      "destination": "/public/admin.html"
+    },
+    {
+      "source": "/card-renderer.js",
+      "destination": "/public/card-renderer.js"
+    },
+    {
+      "source": "/play",
+      "destination": "/public/play.html"
+    },
+    {
+      "source": "/engine.js",
+      "destination": "/public/engine.js"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://jcjqooeckoapoikcwpet.supabase.co/functions/v1/api/api/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "https://jcjqooeckoapoikcwpet.supabase.co/storage/v1/object/public/card-media/media/:path*"
+    }
   ]
 }

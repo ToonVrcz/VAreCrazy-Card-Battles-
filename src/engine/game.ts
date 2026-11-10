@@ -183,7 +183,8 @@ export function legalActions(g: Game): Action[] {
       if (e >= 0 && f >= 0 && sac.length === RULES.sacrifice[nx]) out.push({ t: 'evolve', slot: s, evo: e, form: f, sacrifice: sac });
     });
   } else {
-    me.field.forEach((u, s) => { if (!u) return; const es = en.field.map((x, i) => x ? i : -1).filter(i => i >= 0); if (es.length) es.forEach(i => out.push({ t: 'attack', from: s, to: i })); else out.push({ t: 'attack', from: s, to: 'player' }); });
+    if (g.turn === 1 || g.turn < me.noAttackUntil) return out;
+    me.field.forEach((u, s) => { if (!u || u.attacked || u.summonedTurn === g.turn || g.turn < u.lockedUntil) return; const es = en.field.map((x, i) => x ? i : -1).filter(i => i >= 0); if (es.length) es.forEach(i => out.push({ t: 'attack', from: s, to: i })); else out.push({ t: 'attack', from: s, to: 'player' }); });
   }
   return out;
 }

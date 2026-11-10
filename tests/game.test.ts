@@ -130,3 +130,19 @@ describe('engine: simulation with the real seed cards', () => {
     expect(finished).toBeGreaterThan(150);
   }, 120000);
 });
+
+import { botPick } from '../src/engine/bot';
+describe('bot', () => {
+  it('bot vs bot: 100 games finish without illegal moves', () => {
+    const pool = seedCards(), chars = pool.filter(c => c.type === 'character'), l15 = chars.filter(c => c.level === 15), rest = pool.filter(c => c.type !== 'character' && c.type !== 'fusion');
+    let fin = 0;
+    for (let n = 1; n <= 100; n++) {
+      let s = n; const r = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
+      const deck = () => Array.from({ length: 40 }, (_, i) => { const a = i < 24 ? l15 : i < 32 ? chars : rest; return a[Math.floor(r() * a.length)]; });
+      let g = createGame([deck(), deck()], n, (n % 2) as 0 | 1), st = 0;
+      while (g.winner === null && st++ < 4000) g = act(g, botPick(g));
+      if (g.winner !== null) fin++;
+    }
+    expect(fin).toBe(100);
+  }, 120000);
+});
