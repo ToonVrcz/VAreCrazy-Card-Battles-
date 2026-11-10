@@ -1,0 +1,182 @@
+[
+ {
+  "character_id": "TRP-001",
+  "name": "หลุมพราง",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-001.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ทางที่ดูปลอดภัยที่สุด มักมีหลุมรออยู่",
+  "effects": [
+   {
+    "trigger": "on_attack",
+    "description": "เมื่อคู่ต่อสู้โจมตี: ยกเลิกการโจมตีนั้น ผู้โจมตีไม่ทำดาเมจ",
+    "action_text": "ยกเลิกการโจมตี",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-002",
+  "name": "กระจกสะท้อน",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-002.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "สู้กับเงาตัวเอง ใครจะชนะ",
+  "effects": [
+   {
+    "trigger": "on_attack",
+    "description": "เมื่อคู่ต่อสู้โจมตี: สะท้อนดาเมจครึ่งหนึ่งกลับไปที่ผู้โจมตี",
+    "action_text": "สะท้อนดาเมจ 50%",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-003",
+  "name": "ประตูลับหลังบ้าน",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-003.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ทางหนีที่มีแค่เจ้าของบ้านรู้",
+  "effects": [
+   {
+    "trigger": "on_attack",
+    "description": "เมื่อคู่ต่อสู้โจมตี LP ผู้เล่นโดยตรง: ดาเมจที่ LP ลดลง 50%",
+    "action_text": "ลดดาเมจต่อ LP 50%",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-004",
+  "name": "โซ่พันธนาการ",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-004.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "มาถึงใหม่ ก็ติดกับทันที",
+  "effects": [
+   {
+    "trigger": "on_summon",
+    "description": "เมื่อคู่ต่อสู้อัญเชิญตัวละคร: ตัวนั้นโจมตีไม่ได้ 1 เทิร์น",
+    "action_text": "ห้ามโจมตี 1 เทิร์น",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-005",
+  "name": "ขัดขวางการเติบโต",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-005.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "จังหวะที่เปราะบางที่สุดคือจังหวะที่กำลังเปลี่ยน",
+  "effects": [
+   {
+    "trigger": "on_evolve",
+    "description": "เมื่อคู่ต่อสู้วิวัฒนาการ: ยกเลิกการวิวัฒนาการ การ์ดอีโวที่ใช้ถูกทิ้ง",
+    "action_text": "ยกเลิกการวิวัฒนาการ",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-006",
+  "name": "ระเบิดเวลา",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-006.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ติ๊กต่อก ติ๊กต่อก",
+  "effects": [
+   {
+    "trigger": "turn_end",
+    "description": "เมื่อจบเทิร์นคู่ต่อสู้: ตัวละครที่ ATK สูงสุดของคู่ต่อสู้ได้รับดาเมจ 15",
+    "action_text": "ดาเมจ 15 ใส่ตัว ATK สูงสุด",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-007",
+  "name": "ม่านหมอกพิษ",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-007.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "หายใจเข้าไปทีเดียว ก็รู้สึก",
+  "effects": [
+   {
+    "trigger": "turn_start",
+    "description": "เมื่อเริ่มเทิร์นคู่ต่อสู้: ตัวละครทุกตัวของคู่ต่อสู้ได้รับดาเมจ 5",
+    "action_text": "ดาเมจ 5 ทุกตัว",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-008",
+  "name": "ปลุกผู้พิทักษ์",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-008.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ยังไม่จบ ตราบใดที่ยังเหลือหนึ่งหัวใจ",
+  "effects": [
+   {
+    "trigger": "on_destroyed",
+    "description": "เมื่อตัวละครฝ่ายเรากำลังจะถูกทำลาย: ตัวนั้นรอดไว้ด้วย HP 1",
+    "action_text": "รอดด้วย HP 1",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-009",
+  "name": "พัดกลับบ้าน",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-009.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ลมแรงขนาดนี้ ใครจะยืนอยู่ได้",
+  "effects": [
+   {
+    "trigger": "on_attack",
+    "description": "เมื่อคู่ต่อสู้โจมตี: ส่งตัวละครที่โจมตีกลับขึ้นมือเจ้าของ",
+    "action_text": "ส่งกลับขึ้นมือ",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ },
+ {
+  "character_id": "TRP-010",
+  "name": "เสียงเพรียกจากสุสาน",
+  "card_type": "trap",
+  "image_path": "assets/cards/TRP-010.jpg",
+  "rules_text": "วางหน้าคว่ำในช่องหลัง ทำงานเมื่อเงื่อนไขตรง ใช้ได้ครั้งเดียวแล้วลงสุสาน (จังหวะ/การตอบโต้ รอเจ้าของยืนยัน)",
+  "flavor_text": "ใครที่ล้ม ฝากอะไรไว้เสมอ",
+  "effects": [
+   {
+    "trigger": "to_graveyard",
+    "description": "เมื่อตัวละครฝ่ายเราลงสุสาน: จั่วการ์ด 1 ใบ",
+    "action_text": "จั่วการ์ด 1 ใบ",
+    "target_text": null,
+    "duration": "instant",
+    "use_limit": "once_per_game"
+   }
+  ]
+ }
+]

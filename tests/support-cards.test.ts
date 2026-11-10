@@ -37,3 +37,19 @@ describe('deleteCard', () => {
     await expect(svc.deleteCard(u, a.id)).rejects.toThrow('ไม่พบการ์ด');
   });
 });
+
+describe('Trap set', () => {
+  it('10 distinct traps import as Draft', async () => {
+    const t: any[] = JSON.parse(readFileSync('db/seed/trap-cards.json', 'utf8'));
+    expect(t.length).toBe(10);
+    expect(new Set(t.map(c => c.effects[0].description)).size).toBe(10);
+    expect(new Set(t.map(c => c.name)).size).toBe(10);
+    t.forEach(c => expect(existsSync(c.image_path)).toBe(true));
+    const db = new PGlite(); await migrateUp(db);
+    const svc = new CardService(db);
+    await svc.createUser('a@local', 'admin12345', 'super_admin');
+    const u = (await svc.login('a@local', 'admin12345')).user;
+    const r = await svc.importCards(u, t);
+    expect(r.errors).toEqual([]); expect(r.created).toBe(10);
+  });
+});
