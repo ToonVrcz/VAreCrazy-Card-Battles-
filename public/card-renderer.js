@@ -40,13 +40,13 @@ const VCZ = (() => {
     return `<svg viewBox="0 0 1023 1538" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(nm)} ${esc(card.name)} Lv.${lv}">
       <rect x="20" y="20" width="983" height="1498" rx="30" fill="#120620"/>
       <image href="${card.img}" x="60" y="172" width="903" height="990" preserveAspectRatio="xMidYMid slice"/>
-      <image href="${ref.frame}" x="0" y="0" width="1023" height="1538"/>
+      <image href="${card.frame||ref.frame}" x="0" y="0" width="1023" height="1538"/>
       ${pt(512, 135 + nfs * 0.1, nfs, esc(nm), '#f6df9a', '#2a0f44', 7, 3)}
       <circle cx="122" cy="262" r="54" fill="#2a1244" stroke="#e2b440" stroke-width="7"/>
       ${pt(122, 262 + lfs * 0.35, lfs, lv, '#f6df9a', '#12061f', 4)}
       ${pt(512, 1236, 48, esc(cls), '#3b2410', '#f3e2b0', 2, 3)}
-      ${pt(372, 1385, 96, card.hp, col('hp'), '#f3e2b0', 4)}
-      ${pt(800, 1385, 96, card.atk, col('atk'), '#f3e2b0', 4)}
+      ${card.hp==null?'':pt(372, 1385, 96, card.hp, col('hp'), '#f3e2b0', 4)}
+      ${card.atk==null?'':pt(800, 1385, 96, card.atk, col('atk'), '#f3e2b0', 4)}
       ${def}
     </svg>`;
   }

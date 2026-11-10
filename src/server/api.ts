@@ -34,6 +34,11 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
         const mode = req.headers['x-render-mode'] === 'full' ? 'full' : 'art_only';
         return send(res, 201, await svc.uploadMedia(u, String(req.headers['x-filename'] ?? 'file'), String(req.headers['content-type'] ?? ''), await body(req), mode));
       }
+      if (path === '/api/frames' && m === 'GET') return send(res, 200, await svc.listFrames(u));
+      if ((a = path.match(/^\/api\/frames\/([\w:-]+)$/))) {
+        if (m === 'PUT') return send(res, 200, await svc.setFrame(u, a[1], JSON.parse((await body(req)).toString()).media_id));
+        if (m === 'DELETE') return send(res, 200, await svc.deleteFrame(u, a[1]));
+      }
       if (path === '/api/export.json') return send(res, 200, await svc.exportJSON(u));
       if (path === '/api/export.csv') return send(res, 200, await svc.exportCSV(u), 'text/csv; charset=utf-8');
       if (path === '/api/import' && m === 'POST') {

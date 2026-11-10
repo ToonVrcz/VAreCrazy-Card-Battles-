@@ -305,6 +305,24 @@ export class CardService {
     return r.rows[0] as { id: string; storage_path: string };
   }
 
+  // ---- card frames (per type: "type:spell", per card: "card:<character_id>") ----
+  async listFrames(u: User) {
+    need(u, 'read');
+    return (await this.db.query<any>(`SELECT f.scope, m.storage_path AS path FROM card_frames f JOIN media_assets m ON m.id=f.media_id ORDER BY f.scope`)).rows;
+  }
+  async setFrame(u: User, scope: string, mediaId: string) {
+    need(u, 'write');
+    if (!/^(type:(character|evolution|fusion|spell|trap|item)|card:[\w-]+)$/.test(scope)) throw new AppError(400, 'scope ไม่ถูกต้อง');
+    if (!(await this.db.query<any>(`SELECT 1 FROM media_assets WHERE id=$1`, [mediaId])).rows[0]) throw new AppError(400, 'ไม่พบไฟล์กรอบ');
+    await this.db.query(`INSERT INTO card_frames(scope,media_id) VALUES ($1,$2) ON CONFLICT (scope) DO UPDATE SET media_id=$2, updated_at=now()`, [scope, mediaId]);
+    return { ok: true };
+  }
+  async deleteFrame(u: User, scope: string) {
+    need(u, 'write');
+    await this.db.query(`DELETE FROM card_frames WHERE scope=$1`, [scope]);
+    return { ok: true };
+  }
+
   // ---- export / import ----
   static COLS = ['character_id', 'name', 'card_type', 'level', 'chain_key', 'evolves_from', 'hp', 'atk', 'def', 'has_combo',
     'element', 'race', 'class', 'atk_icon', 'shop_price_points', 'shop_price_vrcoin', 'rules_text', 'flavor_text', 'image_path', 'effects'];
