@@ -1,0 +1,19 @@
+{
+  "name": "varecrazy-card-battle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "tsx src/server/http.ts"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "postgres": "^4.1.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

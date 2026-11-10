@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VAreCrazy Card CMS</title><script src="/card-renderer.js"></script>
+<style>
+[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#15101d;color:#eee}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#221833;position:sticky;top:0;z-index:5}
+header b{font-size:15px}header span{font-size:12px;color:#bbb}
+main{padding:12px;max-width:900px;margin:auto}
+input,select,textarea,button{font:inherit;border-radius:8px;border:1px solid #5a4a7a;background:#241a36;color:#fff;padding:9px}
+button{cursor:pointer;background:#3a2a5c}button.pri{background:#6b3fd1;border-color:#8a63e8}button.warn{background:#7a2530}
+button:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row>*{flex:1;min-width:110px}.row>button{flex:none}
+.card{display:flex;gap:10px;padding:8px;background:#201733;border:1px solid #3d2f5c;border-radius:10px;margin:8px 0;cursor:pointer}
+.card img{width:54px;height:72px;object-fit:cover;border-radius:5px;background:#000}
+.card .t{font-weight:700}.card .s{font-size:12px;color:#b9a}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;background:#444;margin-left:4px}
+.badge.draft{background:#555}.badge.in_review{background:#8a6a10}.badge.approved{background:#1d6a8a}.badge.published{background:#1d7a3a}.badge.archived{background:#6a2a2a}
+.g input,.g select{width:100%}label{display:block;font-size:12px;color:#bbb;margin:8px 0 3px}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+#msg{position:fixed;bottom:12px;left:12px;right:12px;padding:10px;border-radius:8px;display:none;z-index:9}
+#msg.err{background:#7a2530}#msg.ok{background:#1d6a3a}
+.prev{width:110px;height:150px;object-fit:cover;border-radius:6px;background:#000;border:1px solid #5a4a7a}
+pre{white-space:pre-wrap;font-size:12px;background:#0006;padding:8px;border-radius:8px;max-height:220px;overflow:auto}
+table{width:100%;font-size:12px;border-collapse:collapse}td{padding:4px;border-bottom:1px solid #3d2f5c}
+</style></head><body>
+<header><b>🃏 VAreCrazy Card CMS</b><span id="who"></span></header>
+<nav id="nav" style="display:flex;gap:6px;padding:8px 12px;background:#1b1329"></nav><main id="app"></main><div id="msg"></div>
+<script>
+let tok=sessionStorage.getItem('t')||'',me=null,cur=null,filter={status:'',q:''};
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t,ok){const m=$('#msg');m.textContent=t;m.className=ok?'ok':'err';m.style.display='block';clearTimeout(toast.i);toast.i=setTimeout(()=>m.style.display='none',3500)}
+async function api(p,o={}){const r=await fetch('/api'+p,{...o,headers:{...(o.headers||{}),...(tok?{authorization:'Bearer '+tok}:{})}});
+ const ct=r.headers.get('content-type')||'';const d=ct.includes('json')?await r.json():await r.text();
+ if(!r.ok){if(r.status===401&&tok){tok='';sessionStorage.removeItem('t');login()}throw new Error(d.error||'ผิดพลาด')}return d}
+const J=(m,b)=>({method:m,headers:{'content-type':'application/json'},body:JSON.stringify(b)});
+const can=p=>({super_admin:1,card_editor:['read','write','submit','import'],reviewer:['read','review'],publisher:['read','publish'],viewer:['read']}[me.role]===1||{card_editor:['read','write','submit','import'],reviewer:['read','review'],publisher:['read','publish'],viewer:['read']}[me.role]?.includes(p));
+const img=c=>c.image_path?(c.image_path.startsWith('media/')?'/'+c.image_path:'/'+c.image_path):'';
+function login(){$('#who').textContent='';$('#nav').innerHTML='';app.innerHTML=`<h3>เข้าสู่ระบบ</h3><label>อีเมล</label><input id="e" type="email" style="width:100%"><label>รหัสผ่าน</label><input id="p" type="password" style="width:100%"><div class="row"><button class="pri" id="go">เข้าสู่ระบบ</button></div>`;
+ $('#go').onclick=async()=>{try{const r=await api('/login',J('POST',{email:$('#e').value,password:$('#p').value}));tok=r.token;sessionStorage.setItem('t',tok);start()}catch(e){toast(e.message)}}}
+async function start(){try{me=await api('/me');$('#who').innerHTML=`${esc(me.email)} · ${me.role} · <a href="#" id="lo" style="color:#9cf">ออก</a>`;$('#lo').onclick=async e=>{e.preventDefault();await api('/logout',{method:'POST'});tok='';sessionStorage.removeItem('t');login()};nav();list()}catch{login()}}
+async function list(){
+ const cs=await api(`/cards?status=${filter.status}&q=${encodeURIComponent(filter.q)}`);
+ app.innerHTML=`<div class="row"><input id="q" placeholder="ค้นหาชื่อ/Character ID" value="${esc(filter.q)}"><select id="st"><option value="">ทุกสถานะ</option>${['draft','in_review','approved','published','archived'].map(s=>`<option ${filter.status===s?'selected':''}>${s}</option>`).join('')}</select>
+ ${can('write')?'<button class="pri" id="new">+ การ์ดใหม่</button>':''}</div>
+ <div id="items">${cs.map(c=>`<div class="card" data-id="${c.id}"><img src="${img(c)}" alt=""><div><div class="t">${esc(c.chain_name?c.chain_name+" · ":"")}${esc(c.name)}<span class="badge ${c.status}">${c.status}</span></div>
+ <div class="s">${esc(c.character_id)} · Lv.${c.level??'-'} · ${c.card_type}</div><div class="s">❤ ${c.hp??'-'} 🔥 ${c.atk??'-'} 🛡 ${c.def??0}${c.has_combo?' · ⚡combo':''}</div></div></div>`).join('')||'<p>ยังไม่มีการ์ด</p>'}</div>
+ <h4>นำเข้า / ส่งออก</h4><div class="row"><button id="xj">ส่งออก JSON</button><button id="xc">ส่งออก CSV</button>${can('import')?'<input type="file" id="imp" accept=".json,.csv"><button id="dry">ตรวจไฟล์ (ไม่บันทึก)</button><button class="pri" id="doimp">นำเข้า</button>':''}</div><pre id="ir" hidden></pre>
+ <h4>ประวัติการแก้ไข</h4><table id="au"></table>`;
+ $('#q').onchange=e=>{filter.q=e.target.value;list()};$('#st').onchange=e=>{filter.status=e.target.value;list()};
+ if($('#new'))$('#new').onclick=()=>edit();
+ document.querySelectorAll('.card').forEach(el=>el.onclick=()=>edit(el.dataset.id));
+ const dl=async(p,n)=>{const r=await fetch('/api'+p,{headers:{authorization:'Bearer '+tok}});const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()};
+ $('#xj').onclick=()=>dl('/export.json','cards.json');$('#xc').onclick=()=>dl('/export.csv','cards.csv');
+ const run=async dry=>{const f=$('#imp').files[0];if(!f)return toast('เลือกไฟล์ก่อน');const t=await f.text();
+  try{const r=await api('/import'+(dry?'?dry=1':''),{method:'POST',headers:{'content-type':f.name.endsWith('.csv')?'text/csv':'application/json'},body:t});
+   $('#ir').hidden=false;$('#ir').textContent=JSON.stringify(r,null,2);toast(r.ok?(dry?'ไฟล์ถูกต้อง':'นำเข้าแล้ว (ทั้งหมดเป็น Draft)'):'มีแถวผิด ไม่มีการบันทึก',r.ok);if(r.ok&&!dry)setTimeout(list,900)}catch(e){toast(e.message)}};
+ if($('#dry')){$('#dry').onclick=()=>run(true);$('#doimp').onclick=()=>run(false)}
+ api('/audit').then(a=>$('#au').innerHTML=a.slice(0,10).map(r=>`<tr><td>${new Date(r.at).toLocaleString('th-TH')}</td><td>${esc(r.actor)}</td><td>${esc(r.action)}</td></tr>`).join(''))}
+async function edit(id){
+ cur=id?await api('/cards/'+id):{card_type:'character',def:0,has_combo:false,effects:[]};
+ let fx=(cur.effects||[]).map(e=>({...e}));
+ const ro=id&&cur.status!=='draft'||!can('write');const f=(k,l,t='text')=>`<div><label>${l}</label><input data-k="${k}" type="${t}" value="${esc(cur[k])}" ${ro?'disabled':''}></div>`;
+ const nx={draft:[['in_review','ส่งตรวจ']],in_review:[['approved','อนุมัติ'],['draft','ตีกลับ']],approved:[['published','เผยแพร่'],['draft','ตีกลับ']],published:[['archived','เก็บถาวร'],['draft','ถอนเป็นร่างเพื่อแก้']],archived:[['draft','กู้เป็นร่าง']]}[cur.status]||[];
+ app.innerHTML=`<div class="row"><button id="back">← กลับ</button>${id?`<span class="badge ${cur.status}" style="align-self:center">${cur.status} · v${cur.version_no}</span>`:''}</div>
+ <div class="row" style="align-items:flex-start"><div id="pv" style="width:130px;flex:none"></div><div style="flex:1"><label>รูป (JPG/PNG/WEBP ≤5MB)</label><input type="file" id="up" accept="image/*" ${ro?'disabled':''}>
+ <label>โหมดรูป</label><select id="rm" ${ro?'disabled':''}><option value="art_only">ภาพเปล่า (วางตัวเลขจากข้อมูล)</option><option value="full">ภาพเต็ม (ตัวเลขฝังในรูป)</option></select></div></div>
+ <div class="g">${f('character_id','Character ID')}${f('name','ชื่อ')}
+ <div><label>ประเภท</label><select data-k="card_type" ${ro?'disabled':''}>${['character','evolution','spell','trap','item','fusion'].map(t=>`<option ${cur.card_type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+ ${f('level','Level','number')}${f('chain_key','สายวิวัฒนาการ (chain)')}${f('evolves_from','ร่างก่อนหน้า (Character ID)')}${f('hp','HP','number')}${f('atk','ATK 🔥','number')}${f('def','DEF 🛡','number')}
+ ${f('atk_icon','ไอคอน ATK (เช่น fire, water)')}${f('shop_price_points','ราคาร้านค้า (แต้ม)','number')}${f('shop_price_vrcoin','ราคาร้านค้า (Vrcoin)','number')}${f('element','Element')}${f('race','Race')}${f('class','Class')}</div>
+ <label><input type="checkbox" data-k="has_combo" ${cur.has_combo?'checked':''} ${ro?'disabled':''}> มีไอคอนพลังแฝง (Combo)</label>
+ <label>ข้อความกติกา</label><textarea data-k="rules_text" rows="3" style="width:100%" ${ro?'disabled':''}>${esc(cur.rules_text)}</textarea>
+ <label>Flavor text</label><textarea data-k="flavor_text" rows="2" style="width:100%" ${ro?'disabled':''}>${esc(cur.flavor_text)}</textarea>
+ <div class="sec"><label style="font-size:14px;color:#d9a93b">เอฟเฟกต์ (${(cur.effects||[]).length}/10)</label><div id="fx"></div>${!ro?'<button id="addfx">+ เพิ่มเอฟเฟกต์</button>':''}</div>
+ <div class="sec" id="meta"></div>
+ <div class="row">${!ro?'<button class="pri" id="save">บันทึก</button>':''}${id?nx.filter(([to])=>can({in_review:'submit',approved:'review',draft:cur.status==='in_review'||cur.status==='approved'?'review':'publish',published:'publish',archived:'publish'}[to])).map(([to,l])=>`<button data-to="${to}" class="${to==='draft'?'warn':''}">${l}</button>`).join(''):''}</div>`;
+ $('#back').onclick=list;renderFx(fx,ro);metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push({trigger:'on_summon',duration:'instant',use_limit:'none',description:''});renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
+ const collect=()=>{const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.type==='checkbox'?e.checked:e.value);o.media_id=cur.media_id||null;o.effects=fx;return o};
+ $('#up').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;try{const r=await api('/media',{method:'POST',headers:{'content-type':fl.type,'x-filename':fl.name,'x-render-mode':$('#rm').value},body:fl});cur.media_id=r.id;cur.image_path=r.storage_path;pvDraw();toast('อัปโหลดแล้ว (กดบันทึกเพื่อผูกกับการ์ด)',1)}catch(x){toast(x.message)}};
+ if($('#save'))$('#save').onclick=async()=>{try{const r=await api(id?'/cards/'+id:'/cards',J(id?'PUT':'POST',collect()));if(metaC)await api(`/cards/${r.id}/meta`,J('PUT',metaC()));toast('บันทึกแล้ว',1);edit(r.id)}catch(e){toast(e.message)}};
+ document.querySelectorAll('[data-to]').forEach(b=>b.onclick=async()=>{try{await api(`/cards/${id}/status`,J('POST',{to:b.dataset.to}));toast('เปลี่ยนสถานะแล้ว',1);edit(id)}catch(e){toast(e.message)}})}
+const TR={on_summon:'เมื่อถูกเรียก',on_evolve:'เมื่อวิวัฒนาการ',on_attack:'เมื่อโจมตี',on_destroyed:'เมื่อถูกทำลาย',turn_start:'เริ่มเทิร์น',turn_end:'จบเทิร์น',to_graveyard:'เมื่อลงสุสาน',passive:'ต่อเนื่อง',combo:'พลังแฝง (Combo)'};
+const DU={instant:'ทันที',until_end_of_turn:'จนจบเทิร์น',n_turns:'N เทิร์น',permanent:'ถาวร'},LM={none:'ไม่จำกัด',once_per_turn:'1 ครั้ง/เทิร์น',once_per_game:'1 ครั้ง/เกม'};
+function renderFx(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');
+ box.innerHTML=fx.map((e,i)=>`<div class="card" style="cursor:default;display:block"><div class="row"><select data-f="trigger" data-i="${i}" ${ro?'disabled':''}>${opt(TR,e.trigger)}</select>${ro?'':`<button class="warn" data-del="${i}">ลบ</button>`}</div>
+ <label>คำอธิบายที่ผู้เล่นเห็น</label><textarea data-f="description" data-i="${i}" rows="2" maxlength="500" style="width:100%" ${ro?'disabled':''}>${esc(e.description)}</textarea>
+ <details><summary style="font-size:12px;color:#b9a;cursor:pointer">รายละเอียดกติกา (Rule Builder)</summary><div class="g">
+ ${[['condition_text','เงื่อนไข'],['cost_text','ต้นทุน (เช่น สังเวย 1 ตัว)'],['target_text','เป้าหมาย'],['action_text','การกระทำ']].map(([k,l])=>`<div><label>${l}</label><input data-f="${k}" data-i="${i}" value="${esc(e[k])}" ${ro?'disabled':''}></div>`).join('')}
+ <div><label>ระยะเวลา</label><select data-f="duration" data-i="${i}" ${ro?'disabled':''}>${opt(DU,e.duration)}</select></div>
+ <div><label>จำนวนเทิร์น</label><input type="number" min="1" data-f="duration_turns" data-i="${i}" value="${esc(e.duration_turns)}" ${ro?'disabled':''}></div>
+ <div><label>ขีดจำกัดการใช้</label><select data-f="use_limit" data-i="${i}" ${ro?'disabled':''}>${opt(LM,e.use_limit)}</select></div></div></details></div>`).join('')||'<p class="s" style="color:#b9a;font-size:12px">ยังไม่มีเอฟเฟกต์</p>';
+ box.querySelectorAll('[data-f]').forEach(el=>{el.oninput=el.onchange=()=>{fx[+el.dataset.i][el.dataset.f]=el.value}});
+ box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{fx.splice(+b.dataset.del,1);renderFx(fx,ro)})}
+let metaC=null;
+function pvDraw(){const el=$('#pv');if(!el||typeof VCZ==='undefined')return;VCZ.ref.frame='/assets/frame/frame.webp';const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);
+ const n=k=>+o[k]||0;const src=cur.image_path?'/'+cur.image_path:'';
+ el.innerHTML=VCZ.svg({chain_name:o.chain_name||cur.chain_name||o.chain_key||o.name||'NAME',name:o.name||'CLASS',level:n('level')||15,hp:n('hp'),atk:n('atk'),def:n('def'),atk_icon:o.atk_icon||'fire',img:src},{})}
+async function meta(id,ro){const [m,gs,af,chs]=await Promise.all([id?api(`/cards/${id}/meta`):{gender:null,affiliations:[],story_links:[],fusion_partners:[]},api('/genders'),api('/affiliations'),api('/chains')]);
+ const mine=cur.chain_key,others=chs.filter(x=>x.key!==mine&&x.key!==(document.querySelector('[data-k=chain_key]')||{}).value);
+ let sl=m.story_links.map(x=>({...x})),fp=m.fusion_partners.map(x=>({...x})),extra=[];const has=new Set(m.affiliations.map(x=>x.key));
+ const chOpt=v=>`<option value="">— เลือกตัวละคร —</option>${others.map(x=>`<option value="${x.key}" ${v===x.key?'selected':''}>${esc(x.name)} (${x.key})</option>`).join('')}`;
+ const draw=()=>{$('#meta').innerHTML=`<label style="font-size:14px;color:#d9a93b">เพศ / เกมที่เคยเล่นด้วยกัน / Story / Fusion</label>
+ <div class="g"><div><label>เพศ (ตัวละครเพศเดียวกันจับคู่ได้โบนัสในอนาคต)</label><select id="mg" ${ro?'disabled':''}><option value="">ไม่ระบุ</option>${gs.map(x=>`<option value="${x.key}" ${m.gender===x.key?'selected':''}>${esc(x.name)}</option>`).join('')}</select>${ro?'':'<div class="row" style="margin-top:6px"><input id="gn" placeholder="เพิ่มเพศใหม่ (ชื่อ)" style="flex:2"><button id="gadd">+ เพิ่มเพศ</button></div>'}</div></div>
+ <label>เกมที่ตัวละครนี้เคยเล่น (ติ๊ก — ใบที่ติ๊กตรงกันอยู่บนกระดานพร้อมกันจะเกิดเอฟเฟกต์)</label>
+ <div class="row">${af.map(x=>`<label style="display:flex;gap:4px;align-items:center;margin:0;flex:none"><input type="checkbox" data-aff="${x.key}" ${has.has(x.key)?'checked':''} ${ro?'disabled':''}> ${esc(x.name)}</label>`).join('')||'<span class="s">ยังไม่มีเกมในรายการ</span>'}</div>
+ ${ro?'':`<div class="row"><input id="afn" placeholder="เพิ่มเกมใหม่ (เช่น among-us)" style="flex:2"><button id="afadd">+ เพิ่มเกม</button></div>`}
+ <label>Story กับตัวละครอื่น (เมื่ออยู่บนกระดานพร้อมกันจะเกิดเอฟเฟกต์)</label>
+ ${sl.map((x,i)=>`<div class="card" style="cursor:default;display:block"><div class="row"><select data-sl="${i}" data-f="partner" ${ro?'disabled':''}>${chOpt(x.partner)}</select>${ro?'':`<button class="warn" data-sldel="${i}">ลบ</button>`}</div>
+ <div class="g"><div><label>ชื่อ Story</label><input data-sl="${i}" data-f="name" value="${esc(x.name)}" ${ro?'disabled':''}></div><div><label>สเตตัส</label><select data-sl="${i}" data-f="stat" ${ro?'disabled':''}>${['','atk','hp','def'].map(t=>`<option value="${t}" ${x.stat===t?'selected':''}>${t||'ไม่มี (ข้อความอย่างเดียว)'}</option>`).join('')}</select></div>
+ <div><label>ค่า (+/−)</label><input type="number" data-sl="${i}" data-f="amount" value="${esc(x.amount)}" ${ro?'disabled':''}></div></div><label>คำอธิบายเอฟเฟกต์</label><input data-sl="${i}" data-f="description" value="${esc(x.description)}" style="width:100%" ${ro?'disabled':''}></div>`).join('')}
+ ${ro?'':'<div class="row"><button id="sladd">+ เพิ่ม Story</button></div>'}
+ <label>Fusion — ตัวละครที่ฟิวชันกับการ์ดใบนี้ได้ (ใช้เวท Fusion เมื่อมีสองใบบนมือ)</label>
+ ${fp.map((x,i)=>`<div class="card" style="cursor:default;display:block"><div class="row"><select data-fp="${i}" data-f="partner" ${ro?'disabled':''}>${chOpt(x.partner)}</select>${ro?'':`<button class="warn" data-fpdel="${i}">ลบ</button>`}</div>
+ <div class="g">${['hp','atk','def'].map(k=>`<div><label>โบนัส ${k.toUpperCase()}</label><input type="number" data-fp="${i}" data-f="${k}" value="${esc(x[k]??0)}" ${ro?'disabled':''}></div>`).join('')}</div></div>`).join('')}
+ ${ro?'':'<div class="row"><button id="fpadd">+ เพิ่มคู่ Fusion</button></div>'}`;
+ $('#meta').querySelectorAll('[data-sl]').forEach(el=>el.onchange=el.oninput=()=>{sl[+el.dataset.sl][el.dataset.f]=el.type==='number'?(el.value===''?null:+el.value):el.value});
+ $('#meta').querySelectorAll('[data-fp]').forEach(el=>el.onchange=el.oninput=()=>{fp[+el.dataset.fp][el.dataset.f]=el.type==='number'?+el.value:el.value});
+ $('#meta').querySelectorAll('[data-sldel]').forEach(b=>b.onclick=()=>{sl.splice(+b.dataset.sldel,1);draw()});
+ $('#meta').querySelectorAll('[data-fpdel]').forEach(b=>b.onclick=()=>{fp.splice(+b.dataset.fpdel,1);draw()});
+ if($('#sladd'))$('#sladd').onclick=()=>{sl.push({partner:'',name:'',stat:'atk',amount:5,description:''});draw()};
+ if($('#fpadd'))$('#fpadd').onclick=()=>{fp.push({partner:'',hp:20,atk:10,def:0});draw()};
+ if($('#gadd'))$('#gadd').onclick=async()=>{const n=$('#gn').value.trim();if(!n)return;const k='g-'+Date.now().toString(36);try{await api('/genders',J('POST',{key:k,name:n}));gs.push({key:k,name:n});m.gender=k;draw()}catch(e){toast(e.message)}};
+ if($('#afadd'))$('#afadd').onclick=async()=>{const k=$('#afn').value.trim().toLowerCase();if(!k)return;try{await api('/affiliations',J('POST',{key:k,name:k}));af.push({key:k,name:k});has.add(k);draw()}catch(e){toast(e.message)}}};
+ draw();
+ metaC=ro?null:()=>({gender:$('#mg').value||null,affiliations:[...$('#meta').querySelectorAll('[data-aff]:checked')].map(x=>x.dataset.aff),story_links:sl.filter(x=>x.partner),fusion_partners:fp.filter(x=>x.partner)})}
+const ROLES={super_admin:'Super Admin',card_editor:'Card Editor',reviewer:'Reviewer',publisher:'Publisher',viewer:'Viewer'};
+function nav(){$('#nav').innerHTML=`<button id="n1">🃏 การ์ด</button>${can('users')?'<button id="n2">👥 ผู้ใช้</button>':''}<button id="n4">⚙ ระบบเกม</button><button id="n3">🔑 บัญชีฉัน</button>`;$('#n4').onclick=sys;
+ $('#n1').onclick=list;if($('#n2'))$('#n2').onclick=users;$('#n3').onclick=account}
+function account(){app.innerHTML=`<h3>เปลี่ยนรหัสผ่านของฉัน</h3><label>รหัสผ่านเดิม</label><input id="po" type="password" style="width:100%"><label>รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</label><input id="pn" type="password" style="width:100%"><div class="row"><button class="pri" id="pg">เปลี่ยนรหัสผ่าน</button></div><p style="font-size:12px;color:#b9a">เซสชันบนอุปกรณ์อื่นจะถูกออกจากระบบ</p>`;
+ $('#pg').onclick=async()=>{try{await api('/me/password',J('POST',{old:$('#po').value,new:$('#pn').value}));toast('เปลี่ยนรหัสผ่านแล้ว',1);$('#po').value=$('#pn').value=''}catch(e){toast(e.message)}}}
+async function users(){
+ const us=await api('/users');
+ app.innerHTML=`<h3>ผู้ใช้ (${us.length})</h3>${us.map(x=>{const self=x.id===me.id;return `<div class="card" style="cursor:default;display:block"><div class="t">${esc(x.email)}${self?' <span class="badge">คุณ</span>':''}<span class="badge ${x.is_active?'published':'archived'}">${x.is_active?'ใช้งาน':'ปิดบัญชี'}</span></div>
+ <div class="row"><select data-u="${x.id}" data-a="role" ${self?'disabled':''}>${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${x.role===k?'selected':''}>${l}</option>`).join('')}</select>
+ <button data-u="${x.id}" data-a="toggle" ${self?'disabled':''} class="${x.is_active?'warn':''}">${x.is_active?'ปิดบัญชี':'เปิดบัญชี'}</button>
+ <button data-u="${x.id}" data-a="pw">ตั้งรหัสผ่านใหม่</button></div><div class="row" id="pw${x.id}" hidden><input type="password" placeholder="รหัสผ่านใหม่ (≥8)" id="pwi${x.id}"><button class="pri" data-u="${x.id}" data-a="pwgo">บันทึก</button></div></div>`}).join('')}
+ <h4>เพิ่มผู้ใช้</h4><div class="g"><div><label>อีเมล</label><input id="ne" type="email"></div><div><label>รหัสผ่านเริ่มต้น (≥8)</label><input id="np" type="password"></div>
+ <div><label>Role</label><select id="nr">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${k==='viewer'?'selected':''}>${l}</option>`).join('')}</select></div></div>
+ <div class="row"><button class="pri" id="nc">เพิ่มผู้ใช้</button></div>`;
+ const act=async fn=>{try{await fn();users()}catch(e){toast(e.message);users()}};
+ app.querySelectorAll('select[data-a=role]').forEach(el=>el.onchange=()=>act(async()=>{await api('/users/'+el.dataset.u,J('PUT',{role:el.value}));toast('เปลี่ยน role แล้ว (ผู้ใช้ต้องเข้าสู่ระบบใหม่)',1)}));
+ app.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>{const id=b.dataset.u,a=b.dataset.a,u=us.find(z=>z.id===id);
+  if(a==='toggle')act(async()=>{await api('/users/'+id,J('PUT',{is_active:!u.is_active}));toast(u.is_active?'ปิดบัญชีแล้ว':'เปิดบัญชีแล้ว',1)});
+  if(a==='pw'){$('#pw'+id).hidden=false}
+  if(a==='pwgo')act(async()=>{await api(`/users/${id}/password`,J('POST',{password:$('#pwi'+id).value}));toast('ตั้งรหัสผ่านใหม่แล้ว',1)})});
+ $('#nc').onclick=()=>act(async()=>{await api('/users',J('POST',{email:$('#ne').value,password:$('#np').value,role:$('#nr').value}));toast('เพิ่มผู้ใช้แล้ว',1)})}
+const lines=a=>String(a||'').split(',').map(x=>x.trim()).filter(Boolean);
+async function sys(){
+ const [rs,af,st,fu]=await Promise.all([api('/rules'),api('/affiliations'),api('/stories'),api('/fusion')]);const W=can('write'),A=can('users');
+ const F=(id,l,ph='',t='text')=>`<div><label>${l}</label><input id="${id}" type="${t}" placeholder="${ph}" style="width:100%"></div>`;
+ app.innerHTML=`<h3>⚙ ระบบเกม</h3>
+ <h4>กติกา (✔ ยืนยันแล้ว / ◔ ข้อเสนอ รอยืนยัน)</h4>${rs.map(r=>`<div class="card" style="cursor:default;display:block"><div class="t">${r.status==='confirmed'?'✔':'◔'} ${esc(r.label)} <span class="s">(${r.key})</span></div>${r.note?`<div class="s">${esc(r.note)}</div>`:''}
+ <div class="row"><input data-r="${r.key}" value="${esc(JSON.stringify(r.value))}" ${A?'':'disabled'}><select data-rs="${r.key}" ${A?'':'disabled'}><option value="confirmed" ${r.status==='confirmed'?'selected':''}>ยืนยัน</option><option value="proposed" ${r.status==='proposed'?'selected':''}>ข้อเสนอ</option></select>${A?`<button data-rsave="${r.key}">บันทึก</button>`:''}</div></div>`).join('')}
+ <h4>สังกัดเกม (Game Affiliation)</h4>${af.map(x=>`<div class="card" style="cursor:default;display:block"><div class="t">${esc(x.name)} <span class="s">${x.key} · ${x.members} ตัวละคร</span></div>
+ ${x.synergies.map(y=>`<div class="s">≥${y.min_members} ตัว: ${y.stat.toUpperCase()} ${y.amount>0?'+':''}${y.amount} (ซ้อนสูงสุด ${y.max_stacks}) ${W?`<a href="#" data-ds="${y.id}" style="color:#f99">ลบ</a>`:''}</div>`).join('')}</div>`).join('')||'<p class="s">ยังไม่มีสังกัด</p>'}
+ ${W?`<div class="g">${F('af_k','key (เช่น detective-gang)')}${F('af_n','ชื่อ')}</div><div class="row"><button id="af_go">+ เพิ่มสังกัด</button></div>
+ <div class="g">${F('sy_a','สังกัด (key)')}${F('sy_m','ขั้นต่ำสมาชิก','2','number')}<div><label>สเตตัส</label><select id="sy_s"><option>hp</option><option selected>atk</option><option>def</option></select></div>${F('sy_v','โบนัส (+/−)','5','number')}${F('sy_x','ซ้อนสูงสุด','1','number')}</div><div class="row"><button id="sy_go">+ เพิ่ม Team Synergy</button></div>`:''}
+ <h4>Story (ความสัมพันธ์ตัวละคร)</h4>${st.map(x=>`<div class="card" style="cursor:default;display:block"><div class="t">${esc(x.name)} <span class="badge">${x.kind}</span> <span class="s">${x.stat?x.stat.toUpperCase()+' '+(x.amount>0?'+':'')+x.amount:''} ซ้อนสูงสุด ${x.max_stacks}</span></div><div class="s">สาย: ${esc((x.members||[]).join(', '))}${x.condition_text?' · เงื่อนไข: '+esc(x.condition_text):''}</div>${W?`<a href="#" data-dst="${x.key}" style="color:#f99;font-size:12px">ลบ</a>`:''}</div>`).join('')||'<p class="s">ยังไม่มี Story</p>'}
+ ${W?`<div class="g">${F('st_k','key')}${F('st_n','ชื่อ')}<div><label>ชนิด</label><select id="st_t"><option value="positive">Positive (บวก)</option><option value="negative">Negative (ลบ)</option><option value="conditional">Conditional (มีเงื่อนไข)</option></select></div>
+ <div><label>สเตตัส</label><select id="st_s"><option>atk</option><option>hp</option><option>def</option></select></div>${F('st_v','ค่า (+/−)','5','number')}${F('st_x','ซ้อนสูงสุด','1','number')}</div>${F('st_c','เงื่อนไข (เฉพาะ Conditional)')}${F('st_m','สายตัวละคร (chain key คั่นด้วย , อย่างน้อย 2)')}<div class="row"><button id="st_go">+ บันทึก Story</button></div>`:''}
+ <h4>สูตร Fusion</h4>${fu.map(x=>`<div class="card" style="cursor:default;display:block"><div class="t">${esc(x.name)} → ${esc(x.result||'ยังไม่กำหนดผลลัพธ์')}</div><div class="s">วัตถุดิบ ≥ ${x.min_materials} · ต้องตรงกัน: ${esc((x.must_match||[]).join(', ')||'-')} · เจาะจง: ${esc((x.required_chain_keys||[]).join(', ')||'-')}</div>${W?`<a href="#" data-dfu="${x.key}" style="color:#f99;font-size:12px">ลบ</a>`:''}</div>`).join('')||'<p class="s">ยังไม่มีสูตร (รูปแบบ Fusion ยังรอเจ้าของเลือก)</p>'}
+ ${W?`<div class="g">${F('fu_k','key')}${F('fu_n','ชื่อสูตร')}${F('fu_r','การ์ดผลลัพธ์ (Character ID, ประเภท fusion)')}${F('fu_m','ต้องตรงกัน (class, affiliation, element, story)')}${F('fu_c','ตัวละครเจาะจง (chain key คั่นด้วย ,)')}${F('fu_n2','วัตถุดิบขั้นต่ำ','2','number')}</div><div class="row"><button id="fu_go">+ บันทึกสูตร</button></div>`:''}
+ <h4>ตรวจเด็ค</h4><label>Character ID คั่นด้วย , หรือขึ้นบรรทัดใหม่</label><textarea id="dk" rows="3" style="width:100%"></textarea><div class="row"><button id="dk_go">ตรวจเด็ค</button></div><pre id="dk_r" hidden></pre>`;
+ const run=(fn,ok)=>async e=>{if(e)e.preventDefault();try{await fn();toast(ok||'บันทึกแล้ว',1);sys()}catch(x){toast(x.message)}};const v=i=>$('#'+i).value;
+ app.querySelectorAll('[data-rsave]').forEach(b=>b.onclick=run(async()=>{const k=b.dataset.rsave;let val;try{val=JSON.parse(app.querySelector(`[data-r="${k}"]`).value)}catch{throw new Error('ค่าต้องเป็น JSON (เช่น 8000, true, "text")')}await api('/rules/'+k,J('PUT',{value:val,status:app.querySelector(`[data-rs="${k}"]`).value}))}));
+ app.querySelectorAll('[data-ds]').forEach(a=>a.onclick=run(()=>api('/synergies/'+a.dataset.ds,{method:'DELETE'}),'ลบแล้ว'));
+ app.querySelectorAll('[data-dst]').forEach(a=>a.onclick=run(()=>api('/stories/'+a.dataset.dst,{method:'DELETE'}),'ลบแล้ว'));
+ app.querySelectorAll('[data-dfu]').forEach(a=>a.onclick=run(()=>api('/fusion/'+a.dataset.dfu,{method:'DELETE'}),'ลบแล้ว'));
+ if(W){$('#af_go').onclick=run(()=>api('/affiliations',J('POST',{key:v('af_k'),name:v('af_n')})));
+  $('#sy_go').onclick=run(()=>api('/synergies',J('POST',{affiliation:v('sy_a'),min_members:+v('sy_m')||2,stat:v('sy_s'),amount:+v('sy_v'),max_stacks:+v('sy_x')||1})));
+  $('#st_go').onclick=run(()=>api('/stories',J('POST',{key:v('st_k'),name:v('st_n'),kind:v('st_t'),stat:v('st_v')?v('st_s'):null,amount:v('st_v')?+v('st_v'):null,condition_text:v('st_c')||null,max_stacks:+v('st_x')||1,members:lines(v('st_m'))})));
+  $('#fu_go').onclick=run(()=>api('/fusion',J('POST',{key:v('fu_k'),name:v('fu_n'),result:v('fu_r')||null,must_match:lines(v('fu_m')),required_chain_keys:lines(v('fu_c')),min_materials:+v('fu_n2')||2})))}
+ $('#dk_go').onclick=async()=>{try{const r=await api('/deck/check',J('POST',{cards:v('dk').split(/[\s,]+/).filter(Boolean)}));$('#dk_r').hidden=false;$('#dk_r').textContent=(r.ok?'✔ เด็คผ่าน':'✘ ไม่ผ่าน')+'\n'+r.errors.join('\n')+`\n(${r.counts.total} ใบ, การ์ด Evolution ${r.counts.evolution_cards})`}catch(e){toast(e.message)}}}
+tok?start():login();
+</script></body></html>

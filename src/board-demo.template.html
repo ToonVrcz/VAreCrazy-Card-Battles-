@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card Battle — กรอบการ์ดใหม่ + กระดานทดสอบ</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#120a1c;color:#eee;font-family:system-ui,sans-serif;min-height:100vh}
+h1{font-size:16px;margin:12px 14px 2px;color:#f6df9a}p.sub{margin:0 14px 8px;font-size:12px;color:#aaa}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 14px;padding:12px 10px 6px;background:radial-gradient(ellipse at 50% 0,#3a1d5c,#120a1c 75%)}
+.slot{position:relative;z-index:1;aspect-ratio:2/3;border:1.5px dashed #6a4a9a55;border-radius:8px}
+.slot.sel{z-index:4}.slot.has{border:0}
+.card{width:100%;height:100%;filter:drop-shadow(0 4px 8px #000a);transition:transform .15s}
+.card svg{width:100%;height:100%;display:block}
+.slot.sel .card{transform:translateY(-4px);filter:drop-shadow(0 0 10px #b86bff)}
+.deltas{position:absolute;left:100%;top:6%;margin-left:1px;width:0;z-index:5;pointer-events:none}
+.delta{position:absolute;left:0;white-space:nowrap;display:flex;align-items:center;gap:2px;font:900 clamp(10px,3.2vw,16px)/1 system-ui;padding:2px 5px;border-radius:12px;background:#000c;animation:rise 1.5s ease-out forwards}
+.delta.pos{color:#7dffa0;border:1px solid #2c8}.delta.neg{color:#ff8a80;border:1px solid #c33}
+@keyframes rise{0%{opacity:0;transform:translate(-6px,18px) scale(.6)}15%{opacity:1;transform:translate(0,0) scale(1.15)}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(0,-34px)}}
+.shake{animation:shake .3s}@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.panel{padding:8px 12px}.panel h2{font-size:13px;margin:8px 0 6px;color:#d8c8f0}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+button{background:#2c1a48;color:#fff;border:1px solid #8a5ad0;border-radius:8px;padding:9px 11px;font-size:13px}
+button:active{background:#4a2a80}button.on{background:#7a3ad0;border-color:#e2b440}
+.tray{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 12px;scrollbar-width:thin}
+.tray .t{flex:none;width:78px;position:relative}.tray .t svg{width:100%;display:block}
+.tray .t:active{transform:scale(.96)}
+.note{font-size:11px;color:#998;margin-top:8px;line-height:1.5}
+.zoom{position:absolute;right:-3px;bottom:-3px;z-index:3;width:22px;height:22px;border-radius:50%;background:#000c;border:1px solid #e2b44088;color:#f6df9a;font-size:11px;padding:0}
+.rm{position:absolute;left:-3px;bottom:-3px;z-index:3;width:20px;height:20px;border-radius:50%;background:#000c;border:1px solid #ff8a8088;color:#ff8a80;font-size:11px;padding:0}
+.modal{position:fixed;inset:0;background:#000c;display:none;align-items:flex-end;justify-content:center;z-index:20}.modal.on{display:flex}
+.sheet{background:#1b0f2c;border:1px solid #e2b44066;border-radius:14px 14px 0 0;width:100%;max-width:520px;max-height:92vh;overflow:auto;padding:14px;position:relative}
+.x{position:absolute;right:10px;top:10px;width:34px;height:34px;padding:0;border-radius:50%}
+.big{display:flex;gap:12px;align-items:flex-start;padding-right:36px}.big .bc{width:46%;flex:none}.big .bc svg{width:100%;display:block;filter:drop-shadow(0 6px 12px #000)}
+.big h2{margin:0 0 2px;font-size:17px;color:#f6df9a}.chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.chip{font-size:11px;padding:2px 8px;border-radius:10px;background:#3a1d5c;border:1px solid #8a5ad0}
+.bst{display:flex;flex-direction:column;gap:4px;font-size:15px;font-weight:700}.bst span{display:flex;align-items:center;gap:6px}
+.sec h3{font-size:12px;color:#c9a6ff;margin:12px 0 4px}.eff{background:#2a1644;border-left:3px solid #e2b440;padding:7px 9px;border-radius:5px;font-size:13px;margin-bottom:5px;line-height:1.45}.eff b{display:block;color:#f6df9a;font-size:12px;margin-bottom:2px}
+.fl{font-style:italic;color:#bba;font-size:13px}.sample{font-size:11px;color:#887;margin-top:10px}
+</style></head><body>
+<h1>กรอบการ์ดของ Toon</h1>
+<p class="sub">เลือกการ์ดจากแถบล่างวางบนกระดาน (สูงสุด 7 ช่อง) · แตะการ์ดเลือก · แตะซ้ำ/🔍 เพื่อขยาย</p>
+<div class="board" id="board"></div>
+<div class="panel">
+ <h2>ปรับค่าการ์ดที่เลือก</h2>
+ <div class="row">
+  <button data-s="hp" data-d="-20">HP −20</button><button data-s="hp" data-d="30">HP +30</button>
+  <button data-s="atk" data-d="-10">ATK −10</button><button data-s="atk" data-d="15">ATK +15</button>
+  <button data-s="def" data-d="10">DEF +10</button><button data-s="def" data-d="-5">DEF −5</button>
+  <button id="multi">บัฟหลายค่า</button><button id="clear">ล้างกระดาน</button>
+ </div>
+ <h2>การ์ดทั้งหมด (48 ใบ) — แตะเพื่อวาง</h2>
+ <div class="row" id="filters"><button data-f="0" class="on">ทั้งหมด</button><button data-f="15">Lv.15</button><button data-f="40">Lv.40</button><button data-f="70">Lv.70</button></div>
+ <div class="tray" id="tray"></div>
+ <h2>ตารางธาตุ (ผู้โจมตี → ผู้รับ)</h2><div id="mx" style="overflow-x:auto"></div>
+ <div class="note">ตัวเลข HP/ATK/DEF วาดจากข้อมูลทับภาพศิลป์เปล่า ไอคอน ATK เปลี่ยนตามการ์ด กรอบเป็นรูปที่คุณส่งมา (เปลี่ยนไฟล์เดียวได้ทั้งชุด) · เอฟเฟกต์/ธาตุเป็นข้อเสนอของ Claude ยังไม่ใช่กติกาจริง</div>
+</div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<script>/*__RENDERER__*/</script>
+<script>
+const CARDS=__CARDS__;const EL=__ELEMENTS__;const E=EL.elements;
+const weakTo=k=>Object.keys(E).filter(o=>E[o].strong.includes(k));
+const eChip=(k,cls='')=>`<span class="chip ${cls}">${VCZ.glyph(E[k].icon,13)} ${E[k].th}</span>`;
+CARDS.forEach(c=>{const b=atob(c.b64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);c.img=URL.createObjectURL(new Blob([u],{type:'image/jpeg'}));delete c.b64});
+VCZ.ref.frame=URL.createObjectURL(new Blob([Uint8Array.from(atob(__FRAME__.split(',')[1]),c=>c.charCodeAt(0))],{type:'image/webp'}));
+const TR={on_summon:'เมื่อถูกเรียก',on_evolve:'เมื่อวิวัฒนาการ',on_attack:'เมื่อโจมตี',on_destroyed:'เมื่อถูกทำลาย',turn_start:'เริ่มเทิร์น',turn_end:'จบเทิร์น',to_graveyard:'เมื่อลงสุสาน',passive:'ต่อเนื่อง',combo:'พลังแฝง (Combo)'};
+const LIM={once_per_turn:'1 ครั้ง/เทิร์น',once_per_game:'1 ครั้ง/เกม'};
+const SLOTS=7;let slots=Array(SLOTS).fill(null),sel=-1,filt=0;
+const board=document.getElementById('board'),$m=document.getElementById('sheet');
+board.innerHTML=Array.from({length:SLOTS},(_,i)=>`<div class="slot" data-i="${i}"><div class="card"></div><div class="deltas"></div></div>`).join('')+'<div class="slot" style="border:0;display:flex;align-items:center;justify-content:center;color:#6a5a8a;font-size:11px;text-align:center">+5 ช่องหลัง<br>(ไม่ทดสอบ)</div>';
+const inst=(c)=>({c:{...c},b:{hp:c.hp,atk:c.atk,def:c.def}});
+function render(){slots.forEach((s,i)=>{const el=board.children[i],cd=el.querySelector('.card');
+ el.classList.toggle('has',!!s);el.classList.toggle('sel',i===sel&&!!s);
+ cd.innerHTML=s?VCZ.svg(s.c,s.b)+`<button class="zoom" data-z="${i}">🔍</button><button class="rm" data-r="${i}">✕</button>`:''})}
+board.onclick=e=>{const s=e.target.closest('.slot');if(!s||s.dataset.i==null)return;const i=+s.dataset.i;
+ if(e.target.closest('.rm')){slots[i]=null;if(sel===i)sel=-1;render();return}
+ if(!slots[i])return;if(e.target.closest('.zoom')||i===sel){openCard(i);return}sel=i;render()};
+function pop(i,k,d,n){const box=board.children[i].querySelector('.deltas'),e=document.createElement('div');
+ e.className='delta '+(d>0?'pos':'neg');e.style.top=(n*26)+'px';
+ e.innerHTML=VCZ.glyph(k==='atk'?'purple_flame':k,16)+(d>0?'+':'−')+Math.abs(d);box.appendChild(e);setTimeout(()=>e.remove(),1500)}
+function change(k,d,n=0){if(sel<0||!slots[sel])return;const c=slots[sel].c;c[k]=Math.max(0,c[k]+d);render();pop(sel,k,d,n);
+ if(d<0){const el=board.children[sel].querySelector('.card');el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),300)}}
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>change(b.dataset.s,+b.dataset.d));
+document.getElementById('multi').onclick=()=>{change('hp',30,0);change('atk',20,1);change('def',10,2)};
+document.getElementById('clear').onclick=()=>{slots.fill(null);sel=-1;render()};
+function tray(){document.getElementById('tray').innerHTML=CARDS.filter(c=>!filt||c.level===filt).map(c=>`<div class="t" data-id="${c.character_id}">${VCZ.svg(c)}</div>`).join('')}
+document.getElementById('tray').onclick=e=>{const t=e.target.closest('.t');if(!t)return;const c=CARDS.find(x=>x.character_id===t.dataset.id);
+ let i=slots.indexOf(null);if(i<0)i=sel>=0?sel:0;slots[i]=inst(c);sel=i;render()};
+document.getElementById('filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;filt=+b.dataset.f;
+ document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b));tray()};
+function openCard(i){const {c,b}=slots[i];
+ const st=(k,ic,l)=>{const d=c[k]-b[k];return `<span>${VCZ.glyph(ic,20)}${l} ${c[k]}${d?`<small style="font-size:11px;color:${d>0?'#7dffa0':'#ff8a80'}"> (${d>0?'+':''}${d})</small>`:''}</span>`};
+ $m.innerHTML=`<button class="x" id="cx">✕</button><div class="big"><div class="bc">${VCZ.svg(c,b)}</div>
+ <div><h2>${c.chain_name}</h2><div style="font-size:12px;color:#aaa">${c.name} · ${c.character_id} · Lv.${c.level}</div>
+ <div class="chips">${eChip(c.element)}${c.has_combo?'<span class="chip">⚡ พลังแฝง</span>':''}</div>
+ <div class="bst">${st('hp','hp','HP')}${st('atk','purple_flame','ATK')}${c.def>0?st('def','def','DEF'):''}</div></div></div>
+ <div class="sec"><h3>ธาตุ: ${E[c.element].th}</h3><div class="eff"><b>ได้เปรียบ ×${EL.multiplier_strong}</b>${E[c.element].strong.map(k=>eChip(k)).join(' ')||'—'}</div><div class="eff"><b>เสียเปรียบ ×${EL.multiplier_weak} (แพ้ทาง)</b>${weakTo(c.element).map(k=>eChip(k)).join(' ')||'—'}</div></div>
+ <div class="sec"><h3>เอฟเฟกต์ (${c.effects.length})</h3>${c.effects.map(e=>`<div class="eff"><b>${TR[e.trigger]||e.trigger}${e.use_limit&&LIM[e.use_limit]?' · '+LIM[e.use_limit]:''}</b>${e.description}</div>`).join('')||'<div class="eff">ไม่มีเอฟเฟกต์</div>'}</div>
+ <div class="sec"><h3>คำบรรยาย</h3><div class="fl">${c.flavor_text||''}</div></div>
+ <div class="sample">* เอฟเฟกต์/ธาตุเป็นข้อเสนอสำหรับทดสอบ ยังไม่ใช่กติกาจริง</div>`;
+ $m.parentNode.classList.add('on');document.getElementById('cx').onclick=closeCard}
+function closeCard(){$m.parentNode.classList.remove('on')}
+document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeCard()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCard()});
+tray();
+(()=>{const ks=Object.keys(E);let h='<table style="border-collapse:collapse;font-size:11px;text-align:center"><tr><td></td>'+ks.map(k=>`<td style="padding:2px 3px">${VCZ.glyph(E[k].icon,15)}</td>`).join('')+'</tr>';
+ ks.forEach(a=>{h+=`<tr><td style="padding:2px 4px;text-align:left;white-space:nowrap">${VCZ.glyph(E[a].icon,15)} ${E[a].th}</td>`+ks.map(d=>{const up=E[a].strong.includes(d),dn=E[d].strong.includes(a);return `<td style="border:1px solid #3a2a5a;padding:2px 4px;color:${up?'#7dffa0':dn?'#ff8a80':'#554'};background:${up?'#12301c':dn?'#301418':'transparent'}">${up?'▲':dn?'▼':'·'}</td>`}).join('')+'</tr>'});
+ document.getElementById('mx').innerHTML=h+`</table><div class="note">▲ ได้เปรียบ ×${EL.multiplier_strong} · ▼ เสียเปรียบ ×${EL.multiplier_weak} · มืด↔แสง ชนะกันและกัน · กายภาพ/กลาง ไม่มีได้เปรียบเสียเปรียบ</div>`})();
+// preload sample: FOLLOW YOU line
+['FOLLOW-YOU-015','FOLLOW-YOU-040','FOLLOW-YOU-070'].forEach((id,i)=>{const c=CARDS.find(x=>x.character_id===id);if(c)slots[i]=inst(c)});sel=0;render();
+</script></body></html>

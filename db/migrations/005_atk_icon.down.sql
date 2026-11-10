@@ -1,0 +1,1 @@
+ALTER TABLE cards DROP COLUMN IF EXISTS atk_icon;

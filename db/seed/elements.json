@@ -1,0 +1,88 @@
+{
+  "_note": "ข้อเสนอของ Claude ยังไม่ใช่กติกาจริง — แก้ได้ที่ไฟล์นี้ที่เดียว",
+  "multiplier_strong": 1.5,
+  "multiplier_weak": 0.75,
+  "elements": {
+    "fire": {
+      "th": "ไฟ",
+      "icon": "fire",
+      "strong": [
+        "nature",
+        "alchemy"
+      ]
+    },
+    "water": {
+      "th": "น้ำ",
+      "icon": "water",
+      "strong": [
+        "fire"
+      ]
+    },
+    "lightning": {
+      "th": "สายฟ้า",
+      "icon": "lightning",
+      "strong": [
+        "water"
+      ]
+    },
+    "earth": {
+      "th": "ดิน",
+      "icon": "rock_mp",
+      "strong": [
+        "lightning"
+      ]
+    },
+    "nature": {
+      "th": "ธรรมชาติ",
+      "icon": "leaf",
+      "strong": [
+        "earth"
+      ]
+    },
+    "poison": {
+      "th": "พิษ",
+      "icon": "drop_green",
+      "strong": [
+        "nature"
+      ]
+    },
+    "alchemy": {
+      "th": "เล่นแร่แปรธาตุ",
+      "icon": "potion_mortar",
+      "strong": [
+        "poison"
+      ]
+    },
+    "dark": {
+      "th": "มืด",
+      "icon": "moon",
+      "strong": [
+        "holy"
+      ]
+    },
+    "holy": {
+      "th": "แสง",
+      "icon": "sun",
+      "strong": [
+        "dark"
+      ]
+    },
+    "physical": {
+      "th": "กายภาพ",
+      "icon": "swords",
+      "strong": []
+    },
+    "neutral": {
+      "th": "กลาง",
+      "icon": "coin",
+      "strong": []
+    },
+    "wind": {
+      "th": "ลม",
+      "icon": "smoke",
+      "strong": [
+        "poison"
+      ]
+    }
+  }
+}
