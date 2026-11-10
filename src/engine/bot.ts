@@ -2,6 +2,7 @@
 import { legalActions, RULES, type Action, type Game, type Unit } from './game';
 const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk), def = (u: Unit) => Math.max(0, u.def + u.bonusDef);
 export function botPick(g: Game): Action {
+  if (g.pending) return g.pending.options.length ? { t: 'respond', back: g.pending.options[0] } : { t: 'pass' };
   const L = legalActions(g), me = g.players[g.active], en = g.players[1 - g.active];
   const pick = <T extends Action>(t: T['t']) => L.filter(a => a.t === t) as T[];
   const myUnits = me.field.map((u, i) => ({ u, i })).filter((x): x is { u: Unit; i: number } => !!x.u);

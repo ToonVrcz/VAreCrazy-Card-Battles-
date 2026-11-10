@@ -37,7 +37,7 @@ function deck(){const pick=a=>a[Math.floor(Math.random()*a.length)],all=[...new 
  const l15=DEFS.filter(x=>x.type==='character'&&x.level===15);while(d.length<40)d.push(pick(l15));return d.slice(0,40).map(x=>({...x}))}
 function view(c,extra={}){const d=BY[c.id]||c;return{chain_name:d.chainName||d.name,name:d.name,level:d.level||'',hp:d.hp,atk:d.atk,def:d.def,img:d.img,...extra}}
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
-function start(){G=E.createGame([deck(),deck()],Date.now()%1e9,Math.random()<.5?0:1,{fusionPairs:PAIRS});mode=null;sel=null;snap=take();render();if(G.active===1)bot()}
+function start(){G=E.createGame([deck(),deck()],Date.now()%1e9,Math.random()<.5?0:1,{fusionPairs:PAIRS,interactive:true});mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk,u.def+u.bonusDef]})});return m}
 function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
  [[0,'❤'],[1,'⚔'],[2,'🛡']].forEach(([k,ic])=>{const d=b[k]-a[k];if(d)fl(el,(d>0?'+':'')+d+ic,d>0?'#7dffa0':'#ff8a80')})});
@@ -54,7 +54,7 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
   else if(id==='SPL-010')en.back.forEach((b,i)=>b&&t.b1.push(i))}
  if(mode.k==='fuse'){me.hand.forEach((c,i)=>{if(i===mode.f||mode.picks.includes(i))return;if(mode.picks.length?E.fusionBonus(G,me.hand[mode.picks[0]],c):me.hand.some((o,j)=>j!==i&&j!==mode.f&&E.fusionBonus(G,c,o)))t.h.push(i)})}
  if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&t.f0.push(i));return t}
-function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active===0&&!G.winner&&!busy;
+function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${mode.sac.length}/${mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'เลือกตัวละครของคุณ':'เลือกช่องที่จะสลับ'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
  $('#app').innerHTML=`<div class="bar"><span>เทิร์น ${G.turn} · ${G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]}</span><button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button></div>
  <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">👾 ศัตรู LP ${en.lp}</span><span>มือ ${en.hand.length} · เด็ค ${en.deck.length} · สุสาน ${en.grave.length}</span></div>
@@ -67,8 +67,15 @@ function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active=
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
  ${showLog?`<div id="lg">${G.log.slice(-8).reverse().join('<br>')}</div>`:''}`;
  if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2><button id="again">เล่นใหม่</button></div>`;$('#again').onclick=()=>{$('#md').className='';start()}}
+ if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
  if(snap)floats(snap)}
-function go(a){try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();return true}
+const EV={on_attack:'ศัตรูโจมตี',on_attack_direct:'ศัตรูโจมตีตรงที่ผู้เล่น',on_summon:'ศัตรูเรียกตัวละคร',on_evolve:'ศัตรูกำลังวิวัฒนาการ',turn_start:'เทิร์นของศัตรูเริ่ม',turn_end:'เทิร์นของศัตรูกำลังจบ',on_destroyed:'ตัวละครของคุณกำลังจะถูกทำลาย',to_graveyard:'ตัวละครของคุณลงสุสาน'};
+function respModal(){const P=G.pending,b=P.base,ac=P.action;let more='';
+ if(ac.t==='attack'){const a=b.players[b.active].field[ac.from],t=ac.to==='player'?'ผู้เล่น':b.players[1-b.active].field[ac.to]?.card.name;more=`<p>${a?.card.name||''} → ${t||''}</p>`}
+ $('#md').className='on';$('#md').innerHTML=`<div class="box resp" style="text-align:center"><h3 style="margin:4px 0">⚡ ตอบโต้ด้วยกับดัก?</h3><p>${EV[P.event]||P.event}</p>${more}
+ <div class="acts">${P.options.map(i=>{const c=G.players[0].back[i].card;return`<button data-r="${i}" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px"><img src="${img(c)}" style="width:72px;border-radius:5px"><span style="font-size:11px">${c.name}</span></button>`}).join('')}<button class="r" data-r="-1">ผ่าน</button></div></div>`;
+ document.querySelectorAll('[data-r]').forEach(el=>el.onclick=()=>{closeM();go(+el.dataset.r<0?{t:'pass'}:{t:'respond',back:+el.dataset.r})})}
+function go(a){try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
 function detail(c,z,i){const d=BY[c.id]||c,card=view(c,{frame:'/assets/frame/frame.webp'});VCZ.ref.frame='/assets/frame/frame.webp';
  const me=G.players[0],can=G.active===0&&!busy&&!G.winner,main=G.phase==='main',bt=G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
@@ -85,8 +92,8 @@ function closeM(){$('#md').className='';$('#md').innerHTML=''}
 function castStart(h,id){const need=['SPL-001','SPL-002','SPL-003','SPL-004','SPL-007','SPL-009','SPL-010'].includes(id);
  if(!need){go({t:'cast',hand:h});return}mode={k:'cast',hand:h,id};render()}
 document.addEventListener('click',ev=>{const el=ev.target.closest('[data-z]');
- if(ev.target.id==='cx'){mode=null;render();return}if(ev.target.id==='nx'){go({t:'next'});if(G.active===1)bot();return}if(ev.target.id==='lgb'){showLog=!showLog;render();return}
- if(!el||busy)return;const z=el.dataset.z,s=+el.dataset.s,i=+el.dataset.i;
+ if(ev.target.id==='cx'){mode=null;render();return}if(ev.target.id==='nx'){go({t:'next'});return}if(ev.target.id==='lgb'){showLog=!showLog;render();return}
+ if(!el||busy||G.pending)return;const z=el.dataset.z,s=+el.dataset.s,i=+el.dataset.i;
  if(mode){const T=targets(),k=mode.k;
   if(k==='attack'){if(z==='f'&&s===1&&T.f1.includes(i))go({t:'attack',from:mode.from,to:i});else if(z==='lp'&&s===1&&T.lp1)go({t:'attack',from:mode.from,to:'player'});return}
   if(k==='fuse'){if(z==='h'&&s===0&&T.h.includes(i)){mode.picks.push(i);if(mode.picks.length===2)go({t:'fuse',fusion:mode.f,top:mode.picks[0],bottom:mode.picks[1],slot:Math.max(0,G.players[0].field.findIndex(x=>!x))});else render()}return}
@@ -96,6 +103,10 @@ document.addEventListener('click',ev=>{const el=ev.target.closest('[data-z]');
  if(z==='h'){detail(G.players[0].hand[i],'h',i)}
  else if(z==='f'){const u=G.players[s].field[i];if(u)detail(u.card,s===0?'f':'x',i)}
  else if(z==='b'&&s===0){const b=G.players[0].back[i];if(b)detail(b.card,'x',i)}});
-async function bot(){busy=true;render();let n=0;while(G.active===1&&G.winner===null&&n++<40){await sleep(650);const a=E.botPick(G);try{G=E.act(G,a)}catch(e){G=E.act(G,{t:'next'})}render()}busy=false;render()}
+let driving=false;
+async function drive(){if(driving)return;driving=true;busy=true;render();let n=0;
+ while(G.winner===null&&n++<80){const human=G.pending?G.pending.responder===0:G.active===0;if(human)break;await sleep(650);
+  try{G=E.act(G,E.botPick(G))}catch(e){try{G=E.act(G,{t:G.pending?'pass':'next'})}catch(e2){break}}render()}
+ driving=false;busy=false;render()}
 start();
 </script></body></html>

@@ -1,6 +1,8 @@
 // Game engine v1 — pure rules, no UI. Rules come from the agreed/proposed game_rules (LP 100, 4 phases, ATK-DEF min 1 x element,
 // counter-attack, first player can't attack on turn 1, spells main-phase only, traps face-down & usable from next turn).
-// Not yet included: Fusion stacking, interactive chain (traps auto-resolve, first matching, one per event), item cards.
+// Chain window: with `interactive: true`, when a face-down trap could answer an event the game pauses (g.pending) and the trap's owner
+// answers with {t:'respond', back} or {t:'pass'}. Implemented by replaying the original action with the collected answers (deterministic, seeded).
+// With `interactive` off (default) the first matching trap fires automatically. Item cards are not included.
 import { elementMultiplier, evolveHp, type Element } from './combat';
 
 export type CardType = 'character' | 'evolution' | 'fusion' | 'spell' | 'trap' | 'item';
@@ -11,7 +13,8 @@ export class EngineError extends Error {}
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
 export interface Unit { fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
-export interface Game { players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number } }
+export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[] }
+export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number } }
 export type Action =
   | { t: 'summon'; hand: number; slot: number }
   | { t: 'evolve'; slot: number; evo: number; form: number; sacrifice: number[] }
@@ -19,6 +22,8 @@ export type Action =
   | { t: 'fuse'; fusion: number; top: number; bottom: number; slot: number }
   | { t: 'set'; hand: number }
   | { t: 'attack'; from: number; to: number | 'player' }
+  | { t: 'respond'; back: number }
+  | { t: 'pass' }
   | { t: 'next' };
 
 const rnd = (g: Game) => { let t = (g.seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -31,8 +36,8 @@ const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
-export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number } = {}): Game {
-  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 } };
+export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean } = {}): Game {
+  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 } };
   for (const p of g.players) { for (let i = p.deck.length - 1; i > 0; i--) { const j = Math.floor(rnd(g) * (i + 1)); [p.deck[i], p.deck[j]] = [p.deck[j], p.deck[i]]; } p.hand = p.deck.splice(0, RULES.startHand); }
   return g;
 }
@@ -42,15 +47,25 @@ function draw(g: Game, pi: 0 | 1, loseIfEmpty = false) {
   p.hand.push(p.deck.shift()!); return true;
 }
 const TRAP: Record<string, string> = { 'TRP-001': 'on_attack', 'TRP-002': 'on_attack', 'TRP-003': 'on_attack_direct', 'TRP-009': 'on_attack', 'TRP-004': 'on_summon', 'TRP-005': 'on_evolve', 'TRP-006': 'turn_end', 'TRP-007': 'turn_start', 'TRP-008': 'on_destroyed', 'TRP-010': 'to_graveyard' };
-/** Fire the first usable face-down trap of `owner` for this event (usable only from the turn after it was set). */
+class NeedAnswer extends Error { constructor(public responder: 0 | 1, public event: string, public options: number[]) { super('need answer'); } }
+let CTX: { answers: number[]; i: number } = { answers: [], i: 0 };
+/** Trap slots of `owner` that could answer this event (usable only from the turn after they were set). */
+export function trapOptions(g: Game, owner: 0 | 1, ev: string): number[] {
+  const out: number[] = [];
+  g.players[owner].back.forEach((t, i) => { if (!t || t.setTurn >= g.turn) return; const k = TRAP[t.card.id]; if (k === ev || (ev === 'on_attack_direct' && k === 'on_attack')) out.push(i); });
+  return out;
+}
+/** Fire a face-down trap of `owner` for this event: first match automatically, or the owner's choice in interactive games. */
 function fire(g: Game, owner: 0 | 1, ev: string): string | null {
-  const p = g.players[owner];
-  for (let i = 0; i < p.back.length; i++) {
-    const t = p.back[i]; if (!t || t.setTurn >= g.turn) continue;
-    const k = TRAP[t.card.id]; if (!(k === ev || (ev === 'on_attack_direct' && k === 'on_attack'))) continue;
-    p.back[i] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); return t.card.id;
+  const opts = trapOptions(g, owner, ev); if (!opts.length) return null;
+  let pick = opts[0];
+  if (g.interactive) {
+    if (CTX.i >= CTX.answers.length) throw new NeedAnswer(owner, ev, opts);
+    const ans = CTX.answers[CTX.i++]; if (ans === -1) return null;
+    if (!opts.includes(ans)) fail('เลือกกับดักไม่ถูกต้อง'); pick = ans;
   }
-  return null;
+  const p = g.players[owner], t = p.back[pick]!;
+  p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); return t.card.id;
 }
 function toGrave(g: Game, pi: 0 | 1, u: Unit) { g.players[pi].grave.push(...(u.fused ?? [u.card])); }
 /** Bonus for fusing two characters, or null if their chains are not ticked as a Fusion pair (highest bonus per stat wins). */
@@ -87,13 +102,32 @@ function endTurn(g: Game) {
 
 export function act(g0: Game, a: Action): Game {
   if (g0.winner !== null) fail('เกมจบแล้ว');
-  const g = structuredClone(g0), pi = g.active, opp = other(pi), me = g.players[pi], en = g.players[opp];
+  if (g0.pending) {
+    if (a.t !== 'respond' && a.t !== 'pass') fail('รอการตอบโต้ก่อน');
+    const pd = g0.pending, base = structuredClone(pd.base);
+    return run(base, pd.action, [...pd.answers, a.t === 'pass' ? -1 : (a as { back: number }).back]);
+  }
+  if (a.t === 'respond' || a.t === 'pass') fail('ไม่มีอะไรให้ตอบโต้');
+  return run(g0, a, []);
+}
+function run(g0: Game, a: Action, answers: number[]): Game {
+  CTX = { answers, i: 0 };
+  try { return step(structuredClone(g0), a); }
+  catch (e) {
+    if (!(e instanceof NeedAnswer)) throw e;
+    const out = structuredClone(g0); out.pending = { responder: e.responder, event: e.event, options: e.options, base: structuredClone(g0), action: a, answers };
+    return out;
+  }
+}
+function step(g: Game, a: Action): Game {
+  const pi = g.active, opp = other(pi), me = g.players[pi], en = g.players[opp];
   const card = (i: number) => me.hand[i] ?? fail('ไม่พบการ์ดบนมือ');
   const mine = (s: number) => me.field[s] ?? fail('ไม่มีตัวละครในช่องนั้น');
   const theirs = (s: number) => en.field[s] ?? fail('ไม่มีตัวละครฝ่ายตรงข้ามในช่องนั้น');
   const main = () => { if (g.phase !== 'main') fail('ทำได้เฉพาะเฟสหลัก'); };
   const sendTo = (c: CardDef) => me.grave.push(c);
   switch (a.t) {
+    case 'respond': case 'pass': return fail('ไม่มีอะไรให้ตอบโต้');
     case 'next':
       if (g.phase === 'main') g.phase = 'battle'; else endTurn(g);
       return g;
@@ -182,6 +216,7 @@ export function act(g0: Game, a: Action): Game {
 
 export function legalActions(g: Game): Action[] {
   if (g.winner !== null) return [];
+  if (g.pending) return [...g.pending.options.map(back => ({ t: 'respond', back }) as Action), { t: 'pass' }];
   const me = g.players[g.active], en = g.players[other(g.active)], out: Action[] = [{ t: 'next' }];
   if (g.phase === 'main') {
     const slot = me.field.findIndex(x => !x);
