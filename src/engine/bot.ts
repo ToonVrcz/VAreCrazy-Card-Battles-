@@ -8,6 +8,7 @@ export function botPick(g: Game): Action {
   const enUnits = en.field.map((u, i) => ({ u, i })).filter((x): x is { u: Unit; i: number } => !!x.u);
   if (g.phase === 'main') {
     const ev = pick('evolve')[0]; if (ev) return ev;
+    const fu = pick('fuse')[0]; if (fu) return fu;
     const su = pick<Extract<Action, { t: 'summon' }>>('summon').sort((a, b) => (me.hand[b.hand].atk ?? 0) - (me.hand[a.hand].atk ?? 0))[0]; if (su) return su;
     const st = pick('set')[0]; if (st) return st;
     for (const a of pick<Extract<Action, { t: 'cast' }>>('cast')) {

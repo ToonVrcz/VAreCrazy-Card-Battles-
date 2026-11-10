@@ -8,13 +8,15 @@ export interface CardDef { id: string; name: string; type: CardType; level: numb
 export const RULES = { lp: 100, handMax: 5, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, poison: { dmg: 5, turns: 3 } };
 export class EngineError extends Error {}
 
-export interface Unit { uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
+export interface Unit { fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
-export interface Game { players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number }
+export interface Game { players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number } }
 export type Action =
   | { t: 'summon'; hand: number; slot: number }
   | { t: 'evolve'; slot: number; evo: number; form: number; sacrifice: number[] }
   | { t: 'cast'; hand: number; target?: { slot?: number; slot2?: number; grave?: number } }
+  | { t: 'fuse'; fusion: number; top: number; bottom: number; slot: number }
   | { t: 'set'; hand: number }
   | { t: 'attack'; from: number; to: number | 'player' }
   | { t: 'next' };
@@ -29,8 +31,8 @@ const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
-export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0): Game {
-  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0 };
+export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number } = {}): Game {
+  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 } };
   for (const p of g.players) { for (let i = p.deck.length - 1; i > 0; i--) { const j = Math.floor(rnd(g) * (i + 1)); [p.deck[i], p.deck[j]] = [p.deck[j], p.deck[i]]; } p.hand = p.deck.splice(0, RULES.startHand); }
   return g;
 }
@@ -50,7 +52,13 @@ function fire(g: Game, owner: 0 | 1, ev: string): string | null {
   }
   return null;
 }
-function toGrave(g: Game, pi: 0 | 1, u: Unit) { g.players[pi].grave.push(u.card); }
+function toGrave(g: Game, pi: 0 | 1, u: Unit) { g.players[pi].grave.push(...(u.fused ?? [u.card])); }
+/** Bonus for fusing two characters, or null if their chains are not ticked as a Fusion pair (highest bonus per stat wins). */
+export function fusionBonus(g: Game, x: CardDef, y: CardDef) {
+  if (x.type !== 'character' || y.type !== 'character' || !x.chain || !y.chain || x.chain === y.chain) return null;
+  const m = g.fusion.pairs.filter(p => (p.a === x.chain && p.b === y.chain) || (p.a === y.chain && p.b === x.chain)); if (!m.length) return null;
+  return { hp: Math.max(...m.map(p => p.hp)), atk: Math.max(...m.map(p => p.atk)), def: Math.max(...m.map(p => p.def)) };
+}
 function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number) {
   const p = g.players[pi], u = p.field[slot]; if (!u) return;
   u.hp -= amount;
@@ -99,7 +107,7 @@ export function act(g0: Game, a: Action): Game {
     }
     case 'evolve': {
       main(); if (me.evolved) fail('วิวัฒนาการได้ 1 ครั้งต่อเทิร์น');
-      const u = mine(a.slot), evo = card(a.evo), form = card(a.form);
+      const u = mine(a.slot), evo = card(a.evo), form = card(a.form); if (u.fused) fail('ตัวละครที่ฟิวชั่นแล้ววิวัฒนาการไม่ได้');
       if (evo.type !== 'evolution') fail('ต้องใช้การ์ดวิวัฒนาการ');
       const next = ({ 15: 40, 40: 70, 70: 99 } as Record<number, number>)[u.card.level ?? 0];
       if (form.type !== 'character' || form.chain !== u.card.chain || form.level !== next) fail('ร่างใหม่ต้องเป็นขั้นถัดไปของสายเดียวกัน');
@@ -110,6 +118,19 @@ export function act(g0: Game, a: Action): Game {
       if (fire(g, opp, 'on_evolve')) { me.hand.push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
       const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
+      return g;
+    }
+    case 'fuse': {
+      main(); const fc = card(a.fusion), top = card(a.top), bot = card(a.bottom);
+      if (fc.type !== 'fusion') fail('ต้องใช้การ์ดฟิวชั่น'); if (me.summoned) fail('ฟิวชั่นนับเป็นการเรียก 1 ใบต่อเทิร์น');
+      if (new Set([a.fusion, a.top, a.bottom]).size !== 3) fail('ต้องเลือกการ์ดคนละใบ');
+      const b = fusionBonus(g, top, bot) ?? fail('การ์ดสองใบนี้ไม่ได้ติ๊กเป็นคู่ Fusion กัน');
+      if (a.slot < 0 || a.slot >= RULES.fieldSlots || me.field[a.slot]) fail('ช่องไม่ว่าง');
+      const f = g.fusion, mix = (k: 'hp' | 'atk' | 'def') => Math.floor((top[k] ?? 0) * f.topPct / 100) + Math.floor((bot[k] ?? 0) * f.bottomPct / 100) + b[k];
+      [a.fusion, a.top, a.bottom].sort((x, y) => y - x).forEach(i => me.hand.splice(i, 1)); sendTo(fc);
+      const u = mk(g, top, Math.max(1, mix('hp'))); u.maxHp = u.hp; u.atk = mix('atk'); u.def = mix('def'); u.fused = [top, bot];
+      me.field[a.slot] = u; me.summoned = true; log(g, `ฟิวชั่น ${top.name} + ${bot.name}`);
+      if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
       return g;
     }
     case 'set': {
@@ -149,7 +170,7 @@ export function act(g0: Game, a: Action): Game {
       const tgt = direct ? null : theirs(a.to as number); u.attacked = true;
       const t = fire(g, opp, direct ? 'on_attack_direct' : 'on_attack');
       if (t === 'TRP-001') { log(g, 'การโจมตีถูกยกเลิก'); return g; }
-      if (t === 'TRP-009') { me.field[a.from] = null; if (me.hand.length < RULES.handMax) me.hand.push(u.card); else toGrave(g, pi, u); return g; }
+      if (t === 'TRP-009') { me.field[a.from] = null; for (const c of u.fused ?? [u.card]) { if (me.hand.length < RULES.handMax) me.hand.push(c); else me.grave.push(c); } return g; }
       if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2)); log(g, `${u.card.name} โจมตีตรง`); return g; }
       const d1 = hit(u, tgt!); damageUnit(g, opp, a.to as number, d1); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
       if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2));
@@ -167,6 +188,7 @@ export function legalActions(g: Game): Action[] {
     me.hand.forEach((c, h) => {
       if (c.type === 'character' && c.level === 15 && !me.summoned && slot >= 0) out.push({ t: 'summon', hand: h, slot });
       if (c.type === 'trap' && me.back.some(x => !x)) out.push({ t: 'set', hand: h });
+      if (c.type === 'fusion' && !me.summoned && slot >= 0) { let best: Action | null = null, bs = -1; me.hand.forEach((x, i) => me.hand.forEach((y, j) => { if (i === j || i === h || j === h || !fusionBonus(g, x, y)) return; const sc = (x.atk ?? 0) * 2 + (x.hp ?? 0) + (y.atk ?? 0) + (y.hp ?? 0) / 2; if (sc > bs) { bs = sc; best = { t: 'fuse', fusion: h, top: i, bottom: j, slot }; } })); if (best) out.push(best); }
       if (c.type === 'spell') {
         const ms = me.field.map((u, i) => u ? i : -1).filter(i => i >= 0), es = en.field.map((u, i) => u ? i : -1).filter(i => i >= 0);
         if (['SPL-002', 'SPL-003', 'SPL-004'].includes(c.id)) ms.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));

@@ -146,3 +146,30 @@ describe('bot', () => {
     expect(fin).toBe(100);
   }, 120000);
 });
+
+describe('engine: fusion', () => {
+  const pairs = [{ a: 'A', b: 'B', hp: 20, atk: 10, def: 0 }];
+  const mkG = (hand: CardDef[]) => { const g = createGame([filler(), filler()], 3, 0, { fusionPairs: pairs }); g.players[0].hand = hand; return g; };
+  const FUS = (): CardDef => ({ id: 'FUS-001', name: 'fusion', type: 'fusion', level: null, chain: null, hp: null, atk: null, def: 0, element: null });
+  it('stacks two ticked characters into one slot: top 100% + bottom 50% + pair bonus; counts as the summon', () => {
+    let g = mkG([FUS(), ch('A-15', 15, { hp: 40, atk: 20, def: 4 }), ch('B-15', 15, { hp: 30, atk: 10, def: 2 }), ch('C-15', 15)]);
+    g = act(g, { t: 'fuse', fusion: 0, top: 1, bottom: 2, slot: 3 });
+    const u = g.players[0].field[3]!;
+    expect([u.hp, u.maxHp, u.atk, u.def]).toEqual([40 + 15 + 20, 75, 20 + 5 + 10, 4 + 1]);
+    expect(u.fused!.map(c => c.id)).toEqual(['A-15', 'B-15']); expect(g.players[0].hand.map(c => c.id)).toEqual(['C-15']); expect(g.players[0].grave[0].id).toBe('FUS-001');
+    expect(err(() => act(g, { t: 'summon', hand: 0, slot: 0 }))).toMatch(/1 ใบต่อเทิร์น/);
+  });
+  it('rejects pairs that are not ticked, and fused units cannot evolve; both cards go to the graveyard when destroyed', () => {
+    let g = mkG([FUS(), ch('A-15', 15), ch('C-15', 15), ch('B-15', 15)]);
+    expect(err(() => act(g, { t: 'fuse', fusion: 0, top: 1, bottom: 2, slot: 0 }))).toMatch(/คู่ Fusion/);
+    g = act(g, { t: 'fuse', fusion: 0, top: 1, bottom: 3, slot: 0 }); g.players[0].hand.push(sp('EVO-001'), ch('A-40', 40));
+    expect(err(() => act(g, { t: 'evolve', slot: 0, evo: g.players[0].hand.length - 2, form: g.players[0].hand.length - 1, sacrifice: [] }))).toMatch(/ฟิวชั่นแล้ว/);
+    g.players[1].hand = [sp('SPL-001')]; g.players[0].field[0]!.hp = 1;
+    g = skipTurn(g); g = act(g, { t: 'cast', hand: 0, target: { slot: 0 } });
+    expect(g.players[0].grave.map(c => c.id)).toEqual(expect.arrayContaining(['A-15', 'B-15']));
+  });
+  it('bot uses fusion when it can', () => {
+    const g = mkG([FUS(), ch('A-15', 15), ch('B-15', 15)]);
+    expect(botPick(g).t).toBe('fuse');
+  });
+});
