@@ -16,10 +16,11 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
     let a: RegExpMatchArray | null;
       const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');
       // Public online-play endpoints (players are identified by a secret room token, not an admin login)
-      if (path === '/api/play/rooms' && m === 'POST') return send(res, 201, await new Rooms(svc).create());
-      if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act))?$/))) {
+      if (path === '/api/play/rooms' && m === 'POST') return send(res, 201, await new Rooms(svc).create(JSON.parse((await body(req)).toString() || '{}').deck));
+      if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act|leave))?$/))) {
         const rooms = new Rooms(svc);
-        if (a[2] === 'join' && m === 'POST') return send(res, 200, await rooms.join(a[1]));
+        if (a[2] === 'join' && m === 'POST') return send(res, 200, await rooms.join(a[1], JSON.parse((await body(req)).toString() || '{}').deck));
+        if (a[2] === 'leave' && m === 'POST') return send(res, 200, await rooms.leave(a[1], token));
         if (a[2] === 'act' && m === 'POST') return send(res, 200, await rooms.act(a[1], token, JSON.parse((await body(req)).toString() || '{}').action));
         if (!a[2] && m === 'GET') return send(res, 200, await rooms.view(a[1], token, Number(url.searchParams.get('since') ?? -1)));
       }

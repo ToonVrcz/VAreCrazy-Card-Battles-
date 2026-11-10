@@ -31,3 +31,20 @@ export function viewFor(g: Game, seat: 0 | 1) {
   v.log = g.log.slice(-30);
   return v;
 }
+
+/** Custom deck rules (server is the authority; the play screen mirrors them for friendly messages). */
+export const DECK_RULES = { size: 40, maxCopies: 3, minLv15: 3 } as const;
+export function validateDeck(ids: unknown, byId: Map<string, CardDef>): string | null {
+  if (!Array.isArray(ids) || ids.some(x => typeof x !== 'string')) return 'รูปแบบเด็คไม่ถูกต้อง';
+  if (ids.length !== DECK_RULES.size) return `เด็คต้องมี ${DECK_RULES.size} ใบ (ตอนนี้ ${ids.length})`;
+  const n = new Map<string, number>();
+  for (const id of ids as string[]) {
+    if (!byId.has(id)) return `ไม่พบการ์ด ${id} (อาจถูกถอดออกแล้ว)`;
+    const k = (n.get(id) ?? 0) + 1; n.set(id, k);
+    if (k > DECK_RULES.maxCopies) return `${byId.get(id)!.name} ใส่ได้ไม่เกิน ${DECK_RULES.maxCopies} ใบ`;
+  }
+  const l15 = (ids as string[]).filter(id => { const c = byId.get(id)!; return c.type === 'character' && c.level === 15; }).length;
+  if (l15 < DECK_RULES.minLv15) return `ต้องมีตัวละคร Lv.15 อย่างน้อย ${DECK_RULES.minLv15} ใบ (ตอนนี้ ${l15})`;
+  return null;
+}
+export const deckFromIds = (ids: string[], byId: Map<string, CardDef>): CardDef[] => ids.map(id => ({ ...byId.get(id)! }));

@@ -3,6 +3,7 @@
 // Content (the card pool + fusion pairs) arrives through ctx.content, as the platform does for other games' word libraries.
 import { createGame, act as engineAct, EngineError, type Action, type CardDef, type FusionPair, type Game } from '../engine/game.ts';
 import { buildDeck, viewFor } from '../engine/deck-view.ts';
+import { autoEndTurn } from '../engine/turn-timer.ts';
 import type { GameModule, ModuleSeat, ModuleCtx, ActResult, ModuleOutcome } from './contract.ts';
 
 export interface CardBattleContent { pool: CardDef[]; pairs: FusionPair[] }
@@ -61,10 +62,7 @@ export const cardBattleModule: GameModule<CardBattleState, CardBattleView, CardB
     if (s.deadline === null || ctx.now < s.deadline) return false;
     const m = mover(s.game);
     if (++s.misses[m] >= s.settings.maxMisses) { s.forfeit = m; s.deadline = null; return true; }
-    try {
-      if (s.game.pending) s.game = engineAct(s.game, { t: 'pass' });
-      else { const turn = s.game.turn; for (let i = 0; i < 3 && s.game.turn === turn && s.game.winner === null && !s.game.pending; i++) s.game = engineAct(s.game, { t: 'next' }); }   // main -> battle -> next turn
-    } catch { /* engine refused: just restart the clock */ }
+    try { s.game = autoEndTurn(s.game); } catch { /* engine refused: just restart the clock */ }
     s.deadline = done(s) ? null : ctx.now + s.settings.turnSeconds * 1000;
     return true;
   },
