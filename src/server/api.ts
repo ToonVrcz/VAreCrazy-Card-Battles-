@@ -1,5 +1,6 @@
 import { CardService, AppError, can } from './service.ts';
 import { GameData } from './gamedata.ts';
+import { Rooms } from './rooms.ts';
 
 const need = (u: any, p: string) => { if (!can(u, p)) throw new AppError(403, 'ไม่มีสิทธิ์: ' + p); };
 export interface Rq { method: string; path: string; query: URLSearchParams; headers: Record<string, string | undefined>; body: () => Promise<Uint8Array | Buffer> }
@@ -14,6 +15,14 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
   try {
     let a: RegExpMatchArray | null;
       const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');
+      // Public online-play endpoints (players are identified by a secret room token, not an admin login)
+      if (path === '/api/play/rooms' && m === 'POST') return send(res, 201, await new Rooms(svc).create());
+      if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act))?$/))) {
+        const rooms = new Rooms(svc);
+        if (a[2] === 'join' && m === 'POST') return send(res, 200, await rooms.join(a[1]));
+        if (a[2] === 'act' && m === 'POST') return send(res, 200, await rooms.act(a[1], token, JSON.parse((await body(req)).toString() || '{}').action));
+        if (!a[2] && m === 'GET') return send(res, 200, await rooms.view(a[1], token, Number(url.searchParams.get('since') ?? -1)));
+      }
       if (path === '/api/login' && m === 'POST') {
         const b = JSON.parse((await body(req)).toString() || '{}');
         return send(res, 200, await svc.login(String(b.email ?? ''), String(b.password ?? '')));
