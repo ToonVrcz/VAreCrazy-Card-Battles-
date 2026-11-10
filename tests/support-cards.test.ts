@@ -19,3 +19,21 @@ describe('Evolution Cards + Fusion Spells draft set', () => {
     expect(r.errors).toEqual([]); expect(r.created).toBe(20);
   });
 });
+
+describe('deleteCard', () => {
+  it('deletes drafts, blocks parents and non-drafts', async () => {
+    const db = new PGlite(); await migrateUp(db);
+    const svc = new CardService(db);
+    await svc.createUser('a@local', 'admin12345', 'super_admin');
+    await svc.createUser('v@local', 'viewer1234', 'viewer');
+    const u = (await svc.login('a@local', 'admin12345')).user;
+    const v = (await svc.login('v@local', 'viewer1234')).user;
+    const a = await svc.saveCard(u, { character_id: 'T-015', name: 'A', card_type: 'character', level: 15, hp: 10, atk: 5, chain_key: 't' });
+    const b = await svc.saveCard(u, { character_id: 'T-040', name: 'B', card_type: 'character', level: 40, hp: 20, atk: 9, chain_key: 't', evolves_from: 'T-015' });
+    await expect(svc.deleteCard(v, b.id)).rejects.toThrow('ไม่มีสิทธิ์');
+    await expect(svc.deleteCard(u, a.id)).rejects.toThrow('วิวัฒนาการมาจากใบนี้');
+    expect(await svc.deleteCard(u, b.id)).toEqual({ ok: true });
+    expect(await svc.deleteCard(u, a.id)).toEqual({ ok: true });
+    await expect(svc.deleteCard(u, a.id)).rejects.toThrow('ไม่พบการ์ด');
+  });
+});

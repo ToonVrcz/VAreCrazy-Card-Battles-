@@ -262,6 +262,21 @@ export class CardService {
     }
   }
 
+  /** Removes a Draft card (effects/meta cascade). Non-drafts must be withdrawn to Draft first. */
+  async deleteCard(u: any, id: string) {
+    need(u, 'write');
+    const c = (await this.db.query<any>('SELECT id,status,character_id FROM cards WHERE id=$1', [id])).rows[0];
+    if (!c) throw new AppError(404, 'ไม่พบการ์ด');
+    if (c.status !== 'draft') throw new AppError(409, 'ลบได้เฉพาะการ์ดสถานะ Draft (ถอนกลับเป็น Draft ก่อน)');
+    const ref = (await this.db.query<any>('SELECT character_id FROM cards WHERE evolves_from=$1', [id])).rows;
+    if (ref.length) throw new AppError(409, `ลบไม่ได้: ${ref.map(r => r.character_id).join(', ')} วิวัฒนาการมาจากใบนี้ (ลบหรือแก้ใบนั้นก่อน)`);
+    const fr = (await this.db.query<any>('SELECT name FROM fusion_recipes WHERE result_card_id=$1', [id])).rows;
+    if (fr.length) throw new AppError(409, `ลบไม่ได้: เป็นผลลัพธ์ของสูตร Fusion ${fr.map(r => r.name).join(', ')}`);
+    await this.db.query('DELETE FROM cards WHERE id=$1', [id]);
+    await this.audit(u, 'delete', id, { character_id: c.character_id });
+    return { ok: true };
+  }
+
   async transition(u: User, id: string, to: string) {
     const cur = (await this.db.query<any>(`SELECT status,character_id FROM cards WHERE id=$1`, [id])).rows[0];
     if (!cur) throw new AppError(404, 'ไม่พบการ์ด');

@@ -26,6 +26,7 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       if ((a = path.match(/^\/api\/cards\/([\w-]+)$/))) {
         if (m === 'GET') return send(res, 200, await svc.getCard(u, a[1]));
         if (m === 'PUT') return send(res, 200, await svc.saveCard(u, JSON.parse((await body(req)).toString()), a[1]));
+        if (m === 'DELETE') return send(res, 200, await svc.deleteCard(u, a[1]));
       }
       if ((a = path.match(/^\/api\/cards\/([\w-]+)\/status$/)) && m === 'POST')
         return send(res, 200, await svc.transition(u, a[1], JSON.parse((await body(req)).toString()).to));
