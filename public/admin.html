@@ -44,7 +44,7 @@ async function list(){
  ${can('write')?'<button class="pri" id="new">+ การ์ดใหม่</button>':''}</div>
  <div id="items">${cs.map(c=>`<div class="card" data-id="${c.id}"><img src="${img(c)}" alt=""><div><div class="t">${esc(c.chain_name?c.chain_name+" · ":"")}${esc(c.name)}<span class="badge ${c.status}">${c.status}</span></div>
  <div class="s">${esc(c.character_id)} · Lv.${c.level??'-'} · ${c.card_type}</div><div class="s">❤ ${c.hp??'-'} 🔥 ${c.atk??'-'} 🛡 ${c.def??0}${c.has_combo?' · ⚡combo':''}</div></div></div>`).join('')||'<p>ยังไม่มีการ์ด</p>'}</div>
- <h4>นำเข้า / ส่งออก</h4><div class="row"><button id="xj">ส่งออก JSON</button><button id="xc">ส่งออก CSV</button>${can('import')?'<input type="file" id="imp" accept=".json,.csv"><button id="dry">ตรวจไฟล์ (ไม่บันทึก)</button><button class="pri" id="doimp">นำเข้า</button>':''}</div><pre id="ir" hidden></pre>
+ <h4>นำเข้า / ส่งออก</h4><div class="row"><button id="xj">ส่งออก JSON</button><button id="xc">ส่งออก CSV</button>${can('import')?'<input type="file" id="imp" accept=".json,.csv"><button id="dry">ตรวจไฟล์ (ไม่บันทึก)</button><button class="pri" id="doimp">นำเข้า</button><button id="seed">นำเข้าการ์ดตัวอย่าง 48 ใบ</button>':''}</div><pre id="ir" hidden></pre>
  <h4>ประวัติการแก้ไข</h4><table id="au"></table>`;
  $('#q').onchange=e=>{filter.q=e.target.value;list()};$('#st').onchange=e=>{filter.status=e.target.value;list()};
  if($('#new'))$('#new').onclick=()=>edit();
@@ -54,7 +54,7 @@ async function list(){
  const run=async dry=>{const f=$('#imp').files[0];if(!f)return toast('เลือกไฟล์ก่อน');const t=await f.text();
   try{const r=await api('/import'+(dry?'?dry=1':''),{method:'POST',headers:{'content-type':f.name.endsWith('.csv')?'text/csv':'application/json'},body:t});
    $('#ir').hidden=false;$('#ir').textContent=JSON.stringify(r,null,2);toast(r.ok?(dry?'ไฟล์ถูกต้อง':'นำเข้าแล้ว (ทั้งหมดเป็น Draft)'):'มีแถวผิด ไม่มีการบันทึก',r.ok);if(r.ok&&!dry)setTimeout(list,900)}catch(e){toast(e.message)}};
- if($('#dry')){$('#dry').onclick=()=>run(true);$('#doimp').onclick=()=>run(false)}
+ if($('#dry')){$('#dry').onclick=()=>run(true);$('#doimp').onclick=()=>run(false);$('#seed').onclick=async()=>{try{const t=await (await fetch('/db/seed/toon-cards.json')).text();const r=await api('/import',{method:'POST',headers:{'content-type':'application/json'},body:t});$('#ir').hidden=false;$('#ir').textContent=JSON.stringify(r,null,2);toast(r.ok?'นำเข้า '+r.created+' ใบ (Draft)':'มีแถวผิด ไม่มีการบันทึก',r.ok);if(r.ok)setTimeout(list,900)}catch(e){toast(e.message)}}}
  api('/audit').then(a=>$('#au').innerHTML=a.slice(0,10).map(r=>`<tr><td>${new Date(r.at).toLocaleString('th-TH')}</td><td>${esc(r.actor)}</td><td>${esc(r.action)}</td></tr>`).join(''))}
 async function edit(id){
  cur=id?await api('/cards/'+id):{card_type:'character',def:0,has_combo:false,effects:[]};
