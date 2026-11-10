@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+(globalThis as any).Buffer ??= Buffer; // Supabase Edge (Deno) has no global Buffer
 // Supabase Edge Function entry (Deno). Bundled with esbuild -> single file.
 import postgres from 'postgres';
 import { CardService } from '../server/service.ts';
