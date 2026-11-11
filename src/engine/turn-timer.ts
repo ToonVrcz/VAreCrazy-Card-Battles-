@@ -3,7 +3,7 @@ import { act, type Game } from './game.ts';
 
 export const TIMING = { turnMs: 90_000, maxMisses: 3, absentMs: 120_000, seenRefreshMs: 10_000 } as const;
 export type EndReason = 'timeout' | 'absent' | 'left';
-export interface RoomMeta { deadline: number | null; misses: [number, number]; seen: [number | null, number | null]; endReason?: EndReason | null; forfeit?: 0 | 1 | null; rewarded?: boolean; rewards?: ({ points: number; vrcoin: number; matches: number } | null)[] }
+export interface RoomMeta { deadline: number | null; misses: [number, number]; seen: [number | null, number | null]; endReason?: EndReason | null; forfeit?: 0 | 1 | null; rewarded?: boolean; matchId?: string; startedAt?: number; historyRecorded?: boolean; historyError?: string; rewards?: ({ points: number; vrcoin: number; matches: number } | null)[] }
 
 export const mover = (g: Game): 0 | 1 => (g.pending ? g.pending.responder : g.active);
 export const newMeta = (now: number): RoomMeta => ({ deadline: now + TIMING.turnMs, misses: [0, 0], seen: [now, now], endReason: null, forfeit: null });

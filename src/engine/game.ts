@@ -14,7 +14,30 @@ export interface FusionPair { a: string; b: string; hp: number; atk: number; def
 export interface Unit { fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[] }
-export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number } }
+export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats] }
+/** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
+export interface PlayerStats {
+  summon: number; evolve: number; fuse: number; set: number; cast: number;
+  attack: number;          // attacks declared (unit or direct); an attack cancelled by a trap still counts
+  attackDirect: number;    // subset of `attack` aimed at the player
+  trap: number;            // face-down traps of this player that actually fired
+  dmgUnit: number;         // unit HP actually removed by this player's attacks, spells, counter-attacks and trap reflections
+  dmgLp: number;           // LP actually removed from the opponent
+  dmgDelayed: number;      // unit HP removed by this player's lingering effects (poison ticks, turn-start / turn-end traps)
+  activeTurns: number;     // own turns in which at least one of summon/evolve/fuse/set/cast/attack succeeded
+  lastActiveTurn: number;  // g.turn of the last counted active turn (bookkeeping for activeTurns)
+}
+/** Version of the PlayerStats layout stored in pvp_matches.stats_version. Bump when a counter's meaning changes. */
+export const STATS_VERSION = 1;
+export const newStats = (): PlayerStats => ({ summon: 0, evolve: 0, fuse: 0, set: 0, cast: 0, attack: 0, attackDirect: 0, trap: 0, dmgUnit: 0, dmgLp: 0, dmgDelayed: 0, activeTurns: 0, lastActiveTurn: 0 });
+type Counter = Exclude<keyof PlayerStats, 'lastActiveTurn' | 'activeTurns'>;
+/** Adds to a counter; a no-op for games without stats. Only called after an action has been validated, on the cloned state of that action. */
+function bump(g: Game, pi: 0 | 1, k: Counter, n = 1) { if (g.stats && n > 0) g.stats[pi][k] += n; }
+/** An own-turn action succeeded: counts the turn once. */
+function active(g: Game, pi: 0 | 1, k: 'summon' | 'evolve' | 'fuse' | 'set' | 'cast' | 'attack') {
+  const s = g.stats?.[pi]; if (!s) return;
+  s[k]++; if (s.lastActiveTurn !== g.turn) { s.lastActiveTurn = g.turn; s.activeTurns++; }
+}
 export type Action =
   | { t: 'summon'; hand: number; slot: number }
   | { t: 'evolve'; slot: number; evo: number; form: number; sacrifice: number[] }
@@ -38,7 +61,7 @@ const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
 export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] } = {}): Game {
   // extras = each player's separate Evolution deck (Lv40/70/99 forms). Without it, forms live in the hand (legacy rules).
-  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 } };
+  const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 }, stats: [newStats(), newStats()] };
   if (opts.extras) g.players.forEach((p, i) => { p.extra = [...opts.extras![i]]; });
   for (const p of g.players) { for (let i = p.deck.length - 1; i > 0; i--) { const j = Math.floor(rnd(g) * (i + 1)); [p.deck[i], p.deck[j]] = [p.deck[j], p.deck[i]]; } p.hand = p.deck.splice(0, RULES.startHand); }
   return g;
@@ -67,7 +90,7 @@ function fire(g: Game, owner: 0 | 1, ev: string): string | null {
     if (!opts.includes(ans)) fail('เลือกกับดักไม่ถูกต้อง'); pick = ans;
   }
   const p = g.players[owner], t = p.back[pick]!;
-  p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); return t.card.id;
+  p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); bump(g, owner, 'trap'); return t.card.id;
 }
 function toGrave(g: Game, pi: 0 | 1, u: Unit) { g.players[pi].grave.push(...(u.fused ?? [u.card])); }
 /** Bonus for fusing two characters, or null if their chains are not ticked as a Fusion pair (highest bonus per stat wins). */
@@ -76,27 +99,29 @@ export function fusionBonus(g: Game, x: CardDef, y: CardDef) {
   const m = g.fusion.pairs.filter(p => (p.a === x.chain && p.b === y.chain) || (p.a === y.chain && p.b === x.chain)); if (!m.length) return null;
   return { hp: Math.max(...m.map(p => p.hp)), atk: Math.max(...m.map(p => p.atk)), def: Math.max(...m.map(p => p.def)) };
 }
-function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number) {
+/** `by` = the player the damage is credited to in the stats; `delayed` = caused by a lingering effect rather than by the action being resolved. */
+function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number, by: 0 | 1, delayed = false) {
   const p = g.players[pi], u = p.field[slot]; if (!u) return;
+  bump(g, by, delayed ? 'dmgDelayed' : 'dmgUnit', Math.min(Math.max(0, amount), Math.max(0, u.hp)));
   u.hp -= amount;
   if (u.hp > 0) return;
   if (fire(g, pi, 'on_destroyed')) { u.hp = 1; return; }
   p.field[slot] = null; toGrave(g, pi, u); log(g, `${u.card.name} ถูกทำลาย`);
   if (fire(g, pi, 'to_graveyard')) draw(g, pi);
 }
-function dealLp(g: Game, pi: 0 | 1, n: number) { const p = g.players[pi]; p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); } }
+function dealLp(g: Game, pi: 0 | 1, n: number, by: 0 | 1) { const p = g.players[pi]; bump(g, by, 'dmgLp', Math.min(Math.max(0, n), p.lp)); p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); } }
 
 function startTurn(g: Game) {
   const pi = g.active, p = g.players[pi]; p.summoned = false; p.evolved = false;
   p.field.forEach(u => { if (u) u.attacked = false; });
-  p.field.forEach((u, i) => { if (u?.poison) { u.poison--; damageUnit(g, pi, i, RULES.poison.dmg); } });
-  if (fire(g, other(pi), 'turn_start')) p.field.forEach((u, i) => { if (u) damageUnit(g, pi, i, 5); });
+  p.field.forEach((u, i) => { if (u?.poison) { u.poison--; damageUnit(g, pi, i, RULES.poison.dmg, other(pi), true); } });
+  if (fire(g, other(pi), 'turn_start')) p.field.forEach((u, i) => { if (u) damageUnit(g, pi, i, 5, other(pi), true); });
   if (g.winner === null) draw(g, pi, true);
   g.phase = 'main';
 }
 function endTurn(g: Game) {
   const pi = g.active, opp = other(pi);
-  if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15); }
+  if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true); }
   g.players[pi].field.forEach(u => { if (u) { u.bonusAtk = 0; u.bonusDef = 0; } });
   if (g.winner !== null) return;
   g.active = opp; g.turn++; startTurn(g);
@@ -137,7 +162,7 @@ function step(g: Game, a: Action): Game {
       main(); const c = card(a.hand);
       if (c.type !== 'character' || c.level !== 15) fail('เรียกได้เฉพาะตัวละคร Lv.15'); if (me.summoned) fail('เรียกได้ 1 ใบต่อเทิร์น');
       if (a.slot < 0 || a.slot >= RULES.fieldSlots || me.field[a.slot]) fail('ช่องไม่ว่าง');
-      me.hand.splice(a.hand, 1); const u = mk(g, c); me.field[a.slot] = u; me.summoned = true; log(g, `เรียก ${c.name}`);
+      me.hand.splice(a.hand, 1); const u = mk(g, c); me.field[a.slot] = u; me.summoned = true; active(g, pi, 'summon'); log(g, `เรียก ${c.name}`);
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
       return g;
     }
@@ -150,7 +175,7 @@ function step(g: Game, a: Action): Game {
       const need = RULES.sacrifice[next], sac = [...new Set(a.sacrifice)];
       if (sac.length !== need || sac.some(s => s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
       if (ex) { me.hand.splice(a.evo, 1); ex.splice(a.form, 1); } else { const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1); }
-      sendTo(evo); me.evolved = true;
+      sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
       const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
@@ -165,20 +190,20 @@ function step(g: Game, a: Action): Game {
       const f = g.fusion, mix = (k: 'hp' | 'atk' | 'def') => Math.floor((top[k] ?? 0) * f.topPct / 100) + Math.floor((bot[k] ?? 0) * f.bottomPct / 100) + b[k];
       [a.fusion, a.top, a.bottom].sort((x, y) => y - x).forEach(i => me.hand.splice(i, 1)); sendTo(fc);
       const u = mk(g, top, Math.max(1, mix('hp'))); u.maxHp = u.hp; u.atk = mix('atk'); u.def = mix('def'); u.fused = [top, bot];
-      me.field[a.slot] = u; me.summoned = true; log(g, `ฟิวชั่น ${top.name} + ${bot.name}`);
+      me.field[a.slot] = u; me.summoned = true; active(g, pi, 'fuse'); log(g, `ฟิวชั่น ${top.name} + ${bot.name}`);
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
       return g;
     }
     case 'set': {
       main(); const c = card(a.hand); if (c.type !== 'trap') fail('ต้องเป็นกับดัก');
       const i = me.back.findIndex(x => !x); if (i < 0) fail('ช่องหลังเต็ม');
-      me.hand.splice(a.hand, 1); me.back[i] = { card: c, setTurn: g.turn }; return g;
+      me.hand.splice(a.hand, 1); me.back[i] = { card: c, setTurn: g.turn }; active(g, pi, 'set'); return g;
     }
     case 'cast': {
       main(); const c = card(a.hand); if (c.type !== 'spell') fail('ต้องเป็นเวทมนตร์');
       const t = a.target ?? {}; const need = (v: number | undefined) => v ?? fail('ต้องเลือกเป้าหมาย');
       switch (c.id) {
-        case 'SPL-001': damageUnit(g, opp, (theirs(need(t.slot)), t.slot!), 20); break;
+        case 'SPL-001': damageUnit(g, opp, (theirs(need(t.slot)), t.slot!), 20, pi); break;
         case 'SPL-002': { const u = mine(need(t.slot)); u.hp = Math.min(u.maxHp, u.hp + 30); break; }
         case 'SPL-003': mine(need(t.slot)).bonusDef += 15; break;
         case 'SPL-004': mine(need(t.slot)).bonusAtk += 15; break;
@@ -187,7 +212,7 @@ function step(g: Game, a: Action): Game {
           if (me.hand.length - 1 >= RULES.handMax) fail('มือเต็ม');
           const gi = t.grave ?? me.grave.findIndex(x => x.type === 'character' && x.level === 15);
           const gc = me.grave[gi]; if (!gc || gc.type !== 'character' || gc.level !== 15) fail('ไม่มีตัวละคร Lv.15 ในสุสาน');
-          me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); log(g, `ใช้ ${c.name}`); return g;
+          me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
         }
         case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); mine(x); if (y < 0 || y >= RULES.fieldSlots || x === y) fail('ช่องไม่ถูกต้อง'); [me.field[x], me.field[y]] = [me.field[y], me.field[x]]; break; }
         case 'SPL-008': en.noAttackUntil = g.turn + 2; break;
@@ -195,7 +220,7 @@ function step(g: Game, a: Action): Game {
         case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; break; }
         default: fail('ยังไม่รองรับเวทมนตร์ใบนี้');
       }
-      me.hand.splice(a.hand, 1); sendTo(c); log(g, `ใช้ ${c.name}`); return g;
+      me.hand.splice(a.hand, 1); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
     }
     case 'attack': {
       if (g.phase !== 'battle') fail('โจมตีได้เฉพาะเฟสต่อสู้'); if (g.turn === 1) fail('ผู้เริ่มก่อนโจมตีไม่ได้ในเทิร์นแรก');
@@ -203,14 +228,14 @@ function step(g: Game, a: Action): Game {
       const u = mine(a.from); if (u.attacked) fail('ตัวนี้โจมตีแล้ว'); if (u.summonedTurn === g.turn) fail('ตัวที่เพิ่งถูกเรียกโจมตีไม่ได้'); if (g.turn < u.lockedUntil) fail('ตัวนี้ถูกห้ามโจมตี');
       const direct = a.to === 'player';
       if (direct && units(en).length) fail('โจมตีผู้เล่นได้เมื่อฝั่งตรงข้ามไม่มีตัวละคร');
-      const tgt = direct ? null : theirs(a.to as number); u.attacked = true;
+      const tgt = direct ? null : theirs(a.to as number); u.attacked = true; active(g, pi, 'attack'); if (direct) bump(g, pi, 'attackDirect');
       const t = fire(g, opp, direct ? 'on_attack_direct' : 'on_attack');
       if (t === 'TRP-001') { log(g, 'การโจมตีถูกยกเลิก'); return g; }
       if (t === 'TRP-009') { me.field[a.from] = null; for (const c of u.fused ?? [u.card]) { if (me.hand.length < RULES.handMax) me.hand.push(c); else me.grave.push(c); } return g; }
-      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2)); log(g, `${u.card.name} โจมตีตรง`); return g; }
-      const d1 = hit(u, tgt!); damageUnit(g, opp, a.to as number, d1); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
-      if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2));
-      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) damageUnit(g, pi, a.from, hit(tgt!, u));
+      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp); log(g, `${u.card.name} โจมตีตรง`); return g; }
+      const d1 = hit(u, tgt!); damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
+      if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp);
+      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) damageUnit(g, pi, a.from, hit(tgt!, u), opp);
       return g;
     }
   }
