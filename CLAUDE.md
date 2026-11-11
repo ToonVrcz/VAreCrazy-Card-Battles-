@@ -20,7 +20,7 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - `src/server/` — api.ts (routes), rooms.ts (online rooms, polling 1.5s, timers processed lazily on poll/act), economy.ts (players/wallet/shop), admin services.
 - `src/edge/index.ts` — Supabase edge entry (Deno). `src/universe/` — Universe module contract + adapter (unused).
 - `public/play.html`, `public/admin.html` — vanilla JS pages. `public/engine.js` is a **generated** browser bundle.
-- `db/migrations/NNN_*.up.sql|down.sql` — 001..013 applied to production.
+- `db/migrations/NNN_*.up.sql|down.sql` — 001..013 applied to production. **014 (`pvp_match_history`) exists only on branch `feature/pvp-anti-farming-phase1` and is NOT applied to production.**
 - `vercel.json` — rewrites: `/` → admin, `/play` → play.html, `/api/*` → Supabase function, `/media/*` → Supabase storage.
 - `tests/` — vitest + PGlite (in-memory Postgres).
 
@@ -48,4 +48,5 @@ Known / open:
 - Temporary GitHub branch `tmp-edge-bundle` should be deleted (Toon to do it in GitHub).
 - Unverified: mobile testing; an earlier blank `/play` page report (suspected cache/extension); Vercel plan cost.
 - Anti-farming for PvP points is weak (two accounts can farm).
+- PvP anti-farming **Phase 1 (data collection only) is on branch `feature/pvp-anti-farming-phase1`, not deployed**: engine action stats + persistent match history (migration 014). Enforcement (pair limit, Match Quality, reward denial) is NOT active; rewards behave as before. Details, stat definitions, approved rules for later phases and deploy order: `docs/PVP-ANTI-FARMING.md`. Changing `src/engine` means rebuilding `public/engine.js` and the edge bundle.
 - Ideas not done: trap-vs-trap chain, real card art, Universe bridge (EXP/wallet/quests) and actual connection.

@@ -1,7 +1,7 @@
 // Online 2-player rooms. The server owns the game state (src/engine/game.ts); clients get a seat-relative, redacted view and
 // send actions. Polling transport: GET room every ~1.5s. Opponent hand/deck/face-down traps are never sent.
-import { randomBytes } from 'node:crypto';
-import { createGame, act, EngineError, type Action, type CardDef, type Game, type FusionPair } from '../engine/game.ts';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { createGame, act, EngineError, STATS_VERSION, type Action, type CardDef, type Game, type FusionPair } from '../engine/game.ts';
 import { buildDeck, buildSet, viewFor, validateDeck, validateEvoDeck, deckFromIds, EVO_RULES } from '../engine/deck-view.ts';
 import { Economy, ECONOMY } from './economy.ts';
 import { TIMING, newMeta, tickRoom, needsTick, forfeit, type RoomMeta } from '../engine/turn-timer.ts';
@@ -83,7 +83,7 @@ export class Rooms {
       const g = createGame([sets[0].main, sets[1].main], Date.now() % 1e9, first, { fusionPairs: pairs, interactive: true, extras: [sets[0].extra, sets[1].extra] });
       const tokens = [row.tokens[0], tok], now = Date.now();
       await tx.query(`UPDATE play_rooms SET status='playing', tokens=$2::jsonb, state=$3::jsonb, decks=$4::jsonb, profiles=$5::jsonb, meta=$6::jsonb, version=1, updated_at=now() WHERE code=$1`,
-        [code, JSON.stringify(tokens), JSON.stringify(g), JSON.stringify(seatDecks), JSON.stringify(pids), JSON.stringify(newMeta(now))]);
+        [code, JSON.stringify(tokens), JSON.stringify(g), JSON.stringify(seatDecks), JSON.stringify(pids), JSON.stringify({ ...newMeta(now), matchId: randomUUID(), startedAt: now })]);
       return { code, token: tok, seat: 1 };
     });
   }
@@ -96,8 +96,32 @@ export class Rooms {
   private async settle(tx: Tx, code: string, profiles: (string | null)[], g: Game, meta: RoomMeta) {
     if (g.winner === null || meta.rewarded) return;
     meta.rewarded = true;
-    if (g.turn < ECONOMY.minTurnsForReward) return;
-    meta.rewards = await this.eco.award(tx, profiles ?? [null, null], code);
+    if (g.turn >= ECONOMY.minTurnsForReward) meta.rewards = await this.eco.award(tx, profiles ?? [null, null], code);
+    await this.record(tx, code, profiles ?? [null, null], g, meta);   // history only: never changes rewards (anti-farming phase 1)
+  }
+
+  /** Writes the persistent match record (pvp_matches + pvp_match_players). Runs once per match, inside the settle transaction (guarded by meta.rewarded
+   *  and by the primary key on the match id). A failure here must never block the game or the payout, so it is isolated in a savepoint. */
+  private async record(tx: Tx, code: string, profiles: (string | null)[], g: Game, meta: RoomMeta) {
+    const id = (meta.matchId ??= randomUUID());   // rooms created before this update have no id yet
+    try {
+      await tx.query(`SAVEPOINT pvp_record`);
+      const valid = new Set((await tx.query<any>(`SELECT id FROM players WHERE id = $1::uuid OR id = $2::uuid`, [profiles[0] ?? null, profiles[1] ?? null])).rows.map(r => r.id as string));
+      const has = [0, 1].map(s => !!profiles[s] && valid.has(profiles[s]!)), pid = [0, 1].map(s => (has[s] ? profiles[s] : null)), win = g.winner as 0 | 1;
+      const reason = meta.endReason === 'left' ? 'surrender' : meta.endReason === 'timeout' ? 'timeout' : meta.endReason === 'absent' ? 'disconnect' : 'normal';
+      const paid = (s: number) => meta.rewards?.[s] ?? null;
+      const ins = await tx.query<any>(`INSERT INTO pvp_matches(id,room_code,started_at,ended_at,player0_id,player1_id,seat0_profile,seat1_profile,winner_seat,end_reason,forfeit_seat,turns,stats_version,rewards_paid)
+        VALUES ($1::uuid,$2,$3::timestamptz,now(),$4::uuid,$5::uuid,$6::boolean,$7::boolean,$8::smallint,$9,$10::smallint,$11::int,$12::smallint,$13::boolean) ON CONFLICT (id) DO NOTHING RETURNING id`,
+        [id, code, meta.startedAt ? new Date(meta.startedAt).toISOString() : null, pid[0], pid[1], has[0], has[1], win, reason, reason === 'normal' ? null : meta.forfeit ?? null, g.turn, g.stats ? STATS_VERSION : null, !!meta.rewards?.some(r => r)]);
+      if (ins.rows.length) for (const s of [0, 1]) {
+        await tx.query(`INSERT INTO pvp_match_players(match_id,seat,player_id,has_profile,is_winner,stats,reward_points,reward_vrcoin) VALUES ($1::uuid,$2::smallint,$3::uuid,$4::boolean,$5::boolean,$6::jsonb,$7::int,$8::int)`,
+          [id, s, pid[s], has[s], win === s, g.stats ? JSON.stringify(g.stats[s as 0 | 1]) : null, paid(s)?.points ?? 0, paid(s)?.vrcoin ?? 0]);
+      }
+      await tx.query(`RELEASE SAVEPOINT pvp_record`);
+    } catch (e) {
+      console.error('pvp match history not recorded', e);
+      try { await tx.query(`ROLLBACK TO SAVEPOINT pvp_record`); await tx.query(`RELEASE SAVEPOINT pvp_record`); } catch { /* transaction already unusable: let the caller see it */ }
+    }
   }
 
   private shape(row: any, seat: 0 | 1, now: number, full: boolean) {
