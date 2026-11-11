@@ -15,6 +15,7 @@
 .fl{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-weight:900;font-size:15px;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none;animation:up 1.2s forwards;z-index:5}
 @keyframes up{to{top:-30%;opacity:0}}
 button{background:#5b2d90;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700}button.g{background:#2f7d3a}button.r{background:#a33}button:disabled{opacity:.4}
+a.bl{display:block;background:#5b2d90;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;text-align:center;text-decoration:none}
 .hint{text-align:center;background:#3b2a00;border:1px solid #e2b440;border-radius:8px;padding:6px}
 #md{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:20;padding:10px}#md.on{display:flex}
 .box{background:#1b0b2e;border:1px solid #6b4a9a;border-radius:12px;padding:10px;max-width:420px;width:100%;max-height:94vh;overflow:auto}
@@ -81,7 +82,7 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
  if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&t.f0.push(i));return t}
 function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${mode.sac.length}/${mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'เลือกตัวละครของคุณ':'เลือกช่องที่จะสลับ'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
- $('#app').innerHTML=`<div class="bar"><span>เทิร์น ${G.turn} · ${G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span><button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?' <button id="lv" class="r" style="padding:3px 8px;font-size:12px">ยอมแพ้</button>':''}</span></div>
+ $('#app').innerHTML=`<div class="bar"><span>เทิร์น ${G.turn} · ${G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?' <button id="lv" class="r" style="padding:3px 8px;font-size:12px">ยอมแพ้</button>':''}</span></div>
  <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">👾 ศัตรู LP ${en.lp}</span><span>มือ ${en.hand.length} · เด็ค ${en.deck.length} · สุสาน ${en.grave.length}${en.extra?` · อีโว ${en.extra.length}`:''}</span></div>
  <div class="row b">${en.back.map((b,i)=>`<div class="c ${T.b1.includes(i)?'tg':''}" data-z="b" data-s="1" data-i="${i}">${b?`<img src="/assets/card-back.jpg">`:''}</div>`).join('')}</div>
  <div class="row f">${en.field.map((u,i)=>cell(u,1,i,T.f1.includes(i)?'tg':'')).join('')}</div>
@@ -91,7 +92,7 @@ function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active=
  ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${img(c)}"></div>`).join('')}</div>
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
  ${showLog?`<div id="lg">${G.log.slice(-8).reverse().join('<br>')}</div>`:''}`;
- if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()?`<p>${WHY()}</p>`:''}${ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${ON.reward.points} แต้ม${ON.reward.vrcoin?` และ +${ON.reward.vrcoin} Vrcoin 🪙`:''} (แมตช์ที่ ${ON.reward.matches})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">เล่นใหม่</button></div>`;$('#again').onclick=()=>{if(ON)location.href='/play';else{$('#md').className='';start()}}}
+ if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()?`<p>${WHY()}</p>`:''}${ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${ON.reward.points} แต้ม${ON.reward.vrcoin?` และ +${ON.reward.vrcoin} Vrcoin 🪙`:''} (แมตช์ที่ ${ON.reward.matches})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">กลับหน้าหลัก</button></div>`;$('#again').onclick=()=>{clearRoom();location.href='/play'}}
  if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
  if(snap)floats(snap)}
 const EV={on_attack:'ศัตรูโจมตี',on_attack_direct:'ศัตรูโจมตีตรงที่ผู้เล่น',on_summon:'ศัตรูเรียกตัวละคร',on_evolve:'ศัตรูกำลังวิวัฒนาการ',turn_start:'เทิร์นของศัตรูเริ่ม',turn_end:'เทิร์นของศัตรูกำลังจบ',on_destroyed:'ตัวละครของคุณกำลังจะถูกทำลาย',to_graveyard:'ตัวละครของคุณลงสุสาน'};
@@ -101,6 +102,20 @@ function respModal(){const P=G.pending,b=G,ac=P.action;let more='';
  <div class="acts">${P.options.map(i=>{const c=G.players[0].back[i].card;return`<button data-r="${i}" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px"><img src="${img(c)}" style="width:72px;border-radius:5px"><span style="font-size:11px">${c.name}</span></button>`}).join('')}<button class="r" data-r="-1">ผ่าน</button></div></div>`;
  document.querySelectorAll('[data-r]').forEach(el=>el.onclick=()=>{closeM();go(+el.dataset.r<0?{t:'pass'}:{t:'respond',back:+el.dataset.r})})}
 let ON=null,poll=null,acting=false;
+// Playtest bug report: paste the Project Owner's Google Form link here. Empty = the buttons stay hidden (no dead link). The URL carries no player or room data.
+const FEEDBACK_URL='';
+const FB=s=>FEEDBACK_URL?`<a class="bl" href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer"${s?' style="padding:3px 8px;font-size:12px;display:inline-block"':''}>🐞 แจ้งปัญหา</a>`:'';
+// Resume after refresh / app switch: the room code + seat token are kept in this browser until the match is over (or the room is gone).
+const RK='vcz_room';
+function saveRoom(){try{if(ON)localStorage.setItem(RK,JSON.stringify({code:ON.code,token:ON.token,seat:ON.seat}))}catch(e){}}
+function clearRoom(){try{localStorage.removeItem(RK)}catch(e){}}
+async function resumeRoom(){let s=null;try{s=JSON.parse(localStorage.getItem(RK)||'null')}catch(e){}
+ if(!s)return null;if(!/^[A-Z0-9]{5}$/.test(s.code||'')||typeof s.token!=='string'||!s.token){clearRoom();return null}
+ $('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังกลับเข้าห้อง…</div>';
+ try{const r=await API('/rooms/'+s.code+'?since=-1',{},{authorization:'Bearer '+s.token});
+  if(r.status==='finished'){clearRoom();return'ห้องเดิมจบไปแล้ว'}
+  ON={code:s.code,token:s.token,seat:s.seat};if(r.status==='waiting')waitBox();startPoll();return true}
+ catch(e){if(e instanceof TypeError)return'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองรีเฟรชอีกครั้ง (ห้องของคุณยังไม่ถูกลบ)';clearRoom();return'ห้องเดิมไม่มีอยู่แล้ว'}}
 function WHY(){if(!ON||!ON.endReason)return'';const y=ON.forfeitedYou;return({timeout:y?'คุณหมดเวลาติดกันหลายครั้ง':'ศัตรูหมดเวลาติดกันหลายครั้ง',absent:y?'คุณหลุดจากห้อง':'ศัตรูหลุดจากห้อง',left:y?'คุณยอมแพ้':'ศัตรูยอมแพ้หรือออกจากห้อง'})[ON.endReason]||''}
 function tickTm(){const el=$('#tm');if(!el)return;if(!ON||!ON.deadline||!G||G.winner!==null){el.textContent='';return}
  const left=Math.max(0,Math.ceil((ON.deadline-(Date.now()+(ON.skew||0)))/1000)),mine=(G.pending?G.pending.responder:G.active)===0;
@@ -109,15 +124,15 @@ setInterval(tickTm,500);
 const OA=(p,o={})=>API('/rooms'+p,o,ON?{authorization:'Bearer '+ON.token}:{});
 async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;if(r.status==='waiting'||r.unchanged||!r.game)return;
  if(!ON.started){ON.started=true;closeM();history.replaceState(null,'','/play')}
- G=r.game;if(!snap)snap=take();render();tickTm();if(G.winner!==null)clearInterval(poll)}catch(e){}}
+ G=r.game;if(!snap)snap=take();render();tickTm();if(G.winner!==null){clearInterval(poll);clearRoom()}}catch(e){}}
 function startPoll(){clearInterval(poll);pollNow();poll=setInterval(pollNow,1500)}
 function waitBox(){const link=location.origin+'/play?join='+ON.code;$('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3>🌐 ห้องของคุณ</h3><div style="font-size:34px;letter-spacing:6px;font-weight:900">${ON.code}</div><p>ส่งรหัสหรือลิงก์นี้ให้เพื่อน แล้วรอสักครู่</p><p style="word-break:break-all;color:#bba">${link}</p><div class="acts"><button id="cpy">คัดลอกลิงก์</button><button class="r" id="wx">ยกเลิก</button></div></div>`;
- $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
-function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2 style="margin:4px 0">VAreCrazy Card Battle</h2><p style="color:#f99">${msg}</p><div class="acts" style="flex-direction:column;align-items:stretch"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="ld">🃏 เด็คของฉัน: ${activeDeck()?activeDeck().name:'สุ่มให้'}</button><button id="lsh">🛒 ร้านค้า${ME.ok?` · 💰${ME.points} · 🪙${ME.vrcoin}`:''}</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div></div>`;
+ $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);clearRoom();OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
+function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2 style="margin:4px 0">VAreCrazy Card Battle</h2><p style="color:#f99">${msg}</p><div class="acts" style="flex-direction:column;align-items:stretch"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="ld">🃏 เด็คของฉัน: ${activeDeck()?activeDeck().name:'สุ่มให้'}</button><button id="lsh">🛒 ร้านค้า${ME.ok?` · 💰${ME.points} · 🪙${ME.vrcoin}`:''}</button>${FB()}<div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div></div>`;
  $('#lb').onclick=()=>{closeM();start()};$('#ld').onclick=()=>deckList();$('#lsh').onclick=()=>shop();if(!ME.ok&&!lobby.tried){lobby.tried=1;refreshMe().then(()=>{if($('#lsh'))lobby(msg)})}
- $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};waitBox();startPoll()}catch(e){lobby(e.message)}};
+ $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();waitBox();startPoll()}catch(e){lobby(e.message)}};
  $('#ljb').onclick=()=>joinRoom($('#lj').value.trim().toUpperCase())}
-async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};closeM();startPoll()}catch(e){lobby(e.message)}}
+async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();closeM();startPoll()}catch(e){lobby(e.message)}}
 function go(a){if(ON){mode=null;sel=null;OA('/'+ON.code+'/act',{method:'POST',body:JSON.stringify({action:a})}).then(pollNow).catch(e=>{toast(e.message);pollNow()});if(G)render();return true}
  try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
 const DEFF='/assets/frame/frame.webp';let FR={};fetch('/api/play/frames').then(r=>r.ok?r.json():[]).then(l=>{FR=Object.fromEntries(l.map(f=>[f.scope,'/'+f.path]))}).catch(()=>{});
@@ -131,7 +146,7 @@ function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr})
  if(can&&z==='f'){if(main){const u=me.field[i],nx={15:40,40:70,70:99}[u.card.level],e=me.hand.findIndex(x=>x.type==='evolution'),f=(me.extra||me.hand).findIndex(x=>x.type==='character'&&x.chain===u.card.chain&&x.level===nx);
    if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:E.RULES.sacrifice[nx],sac:[]};closeM();render()}])}
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
- $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${u.fused.map(x=>x.name).join(' + ')}</p>`:''})():''}${(d.fx||[]).map(x=>`<p>• ${x}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
+ $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${u.fused.map(x=>x.name).join(' + ')}</p>`:''})():''}${d.type==='character'&&(d.fx||[]).length?'<p style="color:#bba;font-size:11px">⚠ ความสามารถของตัวละครยังไม่เปิดใช้งานในช่วงทดสอบ</p>':(d.fx||[]).map(x=>`<p>• ${x}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
  $('#cl').onclick=z==='shop'?()=>shop(d.level):closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
 const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
@@ -238,5 +253,5 @@ async function drive(){if(driving)return;driving=true;busy=true;render();let n=0
  while(G.winner===null&&n++<80){const human=G.pending?G.pending.responder===0:G.active===0;if(human)break;await sleep(650);
   try{G=E.act(G,E.botPick(G))}catch(e){try{G=E.act(G,{t:G.pending?'pass':'next'})}catch(e2){break}}render()}
  driving=false;busy=false;render()}
-const JN=new URLSearchParams(location.search).get('join');if(JN)joinRoom(JN.toUpperCase());else if(/demo/.test(location.search))start();else lobby();
+const JN=new URLSearchParams(location.search).get('join');if(JN)joinRoom(JN.toUpperCase());else if(/demo/.test(location.search))start();else resumeRoom().then(r=>{if(r!==true)lobby(typeof r==='string'?r:'')});
 </script></body></html>
