@@ -29,11 +29,18 @@ let G,mode=null,busy=false,snap=null,showLog=false,sel=null;
 let PAIRS=VCZE.pairs.slice();if(!PAIRS.length&&/demo/.test(location.search)){const ch=[...new Set(DEFS.filter(d=>d.type==='character').map(d=>d.chain))];for(let i=0;i<ch.length;i++)for(let j=i+1;j<ch.length;j++)PAIRS.push({a:ch[i],b:ch[j],hp:20,atk:10,def:0})}
 const PH={main:'เฟสหลัก',battle:'เฟสต่อสู้'};
 const img=c=>BY[c.id]?.img||'';
-const DK={size:40,max:3,min15:3};
-function loadDeck(){try{const a=JSON.parse(localStorage.getItem('vcz_deck')||'null');return Array.isArray(a)&&a.length===DK.size&&a.every(id=>BY[id])?a:null}catch(e){return null}}
-function saveDeck(a){try{a?localStorage.setItem('vcz_deck',JSON.stringify(a)):localStorage.removeItem('vcz_deck')}catch(e){}}
-let MYDECK=loadDeck();
-const myCards=()=>MYDECK?MYDECK.map(id=>({...BY[id]})):deck();
+const DK={size:40,max:3,min15:3,slots:10};
+const uid=()=>Math.random().toString(36).slice(2,8);
+function loadStore(){try{const x=JSON.parse(localStorage.getItem('vcz_decks')||'null');if(x&&Array.isArray(x.list))return{active:x.active||null,list:x.list.map(d=>({id:d.id||uid(),name:String(d.name||'เด็ค').slice(0,24),cards:(d.cards||[]).filter(id=>BY[id])}))}}catch(e){}
+ try{const o=JSON.parse(localStorage.getItem('vcz_deck')||'null');if(Array.isArray(o)){const id=uid();return{active:id,list:[{id,name:'เด็คของฉัน',cards:o.filter(k=>BY[k])}]}}}catch(e){}
+ return{active:null,list:[]}}
+let DS=loadStore();
+function saveStore(){try{localStorage.setItem('vcz_decks',JSON.stringify(DS))}catch(e){}}
+function deckProblem(cards){if(cards.length!==DK.size)return`ต้องครบ ${DK.size} ใบ (ตอนนี้ ${cards.length})`;const n={};for(const id of cards){n[id]=(n[id]||0)+1;if(n[id]>DK.max)return`${BY[id].name} เกิน ${DK.max} ใบ`}
+ const l=cards.filter(id=>BY[id].type==='character'&&BY[id].level===15).length;return l<DK.min15?`ต้องมี Lv.15 อย่างน้อย ${DK.min15} ใบ (ตอนนี้ ${l})`:null}
+const activeDeck=()=>DS.list.find(d=>d.id===DS.active&&!deckProblem(d.cards));
+const myIds=()=>activeDeck()?.cards||null;
+const myCards=()=>myIds()?myIds().map(id=>({...BY[id]})):deck();
 function deck(){const pick=a=>a[Math.floor(Math.random()*a.length)],all=[...new Set(DEFS.filter(d=>d.type==='character').map(d=>d.chain))],pc=new Set(PAIRS.flatMap(p=>[p.a,p.b])),ch=all.sort(()=>Math.random()-.5).sort((x,y)=>(pc.has(y)?1:0)-(pc.has(x)?1:0)).slice(0,7),d=[];
  for(const k of ch){const f=lv=>DEFS.find(x=>x.chain===k&&x.level===lv);d.push(f(15),f(15));for(const lv of[40,70])if(f(lv))d.push(f(lv))}
  const add=(ids,n)=>{for(let i=0;i<n;i++)d.push(BY[pick(ids)])};
@@ -93,11 +100,11 @@ async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since=
 function startPoll(){clearInterval(poll);pollNow();poll=setInterval(pollNow,1500)}
 function waitBox(){const link=location.origin+'/play.html?join='+ON.code;$('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3>🌐 ห้องของคุณ</h3><div style="font-size:34px;letter-spacing:6px;font-weight:900">${ON.code}</div><p>ส่งรหัสหรือลิงก์นี้ให้เพื่อน แล้วรอสักครู่</p><p style="word-break:break-all;color:#bba">${link}</p><div class="acts"><button id="cpy">คัดลอกลิงก์</button><button class="r" id="wx">ยกเลิก</button></div></div>`;
  $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
-function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2 style="margin:4px 0">VAreCrazy Card Battle</h2><p style="color:#f99">${msg}</p><div class="acts" style="flex-direction:column;align-items:stretch"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="ld">🃏 เด็คของฉัน: ${MYDECK?'กำหนดเอง 40 ใบ':'สุ่มให้'}</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div></div>`;
- $('#lb').onclick=()=>{closeM();start()};$('#ld').onclick=()=>deckEditor();
- $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:MYDECK||undefined})});ON={code:r.code,token:r.token,seat:r.seat};waitBox();startPoll()}catch(e){lobby(e.message)}};
+function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2 style="margin:4px 0">VAreCrazy Card Battle</h2><p style="color:#f99">${msg}</p><div class="acts" style="flex-direction:column;align-items:stretch"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="ld">🃏 เด็คของฉัน: ${activeDeck()?activeDeck().name:'สุ่มให้'}</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div></div>`;
+ $('#lb').onclick=()=>{closeM();start()};$('#ld').onclick=()=>deckList();
+ $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};waitBox();startPoll()}catch(e){lobby(e.message)}};
  $('#ljb').onclick=()=>joinRoom($('#lj').value.trim().toUpperCase())}
-async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:MYDECK||undefined})});ON={code:r.code,token:r.token,seat:r.seat};closeM();startPoll()}catch(e){lobby(e.message)}}
+async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};closeM();startPoll()}catch(e){lobby(e.message)}}
 function go(a){if(ON){mode=null;sel=null;OA('/'+ON.code+'/act',{method:'POST',body:JSON.stringify({action:a})}).then(pollNow).catch(e=>{toast(e.message);pollNow()});if(G)render();return true}
  try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
 function detail(c,z,i){const d=BY[c.id]||c,card=view(c,{frame:'/assets/frame/frame.webp'});VCZ.ref.frame='/assets/frame/frame.webp';
@@ -112,24 +119,58 @@ function detail(c,z,i){const d=BY[c.id]||c,card=view(c,{frame:'/assets/frame/fra
  $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${u.fused.map(x=>x.name).join(' + ')}</p>`:''})():''}${(d.fx||[]).map(x=>`<p>• ${x}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
  $('#cl').onclick=closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
-function deckEditor(init){const cnt=init||{};if(!init&&MYDECK)MYDECK.forEach(id=>cnt[id]=(cnt[id]||0)+1);
- const tot=()=>Object.values(cnt).reduce((a,b)=>a+b,0),l15=()=>DEFS.filter(d=>d.type==='character'&&d.level===15).reduce((a,d)=>a+(cnt[d.id]||0),0);
- const order={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5},TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'};
- const list=[...DEFS].sort((a,b)=>(order[a.type]??9)-(order[b.type]??9)||(a.chain||'').localeCompare(b.chain||'')||(a.level||0)-(b.level||0)||a.id.localeCompare(b.id));
- const ok=()=>tot()===DK.size&&l15()>=DK.min15,why=()=>tot()!==DK.size?`ต้องครบ ${DK.size} ใบ`:l15()<DK.min15?`ต้องมี Lv.15 อย่างน้อย ${DK.min15} ใบ`:'พร้อมใช้';
- $('#md').className='on';$('#md').innerHTML=`<div class="box" style="max-width:480px"><h3 style="margin:2px 0;text-align:center">🃏 เด็คของฉัน</h3>
- <div class="bar" style="position:sticky;top:-10px;z-index:2"><b id="dc" style="color:${ok()?'#7dffa0':'#f3e2b0'}">${tot()}/${DK.size} · Lv.15 ${l15()}</b><span style="font-size:11px">${why()} · ใส่ซ้ำได้ ${DK.max} ใบ</span></div>
- <div class="acts" style="margin:6px 0"><button id="dr">🎲 สุ่มให้</button><button id="dx" class="r">ล้าง</button></div>
- ${list.map((d,i)=>`${i===0||list[i-1].type!==d.type?`<p style="margin:8px 0 2px;color:#e2b440"><b>${TN[d.type]||d.type}</b></p>`:''}<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid #2a1244"><img src="${d.img}" style="width:30px;border-radius:3px"><span style="flex:1;font-size:12px">${d.name}<br><small style="color:#bba">${d.level?'Lv.'+d.level+' ':''}${d.chainName||''}</small></span><button data-m="${d.id}" style="padding:2px 10px">−</button><b style="width:16px;text-align:center">${cnt[d.id]||0}</b><button data-p="${d.id}" style="padding:2px 10px">+</button></div>`).join('')}
- <div class="acts"><button id="dsv" class="g" ${ok()?'':'disabled'}>บันทึกเด็ค</button><button id="drd">ใช้เด็คสุ่ม</button><button class="r" id="dcl">ปิด</button></div></div>`;
- const sc=$('#md .box').scrollTop,redo=()=>{deckEditor(cnt);$('#md .box').scrollTop=sc2};let sc2=0;
- const keep=f=>()=>{sc2=$('#md .box').scrollTop;f();redo()};
- document.querySelectorAll('[data-p]').forEach(el=>el.onclick=keep(()=>{const id=el.dataset.p;if(tot()<DK.size&&(cnt[id]||0)<DK.max)cnt[id]=(cnt[id]||0)+1}));
- document.querySelectorAll('[data-m]').forEach(el=>el.onclick=keep(()=>{const id=el.dataset.m;if(cnt[id]>0)cnt[id]--}));
- $('#dr').onclick=keep(()=>{for(const k in cnt)delete cnt[k];deck().forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1);for(const k in cnt)if(cnt[k]>DK.max)cnt[k]=DK.max;const f=DEFS.filter(d=>d.type==='character'&&d.level===15);for(let g=0;tot()<DK.size&&g<500;g++){const d=f[Math.floor(Math.random()*f.length)];if((cnt[d.id]||0)<DK.max)cnt[d.id]=(cnt[d.id]||0)+1}});
- $('#dx').onclick=keep(()=>{for(const k in cnt)delete cnt[k]});
- $('#dsv').onclick=()=>{if(!ok())return;const a=[];for(const k in cnt)for(let i=0;i<cnt[k];i++)a.push(k);MYDECK=a;saveDeck(a);lobby('บันทึกเด็คแล้ว')};
- $('#drd').onclick=()=>{MYDECK=null;saveDeck(null);lobby('ใช้เด็คสุ่มแล้ว')};$('#dcl').onclick=()=>lobby()}
+const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
+function summ(cards){const n={};cards.forEach(id=>{const t=BY[id].type;n[t]=(n[t]||0)+1});return Object.keys(n).sort((x,y)=>(TORD[x]??9)-(TORD[y]??9)).map(t=>`${TN[t]||t} ${n[t]}`).join(' · ')||'ยังไม่มีการ์ด'}
+function deckList(msg=''){const row=d=>{const pr=deckProblem(d.cards),on=DS.active===d.id&&!pr;
+  return`<div style="border:1px solid ${on?'#7dffa0':'#4a3270'};border-radius:8px;padding:6px;margin:6px 0"><div style="display:flex;justify-content:space-between;gap:6px"><b>${d.name}</b><span style="font-size:11px;color:${pr?'#f99':'#7dffa0'}">${on?'✅ กำลังใช้':pr?'⚠ ใช้เล่นไม่ได้':'พร้อมใช้'}</span></div>
+  <div style="font-size:11px;color:#bba;margin:2px 0">${d.cards.length}/${DK.size} · ${summ(d.cards)}${pr?`<br><span style="color:#f99">${pr}</span>`:''}</div>
+  <div class="acts" style="margin-top:4px"><button data-u="${d.id}" class="g" style="padding:4px 10px" ${pr?'disabled':''}>ใช้</button><button data-e="${d.id}" style="padding:4px 10px">แก้ไข</button><button data-c="${d.id}" style="padding:4px 10px">คัดลอก</button><button data-x="${d.id}" class="r" style="padding:4px 10px">ลบ</button></div></div>`};
+ $('#md').className='on';$('#md').innerHTML=`<div class="box" style="max-width:480px"><h3 style="margin:2px 0;text-align:center">🃏 เด็คของฉัน</h3><p style="text-align:center;color:#f99">${msg}</p>
+ <div style="border:1px solid ${DS.active&&activeDeck()?'#4a3270':'#7dffa0'};border-radius:8px;padding:6px;display:flex;justify-content:space-between;align-items:center"><span><b>🎲 สุ่มให้ทุกครั้ง</b><br><small style="color:#bba">เด็คสุ่ม 40 ใบ ${!activeDeck()?'· ✅ กำลังใช้':''}</small></span><button id="dru" class="g" style="padding:4px 10px">ใช้</button></div>
+ ${DS.list.map(row).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีเด็คที่บันทึกไว้</p>'}
+ <div class="acts"><button id="dnw" class="g" ${DS.list.length>=DK.slots?'disabled':''}>+ เด็คใหม่</button><button id="dim" ${DS.list.length>=DK.slots?'disabled':''}>นำเข้าโค้ด</button><button class="r" id="dcl">ปิด</button></div><p style="text-align:center;font-size:11px;color:#bba">เก็บได้ ${DK.slots} เด็ค (เก็บไว้ในเบราว์เซอร์นี้)</p></div>`;
+ const by=id=>DS.list.find(d=>d.id===id);
+ document.querySelectorAll('[data-u]').forEach(el=>el.onclick=()=>{DS.active=el.dataset.u;saveStore();deckList('ใช้เด็ค '+by(el.dataset.u).name+' แล้ว')});
+ $('#dru').onclick=()=>{DS.active=null;saveStore();deckList('ใช้เด็คสุ่มแล้ว')};
+ document.querySelectorAll('[data-e]').forEach(el=>el.onclick=()=>deckEditor(by(el.dataset.e)));
+ document.querySelectorAll('[data-c]').forEach(el=>el.onclick=()=>{if(DS.list.length>=DK.slots){deckList('เด็คเต็มแล้ว');return}const d=by(el.dataset.c);DS.list.push({id:uid(),name:(d.name+' (สำเนา)').slice(0,24),cards:[...d.cards]});saveStore();deckList('คัดลอกแล้ว')});
+ document.querySelectorAll('[data-x]').forEach(el=>el.onclick=()=>{const d=by(el.dataset.x);if(!confirm('ลบเด็ค '+d.name+'?'))return;DS.list=DS.list.filter(x=>x.id!==d.id);if(DS.active===d.id)DS.active=null;saveStore();deckList('ลบแล้ว')});
+ $('#dnw').onclick=()=>deckEditor({id:null,name:'เด็คใหม่ '+(DS.list.length+1),cards:[]});
+ $('#dim').onclick=()=>{const t=prompt('วางโค้ดเด็คที่เพื่อนส่งมา');if(!t)return;const r=decodeDeck(t.trim());if(!r){deckList('โค้ดไม่ถูกต้อง');return}
+  DS.list.push({id:uid(),name:r.name,cards:r.cards});saveStore();deckList(r.dropped?`นำเข้าแล้ว (ข้ามการ์ดที่ไม่มี ${r.dropped} ใบ)`:'นำเข้าแล้ว')};
+ $('#dcl').onclick=()=>lobby()}
+function encodeDeck(name,cards){const n={};cards.forEach(id=>n[id]=(n[id]||0)+1);return'VCZD1.'+btoa(unescape(encodeURIComponent(JSON.stringify({n:name,c:Object.entries(n)}))))}
+function decodeDeck(t){try{const o=JSON.parse(decodeURIComponent(escape(atob(t.replace(/^VCZD1\./,'')))));if(!o||!Array.isArray(o.c))return null;const cards=[];let dropped=0;
+ for(const[id,k]of o.c){if(!BY[id]){dropped+=+k||1;continue}for(let i=0;i<Math.min(+k||0,DK.max);i++)cards.push(id)}
+ return{name:String(o.n||'เด็คนำเข้า').slice(0,24),cards:cards.slice(0,DK.size),dropped}}catch(e){return null}}
+function deckEditor(d){const cnt={};d.cards.forEach(id=>cnt[id]=(cnt[id]||0)+1);let name=d.name,q='',ty='all';
+ const tot=()=>Object.values(cnt).reduce((a,b)=>a+b,0),ids=()=>{const a=[];for(const k in cnt)for(let i=0;i<cnt[k];i++)a.push(k);return a};
+ const list=[...DEFS].sort((a,b)=>(TORD[a.type]??9)-(TORD[b.type]??9)||(a.chain||'').localeCompare(b.chain||'')||(a.level||0)-(b.level||0)||a.id.localeCompare(b.id));
+ $('#md').className='on';$('#md').innerHTML=`<div class="box" style="max-width:480px"><div id="dh" class="bar" style="position:sticky;top:-10px;z-index:2;flex-direction:column;align-items:stretch"></div>
+ <div style="display:flex;gap:6px;margin:6px 0"><input id="dn" maxlength="24" style="flex:1;min-width:0;font-size:16px;padding:6px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff" value=""><button id="dsv" class="g" style="padding:6px 12px">บันทึก</button></div>
+ <input id="dq" placeholder="ค้นหาการ์ด" style="width:100%;font-size:16px;padding:6px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff">
+ <div id="dty" style="display:flex;gap:4px;flex-wrap:wrap;margin:6px 0">${['all',...Object.keys(TN)].map(t=>`<button data-t="${t}" style="padding:3px 8px;font-size:12px">${t==='all'?'ทั้งหมด':TN[t]}</button>`).join('')}</div>
+ <div id="dl"></div>
+ <div class="acts"><button id="dau">เติมให้ครบ</button><button id="drd">🎲 สุ่มทั้งเด็ค</button><button id="dx" class="r">ล้าง</button><button id="dsh">แชร์โค้ด</button><button id="dcl" class="r">ปิด</button></div></div>`;
+ $('#dn').value=name;
+ const head=()=>{const c=ids(),pr=deckProblem(c),l15=c.filter(id=>BY[id].type==='character'&&BY[id].level===15).length;
+  $('#dh').innerHTML=`<div style="display:flex;justify-content:space-between"><b style="color:${pr?'#f3e2b0':'#7dffa0'}">${c.length}/${DK.size} · Lv.15 ${l15}</b><span style="font-size:11px">${pr||'พร้อมใช้ ✅'}</span></div><div style="font-size:11px;color:#bba">${summ(c)}</div>`};
+ const rows=()=>{const ql=q.trim().toLowerCase();$('#dl').innerHTML=list.filter(x=>(ty==='all'||x.type===ty)&&(!ql||(x.name+' '+(x.chainName||'')+' '+x.id).toLowerCase().includes(ql))).map(x=>
+  `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid #2a1244"><img src="${x.img}" style="width:30px;border-radius:3px"><span style="flex:1;font-size:12px">${x.name}<br><small style="color:#bba">${TN[x.type]||x.type}${x.level?' Lv.'+x.level:''}${x.hp?` · ♥${x.hp} ⚔${x.atk} ◈${x.def}`:''}</small></span><button data-m="${x.id}" style="padding:2px 10px">−</button><b data-n="${x.id}" style="width:16px;text-align:center">${cnt[x.id]||0}</b><button data-p="${x.id}" style="padding:2px 10px">+</button></div>`).join('')||'<p style="text-align:center;color:#bba">ไม่พบการ์ด</p>'};
+ const mark=()=>document.querySelectorAll('#dty [data-t]').forEach(b=>b.style.outline=b.dataset.t===ty?'2px solid #ffd54a':'none');
+ const bump=(id,dl)=>{const v=(cnt[id]||0)+dl;if(v<0||v>DK.max||(dl>0&&tot()>=DK.size))return;cnt[id]=v;if(!v)delete cnt[id];const el=document.querySelector('[data-n="'+id+'"]');if(el)el.textContent=v;head()};
+ $('#dl').onclick=e=>{const p=e.target.closest('[data-p]'),m=e.target.closest('[data-m]');if(p)bump(p.dataset.p,1);else if(m)bump(m.dataset.m,-1)};
+ $('#dq').oninput=e=>{q=e.target.value;rows()};$('#dn').oninput=e=>{name=e.target.value};
+ $('#dty').onclick=e=>{const b=e.target.closest('[data-t]');if(b){ty=b.dataset.t;mark();rows()}};
+ const fill=()=>{const f=DEFS.filter(x=>x.type==='character'&&x.level===15);for(let g=0;tot()<DK.size&&g<900;g++){const x=f[Math.floor(Math.random()*f.length)];if((cnt[x.id]||0)<DK.max)cnt[x.id]=(cnt[x.id]||0)+1}};
+ $('#dau').onclick=()=>{fill();rows();head()};
+ $('#drd').onclick=()=>{for(const k in cnt)delete cnt[k];deck().forEach(c=>cnt[c.id]=Math.min(DK.max,(cnt[c.id]||0)+1));fill();rows();head()};
+ $('#dx').onclick=()=>{for(const k in cnt)delete cnt[k];rows();head()};
+ $('#dsh').onclick=()=>{const code=encodeDeck(name||'เด็ค',ids());(navigator.clipboard?navigator.clipboard.writeText(code).then(()=>toast('คัดลอกโค้ดแล้ว'),()=>prompt('คัดลอกโค้ดนี้',code)):Promise.resolve(prompt('คัดลอกโค้ดนี้',code)))};
+ $('#dsv').onclick=()=>{const c=ids(),nm=(name||'').trim().slice(0,24)||'เด็คของฉัน';if(d.id){const t=DS.list.find(x=>x.id===d.id);t.name=nm;t.cards=c}else{if(DS.list.length>=DK.slots){toast('เด็คเต็มแล้ว');return}d.id=uid();DS.list.push({id:d.id,name:nm,cards:c})}
+  const pr=deckProblem(c);if(!pr&&!DS.active)DS.active=d.id;saveStore();deckList(pr?'บันทึกแล้ว แต่ยังใช้เล่นไม่ได้: '+pr:'บันทึกแล้ว')};
+ $('#dcl').onclick=()=>deckList();
+ mark();rows();head()}
 function closeM(){$('#md').className='';$('#md').innerHTML=''}
 function castStart(h,id){const need=['SPL-001','SPL-002','SPL-003','SPL-004','SPL-007','SPL-009','SPL-010'].includes(id);
  if(!need){go({t:'cast',hand:h});return}mode={k:'cast',hand:h,id};render()}
