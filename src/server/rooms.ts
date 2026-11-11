@@ -118,8 +118,10 @@ export class Rooms {
           [id, s, pid[s], has[s], win === s, g.stats ? JSON.stringify(g.stats[s as 0 | 1]) : null, paid(s)?.points ?? 0, paid(s)?.vrcoin ?? 0]);
       }
       await tx.query(`RELEASE SAVEPOINT pvp_record`);
+      meta.historyRecorded = true;
     } catch (e) {
       console.error('pvp match history not recorded', e);
+      meta.historyRecorded = false; meta.historyError = String((e as any)?.message ?? e).slice(0, 200);   // traceable: play_rooms.meta ->> 'historyRecorded' = 'false' (see docs/PVP-ANTI-FARMING.md)
       try { await tx.query(`ROLLBACK TO SAVEPOINT pvp_record`); await tx.query(`RELEASE SAVEPOINT pvp_record`); } catch { /* transaction already unusable: let the caller see it */ }
     }
   }

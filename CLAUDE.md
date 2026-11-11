@@ -25,7 +25,7 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - `tests/` — vitest + PGlite (in-memory Postgres).
 
 ## Commands
-- Tests: `npm test` (~120 tests; the full run can exceed 2 min, so run it in the background with output to a file).
+- Tests: `npm test` (~150 tests; the full run can exceed 2 min, so run it in the background with output to a file).
 - Rebuild browser engine after changing anything under `src/engine` or `src/play-entry.ts`:
   `npx esbuild src/play-entry.ts --bundle --format=iife --global-name=VCZE --minify --charset=utf8 --outfile=public/engine.js`
   (verified byte-identical to the committed file)

@@ -58,7 +58,10 @@ describe('match history: recording each way a match can end', () => {
     expect(seats.map(s => s.is_winner)).toEqual([r.state.winner === 0, r.state.winner === 1]);
     expect(seats.every(s => s.stats && typeof s.stats.summon === 'number' && s.reward_points === 200 && s.has_profile)).toBe(true);
     expect(seats[0].stats.activeTurns + seats[1].stats.activeTurns).toBeGreaterThan(0); expect(seats[0].participation_score).toBeNull();
-    expect(v.reward).toMatchObject({ points: 200, matches: 1, vrcoin: 0 });
+    expect(v.reward).toMatchObject({ points: 200, matches: 1, vrcoin: 0 }); expect(r.meta.historyRecorded).toBe(true);
+    // the monitoring query documented in docs/PVP-ANTI-FARMING.md: paid matches whose history is missing (must be none here)
+    expect((await w.db.query<any>(`SELECT count(*)::int n FROM economy_ledger l WHERE l.kind='match' AND NOT EXISTS (SELECT 1 FROM pvp_matches m WHERE m.room_code=l.ref AND m.ended_at=l.created_at)`)).rows[0].n).toBe(0);
+    expect((await w.db.query<any>(`SELECT count(*)::int n FROM economy_ledger l JOIN pvp_matches m ON m.room_code=l.ref AND m.ended_at=l.created_at WHERE l.kind='match'`)).rows[0].n).toBe(2);
     expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200); expect((await pts(w, p1.key)).matches).toBe(1); expect((await pts(w, p2.key)).vrcoin).toBe(0);
     for (let i = 0; i < 2; i++) { await w.rooms.view(code, a.token); await w.rooms.view(code, b.token); }
     expect(await matches(w.db)).toHaveLength(1);
@@ -159,6 +162,20 @@ describe('match history: guest seats and compatibility', () => {
     expect(spy).toHaveBeenCalled(); spy.mockRestore();
     expect(v.status).toBe('finished'); expect(v.reward).toMatchObject({ points: 200 });
     expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200); expect((await pts(w, p2.key)).points).toBe(ECONOMY.starterPoints + 200);
+    const m = (await room(w.db, code)).meta;                                              // the failure is traceable afterwards
+    expect(m.historyRecorded).toBe(false); expect(typeof m.historyError).toBe('string'); expect(m.rewarded).toBe(true);
+    expect((await w.db.query<any>(`SELECT count(*)::int n FROM economy_ledger WHERE kind='match'`)).rows[0].n).toBe(2);   // payout ledger intact
+  }, 120000);
+
+  it('a half-written history is rolled back as a whole (savepoint): no orphan match row, game and payout unaffected', async () => {
+    const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
+    await w.db.exec(`DROP TABLE pvp_match_players;`);                                    // the first INSERT would succeed, the second cannot
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { a, b, code } = await start(w, p1.key, p2.key); const v = await playOut(w, a, b, code); spy.mockRestore();
+    expect(await matches(w.db)).toHaveLength(0); expect(v.reward).toMatchObject({ points: 200 });
+    expect((await room(w.db, code)).meta.historyRecorded).toBe(false);
+    expect((await pts(w, p2.key)).points).toBe(ECONOMY.starterPoints + 200);
+    await w.rooms.view(code, a.token); await w.rooms.view(code, b.token); expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200);   // polling later does not pay again
   }, 120000);
 });
 
@@ -204,6 +221,23 @@ describe('migration 014', () => {
     const db = new PGlite(); await migrateUp(db); await migrateDown(db);
     expect(await tables(db)).toEqual([]); await migrateUp(db); expect(await tables(db)).toEqual(['pvp_match_players', 'pvp_matches']);
   });
+  it('re-running the project migrator is a no-op; indexes and foreign keys are in place', async () => {
+    const db = new PGlite(); await migrateUp(db); await migrateUp(db);
+    expect((await db.query<any>(`SELECT count(*)::int n FROM schema_migrations WHERE name='014_pvp_match_history.up.sql'`)).rows[0].n).toBe(1);
+    const idx = (await db.query<any>(`SELECT indexname FROM pg_indexes WHERE tablename LIKE 'pvp_%' ORDER BY 1`)).rows.map(r => r.indexname);
+    expect(idx).toEqual(expect.arrayContaining(['pvp_matches_pkey', 'pvp_matches_ended', 'pvp_matches_room', 'pvp_matches_p0', 'pvp_matches_p1', 'pvp_match_players_pkey', 'pvp_match_players_player']));
+    const fk = (await db.query<any>(`SELECT conrelid::regclass::text t, confrelid::regclass::text r, confdeltype d FROM pg_constraint WHERE contype='f' AND conrelid::regclass::text LIKE 'pvp_%' ORDER BY 1,2`)).rows;
+    expect(fk.filter((f: any) => f.r === 'players').every((f: any) => f.d === 'n')).toBe(true);            // ON DELETE SET NULL
+    expect(fk.find((f: any) => f.t === 'pvp_match_players' && f.r === 'pvp_matches').d).toBe('c');            // ON DELETE CASCADE
+    expect((await db.query<any>(`SELECT relrowsecurity FROM pg_class WHERE relname IN ('pvp_matches','pvp_match_players')`)).rows.every((r: any) => r.relrowsecurity)).toBe(true);
+  });
+  it('rollback leaves players, balances, ledger and rooms untouched', async () => {
+    const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
+    const { a, b, code } = await start(w, p1.key, p2.key); await playOut(w, a, b, code);
+    const snap = async () => JSON.stringify([(await w.db.query(`SELECT id, points, vrcoin, pvp_matches FROM players ORDER BY id`)).rows, (await w.db.query(`SELECT player_id, kind, points, vrcoin, ref FROM economy_ledger ORDER BY id`)).rows, (await w.db.query(`SELECT code, status FROM play_rooms`)).rows]);
+    const before = await snap(); await w.db.exec(readFileSync('db/migrations/014_pvp_match_history.down.sql', 'utf8'));
+    expect(await snap()).toBe(before);
+  }, 120000);
   it('constraints: bad end reason / winner seat rejected, match id is unique, deleting a match removes its seats, deleting a player keeps the history', async () => {
     const db = new PGlite(); await migrateUp(db);
     const ins = (id: string, reason = 'normal', win = 0) => db.query(`INSERT INTO pvp_matches(id,room_code,seat0_profile,seat1_profile,winner_seat,end_reason,turns) VALUES ($1::uuid,'ABCDE',false,false,$2,$3,5)`, [id, win, reason]);

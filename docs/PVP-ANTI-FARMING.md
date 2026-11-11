@@ -69,8 +69,10 @@ RLS is enabled (no policies), like the other economy tables.
 
 `Rooms.settle` runs inside the room's row-locked transaction. It is unchanged except that, after the payout, it calls `record`:
 the guard `meta.rewarded` runs the settlement once, and `INSERT … ON CONFLICT (id) DO NOTHING` on the match id makes a repeated call harmless.
-`record` runs inside a `SAVEPOINT`: if the history cannot be written (for example migration 014 is not applied yet) the error is logged and
-the game still finishes and pays as before — history is lost for that match, gameplay is not.
+`record` runs inside a `SAVEPOINT`: if the history cannot be written (for example migration 014 is not applied yet) the whole partial write is rolled
+back to the savepoint (no orphan rows), the error is logged (`pvp match history not recorded`), and the game still finishes and pays as before —
+history is lost for that match, gameplay and payouts are not. The failure is traceable: the room's `meta.historyRecorded` is `true` on success and
+`false` (with a short `meta.historyError`) on failure. Rooms are purged after one day, so also use the ledger query below, which does not expire.
 
 Compatibility: rooms started before this update have no `stats`, `matchId` or `startedAt`. They keep working; the id is created when the match is
 settled and the record has `stats_version = NULL`, `started_at = NULL` and NULL per-player stats.
@@ -88,6 +90,21 @@ Deploy order (only when the Project Owner says "Deploy"): apply migration 014 �
 Applying the edge function before the migration does not break play, but those matches are not recorded.
 Rollback: `014_pvp_match_history.down.sql` (loses the collected history), or redeploy the previous edge bundle.
 
+### Detecting matches that have no history
+
+```sql
+-- paid matches whose history is missing (the ledger is permanent; ended_at and the ledger row share the settle transaction's now())
+SELECT l.ref AS room_code, l.created_at, l.player_id
+FROM economy_ledger l
+WHERE l.kind = 'match'
+  AND NOT EXISTS (SELECT 1 FROM pvp_matches m WHERE m.room_code = l.ref AND m.ended_at = l.created_at);
+-- any match (paid or not) while the room still exists (rooms live about a day)
+SELECT code, meta->>'historyError' FROM play_rooms WHERE status = 'finished' AND meta->>'historyRecorded' = 'false';
+```
+
+Unpaid matches (surrender / timeout / disconnect before turn 6, guests) have no ledger row, so only the room query can find them, and only until the room is purged.
+Matches settled before the update was deployed have no history at all; treat the deploy time as the start of reliable history.
+
 Useful queries once data exists:
 
 ```sql
@@ -98,7 +115,27 @@ SELECT percentile_cont(ARRAY[0.1,0.25,0.5,0.75,0.9]) WITHIN GROUP (ORDER BY (sta
 FROM pvp_match_players WHERE stats IS NOT NULL;
 ```
 
-## 6. Approved rules for later phases (NOT active)
+## 6. Installing / rolling back migration 014 (not done yet)
+
+Nothing has been applied to Supabase. When the Project Owner says "Deploy": run `db/migrations/014_pvp_match_history.up.sql` on the production database
+(the project's migrator is `db/migrate.ts`; on Supabase the SQL is applied as a migration), then deploy the rebuilt edge function, then merge.
+Rollback: run `014_pvp_match_history.down.sql` (drops `pvp_match_players` then `pvp_matches`; balances, ledger, players and rooms are untouched, collected history is lost).
+Because of the savepoint, an edge function deployed before the migration keeps working; those matches are simply not recorded.
+
+## 7. Limits of Phase 1
+
+- Legacy rooms (started before the update) have no stats, so their history rows have `stats_version = NULL` and NULL per-player stats.
+- The history write is verified against PGlite (real Postgres semantics). The `postgres.js` wrapper used by the Supabase edge function was not exercised against a live database.
+- Current reward quirks are intentionally preserved and recorded, not fixed: a surrender after turn 6 is still paid, and a profile playing a guest is still paid.
+
+## 8. Order of work for the next phases (each needs Project Owner approval)
+
+1. **Phase 2 — shadow evaluation:** compute Match Quality from the collected stats, store `quality_*` / `participation_score`, compare with the actual payouts, choose thresholds from the observed distribution (no enforcement).
+2. **Phase 3 — enforcement:** per-player eligibility (surrender / timeout / disconnect rules, both profiles required), Asia/Bangkok daily pair counter (unordered pair, max 3), unique ledger per (player, match), keep the 6-turn minimum.
+3. **Phase 4 — Admin:** editable thresholds and pair limit with validation and before/after audit, reward history and match inspection.
+4. **Phase 5 — client messages and deploy:** explain why a reward was not given; update `CLAUDE.md`; deploy in the documented order.
+
+## 9. Approved rules for later phases (NOT active)
 
 - At most 3 qualifying rewarded matches per unordered player pair per Asia/Bangkok calendar day; from the 4th onward neither player gets Points or Vrcoin from that pair that day.
 - A player who surrenders gets no reward; when the opponent times out or disconnects, the confirmed winner may be rewarded; the timed-out / disconnected player is not.
