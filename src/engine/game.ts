@@ -12,7 +12,7 @@ export class EngineError extends Error {}
 
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
 export interface Unit { fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
-export interface Player { lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
+export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[] }
 export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number } }
 export type Action =
@@ -36,8 +36,10 @@ const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
-export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean } = {}): Game {
+export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] } = {}): Game {
+  // extras = each player's separate Evolution deck (Lv40/70/99 forms). Without it, forms live in the hand (legacy rules).
   const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 } };
+  if (opts.extras) g.players.forEach((p, i) => { p.extra = [...opts.extras![i]]; });
   for (const p of g.players) { for (let i = p.deck.length - 1; i > 0; i--) { const j = Math.floor(rnd(g) * (i + 1)); [p.deck[i], p.deck[j]] = [p.deck[j], p.deck[i]]; } p.hand = p.deck.splice(0, RULES.startHand); }
   return g;
 }
@@ -141,15 +143,15 @@ function step(g: Game, a: Action): Game {
     }
     case 'evolve': {
       main(); if (me.evolved) fail('วิวัฒนาการได้ 1 ครั้งต่อเทิร์น');
-      const u = mine(a.slot), evo = card(a.evo), form = card(a.form); if (u.fused) fail('ตัวละครที่ฟิวชั่นแล้ววิวัฒนาการไม่ได้');
+      const ex = me.extra, u = mine(a.slot), evo = card(a.evo), form = ex ? (ex[a.form] ?? fail('ไม่พบร่างนี้ในเด็คอีโว')) : card(a.form); if (u.fused) fail('ตัวละครที่ฟิวชั่นแล้ววิวัฒนาการไม่ได้');
       if (evo.type !== 'evolution') fail('ต้องใช้การ์ดวิวัฒนาการ');
       const next = ({ 15: 40, 40: 70, 70: 99 } as Record<number, number>)[u.card.level ?? 0];
       if (form.type !== 'character' || form.chain !== u.card.chain || form.level !== next) fail('ร่างใหม่ต้องเป็นขั้นถัดไปของสายเดียวกัน');
       const need = RULES.sacrifice[next], sac = [...new Set(a.sacrifice)];
       if (sac.length !== need || sac.some(s => s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
-      const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1);
+      if (ex) { me.hand.splice(a.evo, 1); ex.splice(a.form, 1); } else { const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1); }
       sendTo(evo); me.evolved = true;
-      if (fire(g, opp, 'on_evolve')) { me.hand.push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
+      if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
       const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
       return g;
@@ -235,7 +237,7 @@ export function legalActions(g: Game): Action[] {
     });
     if (!me.evolved) me.field.forEach((u, s) => {
       if (!u) return; const nx = ({ 15: 40, 40: 70, 70: 99 } as Record<number, number>)[u.card.level ?? 0];
-      const e = me.hand.findIndex(c => c.type === 'evolution'), f = me.hand.findIndex(c => c.type === 'character' && c.chain === u.card.chain && c.level === nx);
+      const e = me.hand.findIndex(c => c.type === 'evolution'), f = (me.extra ?? me.hand).findIndex(c => c.type === 'character' && c.chain === u.card.chain && c.level === nx);
       const sac = me.field.map((x, i) => x && i !== s ? i : -1).filter(i => i >= 0).slice(0, RULES.sacrifice[nx] ?? 9);
       if (e >= 0 && f >= 0 && sac.length === RULES.sacrifice[nx]) out.push({ t: 'evolve', slot: s, evo: e, form: f, sacrifice: sac });
     });

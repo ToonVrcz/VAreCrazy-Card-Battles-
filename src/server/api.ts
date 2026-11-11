@@ -1,5 +1,6 @@
 import { CardService, AppError, can } from './service.ts';
 import { GameData } from './gamedata.ts';
+import { Economy } from './economy.ts';
 import { Rooms } from './rooms.ts';
 
 const need = (u: any, p: string) => { if (!can(u, p)) throw new AppError(403, 'ไม่มีสิทธิ์: ' + p); };
@@ -14,12 +15,17 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
   const send = (_r: any, status: number, data: unknown, type = 'application/json'): Rs => ({ status, data, type });
   try {
     let a: RegExpMatchArray | null;
-      const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');
+      const token = (req.headers.authorization ?? '').replace(/^Bearer /, ''), pkey = (req.headers['x-player-key'] as string | undefined) || undefined;
       // Public online-play endpoints (players are identified by a secret room token, not an admin login)
-      if (path === '/api/play/rooms' && m === 'POST') return send(res, 201, await new Rooms(svc).create(JSON.parse((await body(req)).toString() || '{}').deck));
+      if (path === '/api/play/rooms' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Rooms(svc).create(b.deck, b.evo, pkey)); }
+      // Guest profile, wallet and shop (Lv.40/70 cards)
+      if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
+      if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
+      if (path === '/api/play/shop' && m === 'GET') return send(res, 200, await new Economy(svc).shop(pkey));
+      if (path === '/api/play/shop/buy' && m === 'POST') return send(res, 200, await new Economy(svc).buy(pkey, JSON.parse((await body(req)).toString() || '{}').cardId));
       if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act|leave))?$/))) {
         const rooms = new Rooms(svc);
-        if (a[2] === 'join' && m === 'POST') return send(res, 200, await rooms.join(a[1], JSON.parse((await body(req)).toString() || '{}').deck));
+        if (a[2] === 'join' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await rooms.join(a[1], b.deck, b.evo, pkey)); }
         if (a[2] === 'leave' && m === 'POST') return send(res, 200, await rooms.leave(a[1], token));
         if (a[2] === 'act' && m === 'POST') return send(res, 200, await rooms.act(a[1], token, JSON.parse((await body(req)).toString() || '{}').action));
         if (!a[2] && m === 'GET') return send(res, 200, await rooms.view(a[1], token, Number(url.searchParams.get('since') ?? -1)));
@@ -29,6 +35,10 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
         return send(res, 200, await svc.login(String(b.email ?? ''), String(b.password ?? '')));
       }
       const u = await svc.auth(token);
+      if (path === '/api/admin/economy' && m === 'GET') { need(u, 'users'); const e = new Economy(svc); return send(res, 200, { players: await e.adminPlayers(), prices: await e.prices() }); }
+      if (path === '/api/admin/economy/grant' && m === 'POST') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminGrant(String(b.playerId ?? ''), Number(b.points ?? 0), Number(b.vrcoin ?? 0), b.note)); }
+      if (path === '/api/admin/economy/price' && m === 'PUT') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminSetPrice(Number(b.level), String(b.currency), Number(b.price))); }
+      if (path === '/api/admin/economy/price' && m === 'DELETE') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminRemovePrice(Number(b.level))); }
       if (path === '/api/me') return send(res, 200, u);
       if (path === '/api/logout' && m === 'POST') { await svc.logout(token); return send(res, 200, { ok: true }); }
       if (path === '/api/cards' && m === 'GET') return send(res, 200, await svc.listCards(u, { status: url.searchParams.get('status') || undefined, q: url.searchParams.get('q') || undefined }));

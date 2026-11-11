@@ -2,7 +2,7 @@
 // NOT connected to anything yet: this file only has to satisfy the contract in ./contract.ts and be fully tested here.
 // Content (the card pool + fusion pairs) arrives through ctx.content, as the platform does for other games' word libraries.
 import { createGame, act as engineAct, EngineError, type Action, type CardDef, type FusionPair, type Game } from '../engine/game.ts';
-import { buildDeck, viewFor } from '../engine/deck-view.ts';
+import { buildSet, viewFor } from '../engine/deck-view.ts';
 import { autoEndTurn } from '../engine/turn-timer.ts';
 import type { GameModule, ModuleSeat, ModuleCtx, ActResult, ModuleOutcome } from './contract.ts';
 
@@ -37,7 +37,10 @@ export const cardBattleModule: GameModule<CardBattleState, CardBattleView, CardB
     if (seats.length !== 2) throw new Error('card_battle: exactly 2 seats');
     const [a, b] = [...seats].sort((x, y) => x.seatNumber - y.seatNumber);
     const first = (ctx.random() < 0.5 ? 0 : 1) as 0 | 1;
-    const game = createGame([buildDeck(c.pool, c.pairs, ctx.random), buildDeck(c.pool, c.pairs, ctx.random)], Math.floor(ctx.random() * 1e9), first, { fusionPairs: c.pairs, interactive: true });
+    // Ownership of Lv.40/70 cards will come from the Universe bridge later; until then both seats may use every form of their chains.
+    const forms = (chains: string[]) => c.pool.filter(x => x.type === 'character' && (x.level ?? 0) > 15 && x.chain && chains.includes(x.chain));
+    const A = buildSet(c.pool, c.pairs, ctx.random, forms), B = buildSet(c.pool, c.pairs, ctx.random, forms);
+    const game = createGame([A.main, B.main], Math.floor(ctx.random() * 1e9), first, { fusionPairs: c.pairs, interactive: true, extras: [A.extra, B.extra] });
     return { game, seatIds: [a.id, b.id], settings, deadline: ctx.now + settings.turnSeconds * 1000, misses: [0, 0], forfeit: null };
   },
 

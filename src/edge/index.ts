@@ -21,7 +21,7 @@ svc.put = async (path, data, mime) => {
     method: 'POST', headers: { authorization: `Bearer ${KEY}`, 'content-type': mime, 'x-upsert': 'true' }, body: data });
   if (!r.ok) throw new Error('storage ' + r.status);
 };
-const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS' };
+const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization,content-type,x-player-key', 'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS' };
 
 (globalThis as any).Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });

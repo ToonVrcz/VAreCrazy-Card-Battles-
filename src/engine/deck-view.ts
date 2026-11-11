@@ -21,6 +21,7 @@ export function viewFor(g: Game, seat: 0 | 1) {
   const v = structuredClone({ ...g, pending: undefined }) as any, flip = seat === 1;
   if (flip) { v.players.reverse(); v.active = 1 - g.active; v.winner = g.winner === null ? null : 1 - g.winner; }
   const hide = { id: '?', name: '?', type: 'hidden' };
+  if (v.players[1].extra) v.players[1].extra = v.players[1].extra.map(() => hide);
   const opp = v.players[1]; opp.hand = opp.hand.map(() => hide); opp.deck = opp.deck.map(() => hide);
   opp.back = opp.back.map((b: any) => (b ? { card: hide, setTurn: b.setTurn } : null));
   v.players[0].deck = v.players[0].deck.map(() => hide);          // you do not see your own deck order either
@@ -40,6 +41,7 @@ export function validateDeck(ids: unknown, byId: Map<string, CardDef>): string |
   const n = new Map<string, number>();
   for (const id of ids as string[]) {
     if (!byId.has(id)) return `ไม่พบการ์ด ${id} (อาจถูกถอดออกแล้ว)`;
+    if (isForm(byId.get(id)!)) return `${byId.get(id)!.name} (Lv.${byId.get(id)!.level}) ต้องใส่ในเด็คอีโว ไม่ใช่เด็คหลัก`;
     const k = (n.get(id) ?? 0) + 1; n.set(id, k);
     if (k > DECK_RULES.maxCopies) return `${byId.get(id)!.name} ใส่ได้ไม่เกิน ${DECK_RULES.maxCopies} ใบ`;
   }
@@ -48,3 +50,35 @@ export function validateDeck(ids: unknown, byId: Map<string, CardDef>): string |
   return null;
 }
 export const deckFromIds = (ids: string[], byId: Map<string, CardDef>): CardDef[] => ids.map(id => ({ ...byId.get(id)! }));
+
+/** Evolution deck (Lv40/70/99 forms, separate from the 40-card main deck). Copies are limited by what the player owns. */
+export const EVO_RULES = { max: 15, maxCopies: 3 } as const;
+export const isForm = (c: CardDef) => c.type === 'character' && (c.level ?? 0) > 15;
+export function validateEvoDeck(ids: unknown, byId: Map<string, CardDef>, owned: Map<string, number>): string | null {
+  if (!Array.isArray(ids) || ids.some(x => typeof x !== 'string')) return 'รูปแบบเด็คอีโวไม่ถูกต้อง';
+  if (ids.length > EVO_RULES.max) return `เด็คอีโวมีได้ไม่เกิน ${EVO_RULES.max} ใบ (ตอนนี้ ${ids.length})`;
+  const n = new Map<string, number>();
+  for (const id of ids as string[]) {
+    const c = byId.get(id); if (!c || !isForm(c)) return `${c?.name ?? id} ใส่ในเด็คอีโวไม่ได้`;
+    const k = (n.get(id) ?? 0) + 1; n.set(id, k);
+    if (k > Math.min(EVO_RULES.maxCopies, owned.get(id) ?? 0)) return `คุณมี ${c.name} ไม่พอ (มี ${owned.get(id) ?? 0} ใบ)`;
+  }
+  return null;
+}
+
+/** Main deck + Evolution deck for a random game. Forms are never in the main deck. `extraOf` decides which forms the seat may use. */
+export function buildSet(pool: CardDef[], pairs: FusionPair[], r: () => number = Math.random, extraOf?: (chainKeys: string[]) => CardDef[]): { main: CardDef[]; extra: CardDef[] } {
+  const pick = <T>(a: T[]) => a[Math.floor(r() * a.length)];
+  const chars = pool.filter(c => c.type === 'character'), all = [...new Set(chars.map(c => c.chain!).filter(Boolean))];
+  const pc = new Set(pairs.flatMap(p => [p.a, p.b]));
+  const chains = all.sort(() => r() - 0.5).sort((x, y) => (pc.has(y) ? 1 : 0) - (pc.has(x) ? 1 : 0)).slice(0, 7), d: CardDef[] = [], n = new Map<string, number>();
+  const put = (c: CardDef | undefined, cap = DECK_RULES.maxCopies) => { if (!c || (n.get(c.id) ?? 0) >= cap || d.length >= DECK_RULES.size) return false; n.set(c.id, (n.get(c.id) ?? 0) + 1); d.push(c); return true; };
+  for (const k of chains) { const a = chars.find(x => x.chain === k && x.level === 15); for (let i = 0; i < 3; i++) put(a); }
+  const evo = pool.find(c => c.id === 'EVO-001'); for (let i = 0; i < 3; i++) put(evo);
+  const fus = pool.find(c => c.id === 'FUS-001'); if (pairs.length) for (let i = 0; i < 2; i++) put(fus);
+  const sp = pool.filter(c => c.type === 'spell'), tr = pool.filter(c => c.type === 'trap');
+  for (let g = 0; d.length < DECK_RULES.size && g < 400 && (sp.length || tr.length); g++) put(pick(g % 3 === 2 && tr.length ? tr : sp.length ? sp : tr));
+  const l15 = chars.filter(c => c.level === 15); for (let g = 0; d.length < DECK_RULES.size && g < 400 && l15.length; g++) put(pick(l15));
+  const forms = extraOf ? extraOf(chains) : [];
+  return { main: d.map(c => ({ ...c })), extra: forms.slice(0, EVO_RULES.max).map(c => ({ ...c })) };
+}

@@ -13,7 +13,7 @@ async function world() {
   await svc.createUser('a@x.com', 'password123', 'super_admin');
   const u = (await svc.login('a@x.com', 'password123')).user;
   for (const f of ['toon-cards.json', 'support-cards.json', 'spell-cards.json', 'trap-cards.json']) await svc.importCards(u, load(f));
-  const ids = (await db.query<any>(`SELECT character_id id FROM cards WHERE status<>'archived' ORDER BY character_id`)).rows.map(r => r.id as string);
+  const ids = (await db.query<any>(`SELECT character_id id FROM cards WHERE status<>'archived' AND NOT (card_type='character' AND level>15) ORDER BY character_id`)).rows.map(r => r.id as string);
   const lv15 = (await db.query<any>(`SELECT character_id id FROM cards WHERE status<>'archived' AND card_type='character' AND level=15 ORDER BY character_id`)).rows.map(r => r.id as string);
   return { db, rooms: new Rooms(svc), ids, lv15 };
 }
