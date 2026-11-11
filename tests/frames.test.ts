@@ -19,6 +19,11 @@ describe('card frames', () => {
     expect(l.length).toBe(2);
     expect(l.find((f: any) => f.scope === 'type:spell').path).toBe(m2.storage_path);
     await expect(svc.setFrame(u, 'type:bogus', m1.id)).rejects.toThrow();
+    await svc.setFrame(u, 'level:40', m1.id); await svc.setFrame(u, 'level:70', m1.id); await svc.setFrame(u, 'level:99', m2.id);
+    await expect(svc.setFrame(u, 'level:15', m1.id)).rejects.toThrow();
+    await expect(svc.setFrame(u, 'level:50', m1.id)).rejects.toThrow();
+    expect((await svc.publicFrames()).map((f: any) => f.scope).sort()).toEqual(['card:BIO-001', 'level:40', 'level:70', 'level:99', 'type:spell']);
+    await svc.deleteFrame(u, 'level:40'); await svc.deleteFrame(u, 'level:70'); await svc.deleteFrame(u, 'level:99');
     await expect(svc.setFrame(v, 'type:trap', m1.id)).rejects.toThrow();
     await svc.deleteFrame(u, 'type:spell');
     expect((await svc.listFrames(u)).length).toBe(1);

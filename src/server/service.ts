@@ -305,14 +305,18 @@ export class CardService {
     return r.rows[0] as { id: string; storage_path: string };
   }
 
-  // ---- card frames (per type: "type:spell", per card: "card:<character_id>") ----
+  // ---- card frames (per type: "type:spell", per character level: "level:40|70|99", per card: "card:<character_id>") ----
+  // Read-only list for the public play screen (frames are not secret).
+  async publicFrames() {
+    return (await this.db.query<any>(`SELECT f.scope, m.storage_path AS path FROM card_frames f JOIN media_assets m ON m.id=f.media_id ORDER BY f.scope`)).rows;
+  }
   async listFrames(u: User) {
     need(u, 'read');
     return (await this.db.query<any>(`SELECT f.scope, m.storage_path AS path FROM card_frames f JOIN media_assets m ON m.id=f.media_id ORDER BY f.scope`)).rows;
   }
   async setFrame(u: User, scope: string, mediaId: string) {
     need(u, 'write');
-    if (!/^(type:(character|evolution|fusion|spell|trap|item)|card:[\w-]+)$/.test(scope)) throw new AppError(400, 'scope ไม่ถูกต้อง');
+    if (!/^(type:(character|evolution|fusion|spell|trap|item)|level:(40|70|99)|card:[\w-]+)$/.test(scope)) throw new AppError(400, 'scope ไม่ถูกต้อง');
     if (!(await this.db.query<any>(`SELECT 1 FROM media_assets WHERE id=$1`, [mediaId])).rows[0]) throw new AppError(400, 'ไม่พบไฟล์กรอบ');
     await this.db.query(`INSERT INTO card_frames(scope,media_id) VALUES ($1,$2) ON CONFLICT (scope) DO UPDATE SET media_id=$2, updated_at=now()`, [scope, mediaId]);
     return { ok: true };

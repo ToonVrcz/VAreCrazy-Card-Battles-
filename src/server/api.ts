@@ -21,6 +21,7 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       // Guest profile, wallet and shop (Lv.40/70 cards)
       if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
       if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
+      if (path === '/api/play/frames' && m === 'GET') return send(res, 200, await svc.publicFrames());
       if (path === '/api/play/shop' && m === 'GET') return send(res, 200, await new Economy(svc).shop(pkey));
       if (path === '/api/play/shop/buy' && m === 'POST') return send(res, 200, await new Economy(svc).buy(pkey, JSON.parse((await body(req)).toString() || '{}').cardId));
       if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act|leave))?$/))) {

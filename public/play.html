@@ -120,7 +120,9 @@ function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="b
 async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};closeM();startPoll()}catch(e){lobby(e.message)}}
 function go(a){if(ON){mode=null;sel=null;OA('/'+ON.code+'/act',{method:'POST',body:JSON.stringify({action:a})}).then(pollNow).catch(e=>{toast(e.message);pollNow()});if(G)render();return true}
  try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
-function detail(c,z,i){const d=BY[c.id]||c,card=view(c,{frame:'/assets/frame/frame.webp'});VCZ.ref.frame='/assets/frame/frame.webp';
+const DEFF='/assets/frame/frame.webp';let FR={};fetch('/api/play/frames').then(r=>r.ok?r.json():[]).then(l=>{FR=Object.fromEntries(l.map(f=>[f.scope,'/'+f.path]))}).catch(()=>{});
+const frameOf=d=>FR['card:'+d.id]||(d.type==='character'&&[40,70,99].includes(+d.level)&&FR['level:'+d.level])||FR['type:'+d.type]||DEFF;
+function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
  const me=z==='shop'?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&G.phase==='main',bt=z!=='shop'&&G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
   if(d.type==='trap'&&main)b.push(['วางกับดัก',()=>go({t:'set',hand:i})]);
