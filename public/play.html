@@ -148,7 +148,7 @@ function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr})
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
  $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${u.fused.map(x=>x.name).join(' + ')}</p>`:''})():''}${d.type==='character'&&(d.fx||[]).length?'<p style="color:#bba;font-size:11px">⚠ ความสามารถของตัวละครยังไม่เปิดใช้งานในช่วงทดสอบ</p>':(d.fx||[]).map(x=>`<p>• ${x}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
- $('#cl').onclick=z==='shop'?()=>shop(d.level):z[0]==='g'?()=>graveView(+z[1]):closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
+ $('#cl').onclick=z==='shop'?()=>shop(d.level):z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
 const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
 function summ(cards){const n={};cards.forEach(id=>{const t=BY[id].type;n[t]=(n[t]||0)+1});return Object.keys(n).sort((x,y)=>(TORD[x]??9)-(TORD[y]??9)).map(t=>`${TN[t]||t} ${n[t]}`).join(' · ')||'ยังไม่มีการ์ด'}
 function deckList(msg=''){if(!ME.ok&&!deckList.tried){deckList.tried=1;refreshMe().then(()=>deckList(msg));}const row=d=>{const pr=deckProblem(d.cards)||evoProblem(d.evo),on=DS.active===d.id&&!pr;
@@ -214,6 +214,8 @@ function deckEditor(d){const cnt={},ecnt={};d.cards.forEach(id=>cnt[id]=(cnt[id]
  $('#dsv').onclick=()=>{const c=idsOf(cnt),ev=auto?null:idsOf(ecnt),nm=(name||'').trim().slice(0,24)||'เด็คของฉัน';if(d.id){const t=DS.list.find(x=>x.id===d.id);t.name=nm;t.cards=c;t.evo=ev}else{if(DS.list.length>=DK.slots){toast('เด็คเต็มแล้ว');return}d.id=uid();DS.list.push({id:d.id,name:nm,cards:c,evo:ev})}
   const pr=deckProblem(c)||evoProblem(ev);if(!pr&&!DS.active)DS.active=d.id;saveStore();deckList(pr?'บันทึกแล้ว แต่ยังใช้เล่นไม่ได้: '+pr:'บันทึกแล้ว')};
  mark();acts();rows();head()}
+/** After a purchase, put the card into every saved Evolution deck that is set by hand (automatic decks pick it up on their own). */
+function addToEvoDecks(id,owned){const own=Math.min(DK.max,owned);let n=0,full=0;DS.list.forEach(d=>{if(!d.evo)return;if(d.evo.filter(x=>x===id).length>=own)return;if(d.evo.length>=DK.evoMax){full++;return}d.evo.push(id);n++});if(n)saveStore();return{n,full}}
 async function shop(lv=40,msg=''){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลดร้านค้า…</div>';
  let sh;try{await refreshMe();sh=await API('/shop')}catch(e){lobby('เปิดร้านค้าไม่ได้: '+e.message);return}
  const items=sh.items.filter(i=>i.level===lv),cur=c=>c==='points'?'แต้ม 💰':'Vrcoin 🪙',pr=items[0]?.price;
@@ -228,11 +230,11 @@ async function shop(lv=40,msg=''){$('#md').className='on';$('#md').innerHTML='<d
  <div class="acts"><button class="r" id="shx">ปิด</button></div></div>`;
  document.querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>shop(+el.dataset.l));
  document.querySelectorAll('[data-pv]').forEach(el=>el.onclick=()=>detail(BY[el.dataset.pv],'shop',0));
- document.querySelectorAll('[data-b]').forEach(el=>el.onclick=async()=>{const i=items.find(x=>x.id===el.dataset.b);try{await API('/shop/buy',{method:'POST',body:JSON.stringify({cardId:i.id})});shop(lv,'ซื้อ '+i.name+' แล้ว ✅ (ไปใส่ในเด็คอีโวที่หน้า เด็คของฉัน)')}catch(e){shop(lv,'⚠ '+e.message)}});
+ document.querySelectorAll('[data-b]').forEach(el=>el.onclick=async()=>{const i=items.find(x=>x.id===el.dataset.b);try{await API('/shop/buy',{method:'POST',body:JSON.stringify({cardId:i.id})});const r=addToEvoDecks(i.id,i.owned+1);shop(lv,'ซื้อ '+i.name+' แล้ว ✅ '+(r.n?`ใส่ในเด็คอีโวที่จัดเองให้ ${r.n} เด็คแล้ว`:'เด็คอีโวแบบอัตโนมัติจะใช้ใบนี้เอง')+(r.full?` · เด็คอีโว ${r.full} เด็คเต็ม ${DK.evoMax} ใบ จึงไม่ได้ใส่`:''))}catch(e){shop(lv,'⚠ '+e.message)}});
  $('#shx').onclick=()=>lobby()}
-function extraView(){const me=G.players[0];$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h3 style="margin:2px 0">🧬 เด็คอีโวของคุณ (${me.extra.length})</h3><p>ใช้การ์ดวิวัฒนาการแล้วเลือกร่างจากที่นี่ได้เลย ไม่ต้องรอจั่ว</p>
- <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">${me.extra.map(c=>`<div style="width:30%"><img src="${img(c)}" style="width:100%;border-radius:6px"><div style="font-size:11px">${c.name}<br>Lv.${c.level}</div></div>`).join('')||'<p style="color:#bba">ยังไม่มีการ์ดในเด็คอีโว (ซื้อที่ร้านค้า)</p>'}</div>
- <div class="acts"><button class="r" id="exc">ปิด</button></div></div>`;$('#exc').onclick=closeM}
+function extraView(){const me=G.players[0],L=me.extra.map((c,i)=>({c,i})).sort((a,b)=>(a.c.chain||'').localeCompare(b.c.chain||'')||(a.c.level||0)-(b.c.level||0));$('#md').className='on';
+ $('#md').innerHTML=`<div class="box" style="max-width:480px;text-align:center"><h3 style="margin:2px 0">🧬 เด็คอีโวของคุณ (${me.extra.length} ใบ)</h3><p style="font-size:12px;margin:2px 0">ใช้การ์ดวิวัฒนาการแล้วเลือกร่างจากที่นี่ได้เลย ไม่ต้องรอจั่ว · แตะการ์ดเพื่อดูรายละเอียด</p>${me.extra.length?graveGrid(L,'data-ei'):'<p style="color:#bba">ยังไม่มีการ์ดในเด็คอีโว (ซื้อที่ร้านค้า)</p>'}<div class="acts"><button class="r" id="exc">ปิด</button></div></div>`;
+ $('#exc').onclick=closeM;document.querySelectorAll('[data-ei]').forEach(el=>el.onclick=()=>detail(me.extra[+el.dataset.ei],'e',+el.dataset.ei))}
 function closeM(){$('#md').className='';$('#md').innerHTML=''}
 function graveGrid(L,attr){return`<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">${L.map(x=>`<div ${attr}="${x.i}" style="width:30%;cursor:pointer"><img src="${img(x.c)}" style="width:100%;border-radius:6px"><div style="font-size:12px">${x.c.name}${x.c.level?'<br>Lv.'+x.c.level:''}</div></div>`).join('')||'<p style="color:#bba">ยังไม่มีการ์ดในสุสาน</p>'}</div>`}
 function graveView(s){const L=G.players[s].grave.map((c,i)=>({c,i}));$('#md').className='on';

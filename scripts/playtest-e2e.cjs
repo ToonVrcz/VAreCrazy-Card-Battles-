@@ -70,6 +70,19 @@ async function playBot(page, tag, maxMs = 240000) {
   await new Promise((res, rej) => { srv.stdout.on('data', d => /READY/.test(String(d)) && res()); srv.on('exit', c => rej(new Error('server exited ' + c))); setTimeout(() => rej(new Error('server start timeout')), 90000); });
   const browser = await chromium.launch();
   try {
+    // ---- 0. new in-game views: graveyard of both sides, Evolution pile with card detail ----
+    { const ctx = await browser.newContext(), p = await ctx.newPage(); watch(p, 'views'); await p.goto(BASE + '/play'); await p.waitForSelector('#lb'); await p.click('#lb'); await p.waitForSelector('#nx');
+      for (const side of ['0', '1']) {
+        await p.click(`[data-g="${side}"]`); await p.waitForSelector('#gx');
+        ok(`graveyard button opens the ${side === '0' ? 'own' : 'opponent'} graveyard`, /สุสาน/.test(await p.locator('#md .box').innerText()));
+        await p.click('#gx'); }
+      if (await p.locator('#exb').count()) {
+        await p.click('#exb'); await p.waitForSelector('#exc');
+        const n = await p.locator('[data-ei]').count();
+        if (n === 0) ok('Evolution pile says so when it is empty (nothing bought yet)', /ยังไม่มีการ์ดในเด็คอีโว/.test(await p.locator('#md .box').innerText()));
+        else { await p.locator('[data-ei]').first().click(); await p.waitForSelector('#cl'); await p.click('#cl');
+          ok('Evolution pile: tapping a card opens Card Detail and closing returns to the pile', await p.locator('#exc').count() === 1, n + ' cards'); } }
+      await ctx.close(); }
     // ---- 1. lobby, feedback button hidden without a URL, shown (1 click) when one is configured ----
     { const ctx = await browser.newContext(), p = await ctx.newPage(); watch(p, 'lobby'); await p.goto(BASE + '/play'); await p.waitForSelector('#lb');
       ok('desktop: /play shows the lobby (not blank)', /VAreCrazy Card Battle/.test(await p.locator('#md').innerText()));
