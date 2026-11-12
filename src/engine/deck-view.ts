@@ -36,6 +36,16 @@ export function viewFor(g: Game, seat: 0 | 1) {
   return v;
 }
 
+/** What a spectator may see: both sides as seen by an opponent would (no hands, no deck/extra order, face-down traps hidden), nobody's pending options. players[0] = room creator. */
+export function viewSpectator(g: Game) {
+  const v = viewFor(g, 0) as any, hide = { id: '?', name: '?', type: 'hidden' }, me = v.players[0];
+  me.hand = me.hand.map(() => hide); if (me.extra) me.extra = me.extra.map(() => hide);
+  me.back = me.back.map((b: any) => (b ? { card: hide, setTurn: b.setTurn } : null));
+  if (v.pending) v.pending = { ...v.pending, options: [], info: undefined };
+  v.events = (v.events ?? []).map((e: any) => { if (e.t === 'set_trap' || e.t === 'search_evo') { const o = { ...e }; delete o.card; if (e.t === 'search_evo') delete o.to; return o; } return e; });
+  return v;
+}
+
 /** Custom deck rules (server is the authority; the play screen mirrors them for friendly messages). */
 export const DECK_RULES = { size: 40, maxCopies: 3, minLv15: 3 } as const;
 export function validateDeck(ids: unknown, byId: Map<string, CardDef>): string | null {

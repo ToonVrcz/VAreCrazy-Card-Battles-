@@ -9,6 +9,7 @@ import { Rooms } from '../src/server/rooms';
 import { Economy, ECONOMY } from '../src/server/economy';
 import { botPick } from '../src/engine/bot';
 import { TIMING } from '../src/engine/turn-timer';
+import { joinStart } from './room-helpers';
 
 const load = (f: string) => JSON.parse(readFileSync(`db/seed/${f}`, 'utf8'));
 async function world() {
@@ -36,7 +37,7 @@ const setMeta = async (db: any, code: string, f: (m: any) => void) => { const m 
 const matches = async (db: any) => (await db.query(`SELECT * FROM pvp_matches ORDER BY ended_at, id`)).rows as any[];
 const seatsOf = async (db: any, id: string) => (await db.query(`SELECT * FROM pvp_match_players WHERE match_id=$1 ORDER BY seat`, [id])).rows as any[];
 const pts = async (w: W, key: string) => (await w.eco.me(key)) as any;
-const start = async (w: W, k0?: string, k1?: string, deck?: string[]) => { const a = await w.rooms.create(deck, undefined, k0), b = await w.rooms.join(a.code, deck, undefined, k1); return { a, b, code: a.code as string }; };
+const start = async (w: W, k0?: string, k1?: string, deck?: string[]) => { const a = await w.rooms.create(deck, undefined, k0), b = await joinStart(w.rooms, a, deck, undefined, k1); return { a, b, code: a.code as string }; };
 /** Ends turns with plain 'next' until the game has reached `turn` (both seats just pass their turns). */
 async function idleTo(w: W, a: any, b: any, code: string, turn: number) {
   for (let i = 0; i < 40; i++) {

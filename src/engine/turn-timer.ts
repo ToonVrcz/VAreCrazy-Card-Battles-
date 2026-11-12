@@ -4,10 +4,13 @@ import { emit } from './events.ts';
 
 export const TIMING = { turnMs: 90_000, maxMisses: 3, absentMs: 120_000, seenRefreshMs: 10_000 } as const;
 export type EndReason = 'timeout' | 'absent' | 'left';
-export interface RoomMeta { deadline: number | null; misses: [number, number]; seen: [number | null, number | null]; endReason?: EndReason | null; forfeit?: 0 | 1 | null; rewarded?: boolean; matchId?: string; startedAt?: number; historyRecorded?: boolean; historyError?: string; rewards?: ({ points: number; vrcoin: number; matches: number } | null)[] }
+export interface RoomMeta { deadline: number | null; misses: [number, number]; seen: [number | null, number | null]; endReason?: EndReason | null; forfeit?: 0 | 1 | null; rewarded?: boolean; matchId?: string; startedAt?: number; historyRecorded?: boolean; historyError?: string; rewards?: ({ points: number; vrcoin: number; matches: number } | null)[]; turnMs?: number; kicked?: string[] }
 
 export const mover = (g: Game): 0 | 1 => (g.pending ? g.pending.responder : g.active);
-export const newMeta = (now: number): RoomMeta => ({ deadline: now + TIMING.turnMs, misses: [0, 0], seen: [now, now], endReason: null, forfeit: null });
+/** Turn length of one room: the room's own setting, else the default (TIMING.turnMs). */
+export const turnLen = (meta: Pick<RoomMeta, 'turnMs'>): number => meta.turnMs ?? TIMING.turnMs;
+export const TURN_RANGE = { minMs: 30_000, maxMs: 300_000 } as const;
+export const newMeta = (now: number, turnMs?: number): RoomMeta => ({ ...(turnMs ? { turnMs } : {}), deadline: now + (turnMs ?? TIMING.turnMs), misses: [0, 0], seen: [now, now], endReason: null, forfeit: null });
 
 /** Ends the current mover's turn the way a player would: pass a pending chain window, or press "next" until the turn changes. */
 export function autoEndTurn(g: Game): Game {
@@ -43,7 +46,7 @@ export function tickRoom(g: Game, meta: RoomMeta, seat: 0 | 1, now: number): { g
     if (++meta.misses[m] >= TIMING.maxMisses) { forfeit(g, m, 'timeout', meta); return { game: g, changed: true }; }
     emit(g, { t: 'turn_timeout', p: m });
     let next = g; try { next = autoEndTurn(g); } catch { /* engine refused: keep state, restart the clock */ }
-    meta.deadline = next.winner !== null ? null : now + TIMING.turnMs;
+    meta.deadline = next.winner !== null ? null : now + turnLen(meta);
     return { game: next, changed: true };
   }
   return { game: g, changed: false };

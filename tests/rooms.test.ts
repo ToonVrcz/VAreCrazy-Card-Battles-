@@ -5,6 +5,7 @@ import { migrateUp } from '../db/migrate';
 import { CardService } from '../src/server/service';
 import { Rooms, buildDeck, viewFor } from '../src/server/rooms';
 import { botPick } from '../src/engine/bot';
+import { joinStart } from './room-helpers';
 
 const load = (f: string) => JSON.parse(readFileSync(`db/seed/${f}`, 'utf8'));
 async function world() {
@@ -22,8 +23,8 @@ describe('online rooms', () => {
     const { rooms } = await world();
     const a = await rooms.create(); expect(a.code).toMatch(code5); expect(a.seat).toBe(0);
     expect(await rooms.view(a.code, a.token)).toMatchObject({ status: 'waiting' });
-    const b = await rooms.join(a.code); expect(b.seat).toBe(1);
-    await expect(rooms.join(a.code)).rejects.toThrow(/เริ่มเล่นแล้ว/);
+    const b = await joinStart(rooms, a); expect(b.seat).toBe(1);
+    await expect(joinStart(rooms, a)).rejects.toThrow(/เริ่มเล่นแล้ว/);
     const va: any = await rooms.view(a.code, a.token), vb: any = await rooms.view(a.code, b.token);
     expect(va.status).toBe('playing'); expect(va.game.players[0].hand).toHaveLength(5); expect(va.game.players[0].hand[0].name).not.toBe('?');
     expect(va.game.players[1].hand.every((c: any) => c.id === '?')).toBe(true);         // opponent hand hidden
@@ -36,7 +37,7 @@ describe('online rooms', () => {
   });
   it('only the player whose turn it is can act; illegal actions come back as errors', async () => {
     const { rooms } = await world();
-    const a = await rooms.create(), b = await rooms.join(a.code);
+    const a = await rooms.create(), b = await joinStart(rooms, a);
     const v: any = await rooms.view(a.code, a.token), mineFirst = v.game.active === 0;
     const [me, other] = mineFirst ? [a, b] : [b, a];
     await expect(rooms.act(a.code, other.token, { t: 'next' })).rejects.toThrow(/ยังไม่ถึงตา/);
@@ -46,7 +47,7 @@ describe('online rooms', () => {
   });
   it('two bots can play a whole room through the API (incl. trap response windows)', async () => {
     const { rooms, db } = await world();
-    const a = await rooms.create(), b = await rooms.join(a.code), toks = [a.token, b.token];
+    const a = await rooms.create(), b = await joinStart(rooms, a), toks = [a.token, b.token];
     let steps = 0;
     while (steps++ < 3000) {
       const row: any = (await db.query<any>(`SELECT state, status FROM play_rooms WHERE code=$1`, [a.code])).rows[0];

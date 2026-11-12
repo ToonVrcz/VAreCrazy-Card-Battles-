@@ -5,6 +5,7 @@ import { migrateUp } from '../db/migrate';
 import { CardService } from '../src/server/service';
 import { Rooms } from '../src/server/rooms';
 import { TIMING } from '../src/engine/turn-timer';
+import { joinStart } from './room-helpers';
 
 const load = (f: string) => JSON.parse(readFileSync(`db/seed/${f}`, 'utf8'));
 async function world() {
@@ -21,7 +22,7 @@ async function world() {
 function goodDeck(ids: string[], lv15: string[]) { const out: string[] = []; for (const id of [...lv15, ...ids.filter(i => !lv15.includes(i))]) for (let k = 0; k < 3 && out.length < 40; k++) out.push(id); return out; }
 const meta = async (db: any, code: string) => (await db.query(`SELECT meta, state, status, version FROM play_rooms WHERE code=$1`, [code])).rows[0];
 const setMeta = (db: any, code: string, f: (m: any) => void) => meta(db, code).then((r: any) => { const m = r.meta; f(m); return db.query(`UPDATE play_rooms SET meta=$2::jsonb WHERE code=$1`, [code, JSON.stringify(m)]); });
-async function started(w: any, d0?: string[], d1?: string[]) { const a = await w.rooms.create(d0), b = await w.rooms.join(a.code, d1); return { a, b, code: a.code as string }; }
+async function started(w: any, d0?: string[], d1?: string[]) { const a = await w.rooms.create(d0), b = await joinStart(w.rooms, a, d1); return { a, b, code: a.code as string }; }
 
 describe('custom decks', () => {
   it('uses the chosen decks for both seats (creator + joiner)', async () => {
@@ -41,7 +42,7 @@ describe('custom decks', () => {
     await expect(w.rooms.create(Array(40).fill(w.lv15[0]))).rejects.toThrow(/ไม่เกิน 3/);
     await expect(w.rooms.create(goodDeck(w.ids.filter(i => !w.lv15.includes(i)), []))).rejects.toThrow(/Lv\.15/);
     await expect(w.rooms.create('x' as any)).rejects.toThrow(/รูปแบบ/);
-    const a = await w.rooms.create(); await expect(w.rooms.join(a.code, good.slice(1))).rejects.toThrow(/40 ใบ/);
+    const a = await w.rooms.create(); await expect(joinStart(w.rooms, a, good.slice(1))).rejects.toThrow(/40 ใบ/);
   });
 });
 

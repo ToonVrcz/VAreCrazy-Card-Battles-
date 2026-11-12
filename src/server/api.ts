@@ -17,7 +17,8 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
     let a: RegExpMatchArray | null;
       const token = (req.headers.authorization ?? '').replace(/^Bearer /, ''), pkey = (req.headers['x-player-key'] as string | undefined) || undefined;
       // Public online-play endpoints (players are identified by a secret room token, not an admin login)
-      if (path === '/api/play/rooms' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Rooms(svc).create(b.deck, b.evo, pkey)); }
+      if (path === '/api/play/rooms' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Rooms(svc).create(b.deck, b.evo, pkey, { name: b.name, public: b.public, turnSec: b.turnSec })); }
+      if (path === '/api/play/rooms/public' && m === 'GET') return send(res, 200, await new Rooms(svc).listPublic());
       // Guest profile, wallet and shop (Lv.40/70 cards)
       if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
       if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
@@ -27,9 +28,13 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       if (path === '/api/play/frames' && m === 'GET') return send(res, 200, await svc.publicFrames());
       if (path === '/api/play/shop' && m === 'GET') return send(res, 200, await new Economy(svc).shop(pkey));
       if (path === '/api/play/shop/buy' && m === 'POST') return send(res, 200, await new Economy(svc).buy(pkey, JSON.parse((await body(req)).toString() || '{}').cardId));
-      if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act|leave))?$/))) {
+      if ((a = path.match(/^\/api\/play\/rooms\/([A-Za-z0-9]{5})(?:\/(join|act|leave|ready|start|kick|spectate))?$/))) {
         const rooms = new Rooms(svc);
         if (a[2] === 'join' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await rooms.join(a[1], b.deck, b.evo, pkey)); }
+        if (a[2] === 'ready' && m === 'POST') return send(res, 200, await rooms.ready(a[1], token, JSON.parse((await body(req)).toString() || '{}').ready));
+        if (a[2] === 'start' && m === 'POST') return send(res, 200, await rooms.start(a[1], token));
+        if (a[2] === 'kick' && m === 'POST') return send(res, 200, await rooms.kick(a[1], token, JSON.parse((await body(req)).toString() || '{}').target));
+        if (a[2] === 'spectate' && m === 'POST') return send(res, 200, await rooms.spectate(a[1]));
         if (a[2] === 'leave' && m === 'POST') return send(res, 200, await rooms.leave(a[1], token));
         if (a[2] === 'act' && m === 'POST') return send(res, 200, await rooms.act(a[1], token, JSON.parse((await body(req)).toString() || '{}').action));
         if (!a[2] && m === 'GET') return send(res, 200, await rooms.view(a[1], token, Number(url.searchParams.get('since') ?? -1)));
