@@ -22,6 +22,8 @@ const PORT=8795, BASE=`http://127.0.0.1:${PORT}`; const out=[]; const ok=(n,p,i=
  await p.screenshot({path:'/tmp/p1-dash.png'});
  await p.click('[data-nav=col]'); await p.waitForSelector('.cgrid');
  ok('collection opens (evo)', /คลังการ์ด/.test(await p.innerText('#md')));
+ ok('Lv.40 and Lv.70 are separate tabs', (await p.locator('[data-cat=e40]').count())===1 && (await p.locator('[data-cat=e70]').count())===1);
+ await p.click('[data-cat=e70]'); ok('Lv.70 tab lists only Lv.70', !/Lv\.40/.test(await p.locator('.cgrid').innerText()) && /Lv\.70/.test(await p.locator('.cgrid').innerText()));
  await p.click('[data-cat=spell]'); ok('base cards say free', (await p.innerText('#md')).includes('ใช้ได้ฟรี'));
  await p.click('[data-nav=more]'); ok('more lists upcoming with reasons', (await p.innerText('#md')).includes('ยังไม่เปิดใช้งาน'));
  await p.click('[data-nav=shop]'); await p.waitForSelector('[data-l]');
