@@ -72,17 +72,17 @@ describe('effect parser reads only exact Admin wordings', () => {
     expect(parseEffect(row({ action_text: 'จั่ว 1 ใบ', duration: 'instant', condition_text: 'เป้าหมายถูกทำลายจากการโจมตี' }))).toMatchObject({ kind: 'draw', cond: 'target_destroyed' });
     expect(parseEffect(row({ trigger: 'passive', action_text: 'HP +10', duration: 'permanent', target_text: 'ตัวละครฝ่ายเราทุกใบ', use_limit: 'none' }))).toMatchObject({ kind: 'maxhp', target: 'allies' });
     expect(parseEffect(row({ action_text: 'ป้องกันการเลือกเป็นเป้าหมาย' }))).toBeNull();           // wording not understood -> not executed
-    expect(parseEffect(row({ trigger: 'to_graveyard' }))).toBeNull();
+    expect(parseEffect(row({ trigger: 'combo' }))).toBeNull();                                       // combo timing is not defined in Admin yet
     expect(parseEffect(row({ cost_text: 'ทิ้งการ์ดจากมือ 1 ใบ' }))).toBeNull();
     expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ', action_text: 'HP −10', duration: 'instant', trigger: 'on_summon' }))).toMatchObject({ target: 'enemy1', kind: 'damage', amount: 10 });
     expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ', action_text: 'ATK −10', trigger: 'on_summon' }))).toMatchObject({ kind: 'atk', amount: -10 });
     expect(parseEffect(row({ trigger: 'passive', target_text: 'ตัวละครฝ่ายเรา 1 ใบ', action_text: 'HP +10', duration: 'permanent' }))).toBeNull();   // a passive cannot ask for a target
   });
-  it('the 56 seed abilities: 49 run after F2, the rest stay marked as not active', () => {
+  it('the 56 seed abilities: 55 run (only the Combo one waits for a decision), the rest stay marked as not active', () => {
     const rows = seedCards().flatMap(() => []); void rows;
     const all = (require('node:fs').readFileSync(new URL('../db/seed/toon-cards.json', import.meta.url), 'utf8') as string);
     const fx = (JSON.parse(all) as any[]).flatMap(c => c.effects ?? []);
-    expect(fx.length).toBe(56); expect(fx.filter(r => parseEffect(r)).length).toBe(49);
+    expect(fx.length).toBe(56); expect(fx.filter(r => parseEffect(r)).length).toBe(55);
   });
 });
 
@@ -182,5 +182,50 @@ describe('abilities that need a target', () => {
     const r = act(g0, { t: 'attack', from: 0, to: 0 });
     expect(r.players[1].field[0]).toBeNull();                                    // B was destroyed, its owner (P2) now chooses...
     expect(r.players[0].field[0]!.hp).toBeLessThan(50);                          // ...the only enemy of B is A (auto, single candidate)
+  });
+});
+
+// ---- abilities (F3): graveyard trigger, protection, search, discard-to-draw ----
+describe('remaining abilities that the Admin descriptions define clearly', () => {
+  it('parser: protect, search, discard-to-draw and graveyard trigger', () => {
+    expect(parseEffect(row({ trigger: 'on_summon', action_text: 'ป้องกันการเลือกเป็นเป้าหมาย', use_limit: 'none' }))).toMatchObject({ kind: 'protect' });
+    expect(parseEffect(row({ trigger: 'on_summon', target_text: 'Main Deck', action_text: 'ค้นการ์ด Evolution ขึ้นมือ', duration: 'instant', use_limit: 'once_per_game' }))).toMatchObject({ kind: 'search_evo', target: 'deck' });
+    expect(parseEffect(row({ trigger: 'on_summon', action_text: 'จั่ว 1 ใบ', duration: 'instant', cost_text: 'ทิ้งการ์ดจากมือ 1 ใบ' }))).toMatchObject({ kind: 'draw', cost: 'discard1' });
+    expect(parseEffect(row({ trigger: 'to_graveyard', action_text: 'ATK +5' }))).toMatchObject({ trigger: 'to_graveyard', kind: 'atk', amount: 5 });
+    expect(parseEffect(row({ target_text: 'Main Deck', action_text: 'ATK +5' }))).toBeNull();           // the deck is only for "search"
+  });
+  it('to_graveyard: when another of my characters is destroyed the source gets ATK +5 until end of turn (once per turn)', () => {
+    const g0 = start(); g0.players[0].hand = []; g0.turn = 3; g0.phase = 'battle';
+    g0.players[0].field[0] = unit(withFx('A-15', 15, [E({ trigger: 'to_graveyard', perm: false, amount: 5, limit: 'turn' })]), 601);
+    g0.players[1].field[0] = unit(ch('B-15', 15, { atk: 99 }), 602);
+    g0.players[0].field[1] = unit(ch('C-15', 15, { hp: 5 }), 603);
+    g0.active = 1; g0.turn = 4;
+    const r = act(g0, { t: 'attack', from: 0, to: 1 });                  // P2 destroys C
+    expect(r.players[0].field[1]).toBeNull(); expect(r.players[0].field[0]!.bonusAtk).toBe(5);
+  });
+  it('protect: the turn it is summoned the unit cannot be chosen by spells or abilities', () => {
+    const g0 = start(); g0.players[0].hand = [withFx('A-15', 15, [E({ trigger: 'on_summon', kind: 'protect', amount: 0 })])];
+    const g = act(g0, { t: 'summon', hand: 0, slot: 0 }); expect(g.players[0].field[0]!.untargetableTurn).toBe(g.turn);
+    const h = createGame([filler(), filler()], 9, 0, { interactive: false }); h.players[1].field[0] = { ...g.players[0].field[0]! }; h.turn = 1; h.players[0].hand = [sp('SPL-001')];
+    expect(() => act(h, { t: 'cast', hand: 0, target: { slot: 0 } })).toThrow();
+    expect(legalActions(h).filter(a => a.t === 'cast')).toEqual([]);
+    h.turn = 2; h.active = 0; expect(act(h, { t: 'cast', hand: 0, target: { slot: 0 } }).players[1].field[0]!.hp).toBeLessThan(50);   // the next turn it can be chosen
+  });
+  it('search: finds one Evolution card in the deck, once per game', () => {
+    const g0 = start(); g0.players[0].hand = [withFx('A-15', 15, [E({ trigger: 'on_summon', kind: 'search_evo', target: 'deck', amount: 1, limit: 'game' })])];
+    g0.players[0].deck = [ch('Z-15', 15), evo(), ch('Y-15', 15)];
+    const r = act(g0, { t: 'summon', hand: 0, slot: 0 });
+    expect(r.players[0].hand.map(c => c.id)).toEqual(['EVO-001']); expect(r.players[0].deck.length).toBe(2);
+  });
+  it('discard-to-draw: asks which card to throw away, can be declined, then draws', () => {
+    const fx = E({ trigger: 'on_summon', kind: 'draw', amount: 1, limit: 'game', cost: 'discard1' });
+    const g0 = createGame([filler(), filler()], 7, 0, { interactive: true }); g0.players[0].hand = [withFx('A-15', 15, [fx]), ch('K-15', 15), ch('L-15', 15)];
+    const g = act(g0, { t: 'summon', hand: 0, slot: 0 });
+    expect(g.pending).toMatchObject({ event: 'effect_target', options: [0, 1], info: { kind: 'discard' } });
+    const paid = act(g, { t: 'respond', back: 0 });
+    expect(paid.players[0].grave.map(c => c.id)).toContain('K-15'); expect(paid.players[0].hand.length).toBe(2);       // K gone, one card drawn
+    const declined = act(g, { t: 'pass' });
+    expect(declined.players[0].grave.length).toBe(0); expect(declined.players[0].hand.length).toBe(2);
+    expect(botPick(g)).toEqual({ t: 'respond', back: 1 });
   });
 });

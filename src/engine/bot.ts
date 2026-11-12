@@ -4,6 +4,7 @@ const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def
 export function botPick(g: Game): Action {
   if (g.pending?.event === 'effect_target') {   // choose the ability's target: hit the strongest enemy, heal the most hurt ally, buff the strongest ally
     const p = g.pending, cs = p.info?.choices ?? [], kind = p.info?.kind;
+    if (kind === 'discard') return { t: 'respond', back: p.options[p.options.length - 1] };       // throw away the last card in hand
     const score = (c: { hp: number; maxHp: number; atk: number }) => kind === 'heal' ? -(c.hp / c.maxHp) : c.atk;
     const best = cs.reduce((b, c) => (score(c) > score(b) ? c : b), cs[0]);
     return { t: 'respond', back: best ? best.slot : p.options[0] };

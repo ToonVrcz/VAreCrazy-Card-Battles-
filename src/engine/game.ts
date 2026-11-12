@@ -12,9 +12,9 @@ export const RULES = { lp: 100, handMax: 5, startHand: 5, fieldSlots: 7, backSlo
 export class EngineError extends Error {}
 
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
-export interface Unit { tempAtk?: number; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface Unit { untargetableTurn?: number; tempAtk?: number; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
-export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
+export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
 export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats] }
 /** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
@@ -94,7 +94,12 @@ function fire(g: Game, owner: 0 | 1, ev: string): string | null {
   const p = g.players[owner], t = p.back[pick]!;
   p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); bump(g, owner, 'trap'); return t.card.id;
 }
-function toGrave(g: Game, pi: 0 | 1, u: Unit) { g.players[pi].grave.push(...(u.fused ?? [u.card])); }
+function toGrave(g: Game, pi: 0 | 1, u: Unit) {
+  g.players[pi].grave.push(...(u.fused ?? [u.card]));
+  g.players[pi].field.forEach(s => { if (s && s !== u && s.hp > 0) runEffects(g, pi, s, 'to_graveyard'); });   // "when a character of mine goes to the graveyard"
+}
+/** An opposing unit that effects and spells may choose (a character summoned this turn with "protect" cannot be chosen). */
+const targetable = (g: Game, u: Unit | null): u is Unit => !!u && u.untargetableTurn !== g.turn;
 /** Bonus for fusing two characters, or null if their chains are not ticked as a Fusion pair (highest bonus per stat wins). */
 export function fusionBonus(g: Game, x: CardDef, y: CardDef) {
   if (x.type !== 'character' || y.type !== 'character' || !x.chain || !y.chain || x.chain === y.chain) return null;
@@ -122,7 +127,7 @@ function autoTarget(g: Game, side: 0 | 1, options: number[], kind: TargetInfo['k
 /** The one character an ability targets: the owner chooses (a pending question in interactive games). Returns null when nothing can be targeted. */
 function chooseTarget(g: Game, owner: 0 | 1, e: Effect, u: Unit): Unit | null {
   const side = e.target === 'ally1' ? owner : other(owner), f = g.players[side].field;
-  const options = f.map((x, i) => x ? i : -1).filter(i => i >= 0); if (!options.length) return null;
+  const options = f.map((x, i) => x && (side === owner || targetable(g, x)) ? i : -1).filter(i => i >= 0); if (!options.length) return null;
   const kind: TargetInfo['kind'] = e.kind === 'heal' ? 'heal' : e.kind === 'damage' ? 'damage' : 'atk';
   let slot: number;
   if (options.length === 1) slot = options[0];
@@ -133,6 +138,16 @@ function chooseTarget(g: Game, owner: 0 | 1, e: Effect, u: Unit): Unit | null {
     if (ans === -1) slot = autoTarget(g, side, options, kind); else if (!options.includes(ans)) fail('เลือกเป้าหมายไม่ถูกต้อง'); else slot = ans;
   }
   return f[slot]!;
+}
+/** The hand card the owner discards to pay an ability cost; null = declined / nothing to discard (the ability is not used up). */
+function chooseDiscard(g: Game, owner: 0 | 1, e: Effect, u: Unit): number | null {
+  const hand = g.players[owner].hand; if (!hand.length) return null;
+  const options = hand.map((_, i) => i);
+  if (!g.interactive) return options[options.length - 1];
+  if (CTX.i >= CTX.answers.length) throw new NeedAnswer(owner, 'effect_target', options, { side: 'ally', kind: 'discard', amount: 0, text: e.text, source: u.card.name, choices: hand.map((c, i) => ({ slot: i, id: c.id, name: c.name, hp: 0, maxHp: 0, atk: 0 })) });
+  const ans = CTX.answers[CTX.i++];
+  if (ans === -1) return null;                                                   // "do not discard": the ability is skipped
+  if (!options.includes(ans)) fail('เลือกการ์ดไม่ถูกต้อง'); return ans;
 }
 /** Runs the character abilities of `u` that match `trig` (abilities come from Admin card_effects, see effects.ts). */
 function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { target?: Unit; after?: boolean } = {}) {
@@ -146,8 +161,16 @@ function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { tar
     let ts: Unit[];
     if (e.target === 'self') ts = [u];
     else if (e.target === 'allies') ts = g.players[pi].field.filter((x): x is Unit => !!x);
+    else if (e.target === 'deck') ts = [];
     else { const t = chooseTarget(g, pi, e, u); if (!t) return; ts = [t]; }   // nothing to target: the ability does not fire and is not used up
+    if (e.cost === 'discard1') { const idx = chooseDiscard(g, pi, e, u); if (idx === null) return; const c = g.players[pi].hand.splice(idx, 1)[0]; g.players[pi].grave.push(c); log(g, `${u.card.name}: ทิ้ง ${c.name}`); }
+    if (e.kind === 'search_evo') {
+      const p = g.players[pi], di = p.deck.findIndex(c => c.type === 'evolution');
+      if (di < 0 || p.hand.length >= RULES.handMax) return;                       // nothing to find / hand is full: not used up
+      p.hand.push(p.deck.splice(di, 1)[0]); u.used[k] = e.limit === 'game' ? 1 : g.turn; log(g, `${u.card.name}: ${e.text}`); return;
+    }
     u.used[k] = e.limit === 'game' ? 1 : g.turn;
+    if (e.kind === 'protect') { u.untargetableTurn = g.turn; log(g, `${u.card.name}: ${e.text}`); return; }
     for (const t of ts) {
       if (e.kind === 'atk') {
         let amt = e.amount;
@@ -273,7 +296,7 @@ function step(g: Game, a: Action): Game {
       main(); const c = card(a.hand); if (c.type !== 'spell') fail('ต้องเป็นเวทมนตร์');
       const t = a.target ?? {}; const need = (v: number | undefined) => v ?? fail('ต้องเลือกเป้าหมาย');
       switch (c.id) {
-        case 'SPL-001': damageUnit(g, opp, (theirs(need(t.slot)), t.slot!), 20, pi); break;
+        case 'SPL-001': { const x = need(t.slot); if (!targetable(g, theirs(x))) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); damageUnit(g, opp, x, 20, pi); break; }
         case 'SPL-002': { const u = mine(need(t.slot)); u.hp = Math.min(u.maxHp, u.hp + 30); break; }
         case 'SPL-003': mine(need(t.slot)).bonusDef += 15; break;
         case 'SPL-004': mine(need(t.slot)).bonusAtk += 15; break;
@@ -284,9 +307,9 @@ function step(g: Game, a: Action): Game {
           const gc = me.grave[gi]; if (!gc || gc.type !== 'character' || gc.level !== 15) fail('ไม่มีตัวละคร Lv.15 ในสุสาน');
           me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
         }
-        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); [me.field[x], en.field[y]] = [eu, mu]; log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
+        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); if (!targetable(g, eu)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); [me.field[x], en.field[y]] = [eu, mu]; log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
         case 'SPL-008': en.noAttackUntil = g.turn + 2; break;
-        case 'SPL-009': theirs(need(t.slot)).poison = RULES.poison.turns; break;
+        case 'SPL-009': { const x = theirs(need(t.slot)); if (!targetable(g, x)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); x.poison = RULES.poison.turns; break; }
         case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; break; }
         default: fail('ยังไม่รองรับเวทมนตร์ใบนี้');
       }
@@ -326,9 +349,9 @@ export function legalActions(g: Game): Action[] {
       if (c.type === 'spell') {
         const ms = me.field.map((u, i) => u ? i : -1).filter(i => i >= 0), es = en.field.map((u, i) => u ? i : -1).filter(i => i >= 0);
         if (['SPL-002', 'SPL-003', 'SPL-004'].includes(c.id)) ms.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
-        else if (['SPL-001', 'SPL-009'].includes(c.id)) es.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
+        else if (['SPL-001', 'SPL-009'].includes(c.id)) es.filter(s => targetable(g, en.field[s])).forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
         else if (c.id === 'SPL-010') en.back.forEach((b, i) => b && out.push({ t: 'cast', hand: h, target: { slot: i } }));
-        else if (c.id === 'SPL-007') ms.forEach(x => es.forEach(y => out.push({ t: 'cast', hand: h, target: { slot: x, slot2: y } })));
+        else if (c.id === 'SPL-007') ms.forEach(x => es.filter(y => targetable(g, en.field[y])).forEach(y => out.push({ t: 'cast', hand: h, target: { slot: x, slot2: y } })));
         else out.push({ t: 'cast', hand: h });
       }
     });
