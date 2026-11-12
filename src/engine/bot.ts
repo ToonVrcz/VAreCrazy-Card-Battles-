@@ -12,6 +12,13 @@ export function botPick(g: Game): Action {
     const fu = pick('fuse')[0]; if (fu) return fu;
     const su = pick<Extract<Action, { t: 'summon' }>>('summon').sort((a, b) => (me.hand[b.hand].atk ?? 0) - (me.hand[a.hand].atk ?? 0))[0]; if (su) return su;
     const st = pick('set')[0]; if (st) return st;
+    // Swap spell: trade my weakest unit for their strongest only when it is clearly a gain.
+    const val = (u: Unit) => atk(u) + u.hp / 2; let sw: Action | null = null, gain = 19;
+    for (const a of pick<Extract<Action, { t: 'cast' }>>('cast')) {
+      if (me.hand[a.hand].id !== 'SPL-007' || a.target?.slot === undefined || a.target.slot2 === undefined) continue;
+      const g2 = val(en.field[a.target.slot2]!) - val(me.field[a.target.slot]!); if (g2 > gain) { gain = g2; sw = a; }
+    }
+    if (sw) return sw;
     for (const a of pick<Extract<Action, { t: 'cast' }>>('cast')) {
       const id = me.hand[a.hand].id, s = a.target?.slot;
       if (id === 'SPL-005' || (id === 'SPL-006' && me.grave.some(c => c.level === 15)) || (id === 'SPL-008' && enUnits.length) || (id === 'SPL-010' && s !== undefined)) return a;

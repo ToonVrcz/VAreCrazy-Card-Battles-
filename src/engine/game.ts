@@ -122,7 +122,6 @@ function startTurn(g: Game) {
 function endTurn(g: Game) {
   const pi = g.active, opp = other(pi);
   if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true); }
-  g.players[pi].field.forEach(u => { if (u) { u.bonusAtk = 0; u.bonusDef = 0; } });
   if (g.winner !== null) return;
   g.active = opp; g.turn++; startTurn(g);
 }
@@ -178,7 +177,7 @@ function step(g: Game, a: Action): Game {
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
-      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
+      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk; nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
       return g;
     }
     case 'fuse': {
@@ -214,7 +213,7 @@ function step(g: Game, a: Action): Game {
           const gc = me.grave[gi]; if (!gc || gc.type !== 'character' || gc.level !== 15) fail('ไม่มีตัวละคร Lv.15 ในสุสาน');
           me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
         }
-        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); mine(x); if (y < 0 || y >= RULES.fieldSlots || x === y) fail('ช่องไม่ถูกต้อง'); [me.field[x], me.field[y]] = [me.field[y], me.field[x]]; break; }
+        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); [me.field[x], en.field[y]] = [eu, mu]; log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
         case 'SPL-008': en.noAttackUntil = g.turn + 2; break;
         case 'SPL-009': theirs(need(t.slot)).poison = RULES.poison.turns; break;
         case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; break; }
@@ -256,7 +255,7 @@ export function legalActions(g: Game): Action[] {
         if (['SPL-002', 'SPL-003', 'SPL-004'].includes(c.id)) ms.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
         else if (['SPL-001', 'SPL-009'].includes(c.id)) es.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
         else if (c.id === 'SPL-010') en.back.forEach((b, i) => b && out.push({ t: 'cast', hand: h, target: { slot: i } }));
-        else if (c.id === 'SPL-007') { if (ms.length) out.push({ t: 'cast', hand: h, target: { slot: ms[0], slot2: (ms[0] + 1) % RULES.fieldSlots } }); }
+        else if (c.id === 'SPL-007') ms.forEach(x => es.forEach(y => out.push({ t: 'cast', hand: h, target: { slot: x, slot2: y } })));
         else out.push({ t: 'cast', hand: h });
       }
     });
