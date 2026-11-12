@@ -1,0 +1,117 @@
+# VAreCrazy Card Battle — สถานะโปรเจกต์ล่าสุด (2026-11-12)
+
+เอกสารนี้สรุปทุกอย่างเพื่อให้ผู้ช่วยอีกคน (ChatGPT) อ่านแล้วเข้าใจภาพรวมได้ทันที
+ไม่มีรหัสผ่านหรือคีย์ลับในไฟล์นี้ (และห้ามใส่)
+
+## 1. โปรเจกต์คืออะไร
+- เกมการ์ดบนเว็บ `/play` (2 ผู้เล่น) + ระบบหลังบ้าน Admin CMS ที่ `/` เพื่อต่อกับ varecrazy.com/th ในอนาคต
+- เจ้าของโปรเจกต์: คุณ Toon (ตอบภาษาไทย สั้น ๆ ใช้งานจากมือถือเป็นหลัก)
+- เว็บจริง: https://varecrazy-card-battles.vercel.app (เกม `/play`, Admin `/`) หมายเหตุ `/play.html` ไม่ถูก route ต้องใช้ `/play`
+- Stack: TypeScript + Supabase (ฐานข้อมูล + edge function `api`) + Vercel (เว็บ) ห้ามเพิ่มค่าใช้จ่ายโดยไม่ถาม
+- GitHub: `ToonVrcz/VAreCrazy-Card-Battles-` (public) · Supabase project `jcjqooeckoapoikcwpet` · Vercel project `varecrazy-card-battles-`
+
+## 2. กฎเหล็กของเจ้าของ (ต้องทำตามเสมอ)
+1. **ห้าม deploy จนกว่า Toon จะพิมพ์ "Deploy"** (push เข้า `main` = deploy เว็บอัตโนมัติ) งานทำบน branch ทดสอบ แล้วรอ
+2. ลำดับ Deploy: (1) รัน migration ใหม่กับ Supabase (2) deploy edge function (3) merge เข้า `main` + push (4) ตรวจ endpoint จริง
+3. ห้ามเปิดเผยรหัสผ่านแอดมิน ห้าม force-kill สิ่งที่เจ้าของรันเอง ห้าม force push ห้ามลบ branch rollback `tmp-edge-bundle*`
+4. ห้ามแก้ระบบเศรษฐกิจ/รางวัล/ฐานข้อมูลจริง โดยไม่ได้รับคำสั่งแยกต่างหาก
+5. ระบบ Universe (`xaphdev/VAreCrazy_Project`) ยัง **ไม่เชื่อมต่อ** มีแค่ตัวเชื่อมที่เตรียมไว้ (`src/universe/`)
+6. ถ้าขาดข้อมูลอ้างอิง ให้ถามเจ้าของ ไม่เดา
+
+## 3. สถานะการ deploy
+| ส่วน | ค่า |
+|---|---|
+| main (เว็บจริง) | `229bd73` (เนื้อหาโค้ดจริง = `34af1cf`, ล่าสุดเพิ่มแค่ CLAUDE.md) |
+| Edge function `api` | เวอร์ชัน 9 ใช้ stub ที่ import `edge-bundle.js` จาก branch ชั่วคราว `tmp-edge-bundle-g1` (ชี้ commit `a681569`) |
+| Migration ที่ใช้กับฐานข้อมูลจริงแล้ว | 001–013, 014 `pvp_match_history`, 014_level_frames (ไฟล์ชื่อ 015), **016 `card_effect_texts`** · migration ใหม่เริ่มที่ 017 |
+| Rollback เว็บ | Vercel deployment ก่อนหน้า `dpl_4R3yC476BBXQG8byAxKDTyHLRxvJ` (Playtest Release, commit `1cc633a`) |
+| **ยังไม่ deploy** | branch `feature/gameplay-fixes-1` commit `dbb154a` = F2 (ความสามารถที่เลือกเป้าหมาย) ไม่มี migration ใหม่ ต้องสั่ง "Deploy" |
+
+## 4. สิ่งที่เล่นได้ในเกมจริงตอนนี้
+- เล่นกับบอท, สร้างห้องออนไลน์/เข้าห้องด้วยรหัส 5 ตัว (polling 1.5 วินาที), เด็คหลายชุด + เด็คอีโว (Evolution) แยก, ร้านค้า (Lv.40 = 500 แต้ม, Lv.70 = 100 Vrcoin, ซื้อได้ไม่เกิน 3 ใบต่อการ์ด), รางวัล PvP, จับเวลาเทิร์น 90 วินาที, ปุ่มยอมแพ้, กลับเข้าห้องหลังรีเฟรช
+- อัปเดตล่าสุดที่ deploy แล้ว (2026-11-12):
+  - บัฟ ATK/DEF จากเวทอยู่ข้ามเทิร์นจนตัวนั้นออกจากสนาม และตามไปกับร่างวิวัฒนาการ
+  - เวทสลับ (SPL-007) สลับข้ามฝั่ง: ตัวเรากับตัวศัตรู
+  - ตัวเลข ATK/DEF เขียว = เพิ่ม, แดง = ลด
+  - ปุ่มสุสานดูรายการการ์ดทั้งสองฝั่ง, เวทเรียกคืนให้เลือกใบที่จะเรียก
+  - กองอีโวระหว่างเล่นเปิดดูได้ แตะการ์ดดูรายละเอียดได้; ซื้อการ์ดแล้วใส่เข้าเด็คอีโวแบบจัดเองให้อัตโนมัติ
+  - ข้อความกับดัก 10 ใบ/เวท 10 ใบ ระบุ "เมื่อไร · ใครได้ผล · ผลคืออะไร"
+  - **ความสามารถตัวละครรอบ F1: 31 จาก 56 ทำงานจริง**
+- ยังซ่อน/ไม่ทำงาน: ความสามารถที่เหลือ (ดูข้อ 6)
+
+## 5. กติกาเกม (Toon ตัดสินใจแล้ว)
+2 ผู้เล่น · LP 100 · มือสูงสุด 5 · สนามตัวละคร 7 ช่อง (Toon ตัดสินใจจะเปลี่ยนเป็น 5 แต่ **ยังไม่ทำ** เพราะกระทบห้องที่เล่นอยู่ บอท เทสต์ และต้องกำหนดวันทำ) + แถวหลัง 5 ช่อง (เวท/กับดัก) · เด็คหลัก 40 ใบ (ซ้ำ ≤3, Lv.15 อย่างน้อย 3) · เฟส main → battle → end · ผู้เริ่มก่อนโจมตีไม่ได้เทิร์น 1 · ความเสียหาย = ATK − DEF (ขั้นต่ำ 1) มีสวนกลับ ธาตุคูณ 1.5/0.75 · เรียก Lv.15 ฟรี 1 ใบ/เทิร์น · วิวัฒนาการ 1 ครั้ง/เทิร์น ใช้การ์ด Evolution 1 ใบ + สังเวย (Lv40: 1, Lv70: 2, Lv99: 3) คงความเสียหายที่ได้รับ · Fusion ซ้อน 2 ใบในช่องเดียว
+- เศรษฐกิจ: โปรไฟล์อัตโนมัติ (คีย์ลับอยู่ในเบราว์เซอร์, เก็บเฉพาะค่าแฮชในฐานข้อมูล) เริ่ม 500 แต้ม · แมตช์ PvP ≥ 6 เทิร์น = 200 แต้ม · ทุก 10 แมตช์ = +10 Vrcoin · ราคาแก้ได้ใน Admin
+- ออนไลน์: token ต่อที่นั่ง, หมดเวลาเทิร์น 3 ครั้งติด = แพ้, หายเกิน 2 นาที = แพ้
+- กติกาส่วนมากใน Admin เป็นข้อเสนอที่ Toon ตอบรับแล้ว ตารางธาตุเป็นข้อเสนอ
+
+## 6. ระบบความสามารถตัวละคร (งานหลักที่กำลังทำ)
+- ข้อมูลอยู่ใน Admin ตาราง `card_effects` (ฟิลด์เป็นข้อความอิสระ: trigger, target_text, action_text, condition_text, cost_text, duration, use_limit, description) seed มี 56 รายการบนตัวละคร 48 ใบ (ฐานข้อมูลจริงมี 78 แถวรวมการ์ดอื่น)
+- วิธีที่ใช้: `src/engine/effects.ts` แปลงข้อความ Admin เป็นค่าที่ engine ใช้ได้ โดยรับ **เฉพาะคำที่ตรงเป๊ะ** คำที่ไม่รู้จักคืน `null` = ไม่ทำงานและหน้าการ์ดขึ้น "ยังไม่เปิดใช้งาน" ไม่เดา
+- รูปแบบที่เกมอ่านออก: ผล `ATK +N` (จนจบเทิร์น / `ถาวร` / `ถาวร (สูงสุด +N)`), `ATK −N`, `ฟื้น HP N`, `ฟื้น HP เต็ม`, `HP −N`, `HP +N` (เฉพาะ passive), `จั่ว N ใบ` · เป้าหมาย `ตัวเอง` / `ตัวละครฝ่ายเราทุกใบ` / `ตัวละครฝ่ายเรา 1 ใบ` / `ตัวละครฝ่ายตรงข้าม 1 ใบ` · จังหวะ on_attack, on_summon, on_evolve, on_destroyed, turn_start, turn_end, passive · เงื่อนไข `เป้าหมายถูกทำลายจากการโจมตี`, `HP ของเป้าหมายน้อยกว่าตัวเอง` · ข้อจำกัด none / once_per_turn / once_per_game (นับต่อใบที่อยู่บนสนาม)
+- **ต้องใช้เครื่องหมายลบยาว `−` (U+2212) ไม่ใช่ `-`**
+- ความคืบหน้า: **F1 = 31/56 ใช้งานจริงแล้ว** (เกมจริง) · **F2 = 49/56** (ยังไม่ deploy) เพิ่มเอฟเฟกต์ที่ต้องเลือกเป้าหมาย ผู้เล่นเลือกผ่านหน้าต่าง "🎯 เลือกเป้าหมาย" (ใช้กลไก pending เดียวกับกับดัก), เป้าเดียว = เลือกอัตโนมัติ, ไม่มีเป้า = ไม่ถูกนับว่าใช้, บอท/หมดเวลาเลือกเอง
+- **ที่เหลือ 7 รายการ รอ Toon ตัดสินใจ:** ป้องกันการเลือกเป็นเป้า (2 — คำ "จนจบเทิร์น" คลุมเครือ), ATK +5 เมื่อลงสุสาน (2 — ไม่ชัดว่าใครได้), Combo (1), ทิ้งการ์ดเพื่อจั่ว (1 — มีค่าใช้จ่าย), ค้นการ์ด Evolution จากเด็ค (1)
+- ค่าตั้งต้นที่ผมเลือกไว้ (Toon ยังไม่ได้ยืนยัน แก้ได้): "1 ครั้ง/เกม" นับต่อใบบนสนาม · จั่วเมื่อมือเต็ม = ไม่จั่ว · "ฝ่ายเราทุกใบ" นับรวมตัวเอง · เอฟเฟกต์ร่วมกันใช้ชนิด passive เดิม (ผลคำนวณใหม่ทุกครั้ง หายทันทีเมื่อใบต้นทางออกจากสนาม)
+- ยังไม่ทำ: ช่องใส่ค่าแบบ dropdown ใน Admin Rule Builder (ตอนนี้ยังพิมพ์ข้อความ), ข้อความผลของ passive ที่ซ้อนกันหลายใบอธิบายยังเรียบง่าย
+
+## 7. งานออกแบบ UX/UI (เอกสาร ไม่มีโค้ด) — Claude Docs
+อนุมัติครบแล้ว: Phase 1 UX Foundation, Phase 2 Popup System, Phase 3 Shared Components, Phase 4.1–4.7 หน้าจอเว็บ 7 หน้า
+- Phase 3: https://claude.ai/artifact/32fWbqzMCzq9ohjxDwP89w
+- 4.1 Lobby: https://claude.ai/artifact/AKESqB2X2duRqbmzweVpdJ
+- 4.2 Arena: https://claude.ai/artifact/CKERUmEmk2kV9vbpga85io
+- 4.3 Deck Builder: https://claude.ai/artifact/1PAMGDFRQwsn2km9FJfqos
+- 4.4 Collection: https://claude.ai/artifact/7DahdPLdyU83U31dSaa9Ue
+- 4.5 Shop: https://claude.ai/artifact/SA3W3PVyvevrE1HqafM9iF
+- 4.6 Profile: https://claude.ai/artifact/JRpvsN8rpuynnjRAitQAwg
+- 4.7 Match Result: https://claude.ai/artifact/Coh3s7oQsggzTJoMBpNyjD
+- Phase 2 Popup System: https://claude.ai/artifact/EToTU7tNnPtkiFeRvjye3K
+- **Gameplay Review (ผลทดสอบเล่นของ Toon 12 ข้อ + แผนความสามารถ + ผลงานล่าสุด): https://claude.ai/artifact/StjbJUovwKpWwb23WCExrw**
+- ยังไม่เริ่ม: ส่วนทัศนียภาพ/สี/ฟอนต์ และ Battle Board รอ **ภาพอ้างอิง Anime RPG Fantasy + Design System** จาก Toon (ได้รับชีทตัวละคร 4 แผ่นแล้ว: Toon, Ball, Add, Nu)
+- ข้อค้นพบสำคัญจากโค้ด: โปรไฟล์ถูกสร้างอัตโนมัติเงียบ ๆ ไม่มีหน้าโปรไฟล์ในเกม ชื่อผู้เล่นเป็น "ผู้เล่น" เสมอ คีย์อยู่ในเบราว์เซอร์เท่านั้น (ล้างข้อมูล/เปลี่ยนเครื่อง = เสียแต้มและการ์ด ไม่มีทางกู้) ยังไม่มีหน้าคลังการ์ด คำว่า "แขก/สร้างโปรไฟล์" ในเอกสาร 4.1/4.5 ไม่ตรงโค้ดจริง (รอ Toon สั่งให้แก้เอกสาร)
+- แผนงานแก้โค้ดที่จัดระดับแล้ว: T1 = หน้าจอล้วน, T2 = ต้องแก้ server/engine (ลำดับที่อนุมัติ: T2-1+T2-4 → T2-2+T2-3 → T2-5+T2-6 → T2-7+T2-8) **ยังไม่เริ่มอะไรในกลุ่ม T2** รอคำสั่งแยก
+
+## 8. PvP Anti-Farming (เก็บข้อมูลอย่างเดียว)
+- Phase 1 deploy แล้ว: ตัวนับการกระทำใน engine + ประวัติแมตช์ถาวร (`pvp_matches`, `pvp_match_players`) ไม่เปลี่ยนวิธีจ่ายรางวัล
+- ฐานข้อมูลจริงยัง **ว่างเปล่า** (ยังไม่มีใครเล่น PvP จบแมตช์) ต้องมีผู้ทดสอบ 2 คนเพื่อพิสูจน์ว่าบันทึกได้จริง (ขั้นตอนใน `docs/PLAYTEST.md`)
+- กฎที่ Toon อนุมัติไว้สำหรับอนาคต (ยังไม่ทำงาน): สูงสุด 3 แมตช์ที่ได้รางวัลต่อคู่ผู้เล่นต่อวัน (เวลา Asia/Bangkok), ผู้ยอมแพ้ไม่ได้รางวัล, ต้องมีโปรไฟล์ทั้งคู่, คงเงื่อนไข ≥ 6 เทิร์น, ตั้งค่าได้ใน Admin, ไม่เก็บ IP/อุปกรณ์ · รายละเอียด `docs/PVP-ANTI-FARMING.md`
+
+## 9. สิ่งที่ยังค้าง / รอ Toon
+1. สั่ง **"Deploy"** เพื่อขึ้น F2 (เลือกเป้าหมาย 49/56)
+2. ตัดสินใจ 7 รายการความสามารถที่เหลือ (ข้อ 6) และ 4 ค่าตั้งต้นที่ผมเลือกไว้
+3. ข้อ 12 ในรีวิวเกมเพลย์ "โจมตีผู้เล่นฝั่งตรงข้ามแล้วฝั่งตัวเองตาย" ยังหาสาเหตุไม่ได้ (ผู้ต้องสงสัย: กระจกสะท้อนที่สะท้อนความเสียหายกลับ, การสวนกลับ) Toon บอกให้ปล่อยไว้ก่อน ถ้าเจออีกจะแจ้ง
+4. จำนวนช่องตัวละคร 7 → 5 (เป็นการเปลี่ยนกฎ ต้องกำหนดวัน)
+5. ลิงก์ Google Form เพื่อเปิดปุ่ม "แจ้งปัญหา" (ตั้งค่า `FEEDBACK_URL` ใน `public/play.html` ต้อง Deploy)
+6. ผู้ทดสอบ PvP 2 คน และทดสอบบน Android/iOS จริง (ตอนนี้ทดสอบแค่จำลองหน้าจอ)
+7. ภาพอ้างอิง Anime RPG Fantasy + Design System
+8. การเปลี่ยนใน Admin: ChatGPT กำลังช่วยดูข้อมูลการ์ดทีละใบอยู่ — **ผม (Claude) จะไม่แก้ข้อมูลการ์ดใน Admin ระหว่างนี้**
+9. คำถามเปิดจากเอกสาร UX (ยังไม่ได้ตอบ ใช้ข้อเสนอเป็นค่าตั้งต้น): เมนูหลักบนมือถือ 5 แท็บไหม, ปุ่มอันตรายใช้นอกแผ่นยืนยันได้ไหม, เกมที่โปรไฟล์ไม่พร้อมดูร้านได้ไหม, ระบบกู้คืนโปรไฟล์ทำก่อน Playtest ไหม
+10. ลบ branch ชั่วคราว `tmp-edge-bundle` (ตัวเก่า) ใน GitHub — **แต่ `tmp-edge-bundle-g1`, `-p1`, `-2`, `-3` เก็บไว้ เป็นอ้างอิง rollback**
+11. ความเสี่ยงที่ยังไม่พิสูจน์: ห้องออนไลน์ที่ใช้โค้ดโหลดเอฟเฟกต์ใหม่ยังไม่ได้ลองกับผู้เล่นจริง 2 คน, ค่าใช้จ่าย Vercel plan, รายงานหน้า `/play` ว่างเมื่อก่อน (สงสัยแคช/ส่วนขยาย)
+- ไอเดียที่ยังไม่ทำ: กับดักซ้อนกับดัก (Chain), ภาพการ์ดจริง, เชื่อม Universe (EXP/wallet/quests), Rank/Season, Replay, ฝึกกับ AI, การ์ด Lv.99 (ยังไม่ตั้งราคา)
+
+## 10. โครงสร้างโค้ด
+- `src/engine/` เอนจินล้วน (game.ts, bot.ts, effects.ts, deck-view.ts, turn-timer.ts, combat.ts, cards.ts) server-authoritative ไม่มี I/O
+- `src/server/` api.ts (routes), rooms.ts (ห้องออนไลน์), economy.ts (โปรไฟล์/กระเป๋า/ร้านค้า), service.ts (Admin)
+- `src/edge/index.ts` จุดเข้า Supabase (Deno) · `src/play-entry.ts` สร้างบันเดิลเบราว์เซอร์
+- `public/play.html`, `public/admin.html` (JS ธรรมดา) · `public/engine.js` **สร้างอัตโนมัติ ห้ามแก้ด้วยมือ**
+- `db/migrations/NNN_*.up.sql|down.sql` · `db/seed/*.json` (ข้อมูลการ์ดต้นฉบับ) · `tests/` (vitest + PGlite)
+- `docs/` PLAYTEST.md, PVP-ANTI-FARMING.md, UNIVERSE-INTEGRATION.md, ไฟล์นี้ · `CLAUDE.md` กฎโปรเจกต์
+- Branch บน GitHub: `main`, `feature/gameplay-fixes-1` (นำหน้า main 1 commit = F2), `feature/playtest-release`, `feature/pvp-anti-farming-phase1`, `feature/level-frames`, `fix/play-links`, `tmp-edge-bundle*`
+
+## 11. คำสั่งที่ใช้บ่อย
+- เทสต์: `npm test` (172 ข้อ ใช้เวลาราว 1.5 นาที รันเบื้องหลังแล้วเก็บผลลงไฟล์) · เทสต์เบราว์เซอร์ในเครื่อง: `node scripts/playtest-e2e.cjs` (29 ข้อ ไม่แตะระบบจริง)
+- สร้างบันเดิลเบราว์เซอร์ใหม่หลังแก้ `src/engine` หรือ `src/play-entry.ts`:
+  `npx esbuild src/play-entry.ts --bundle --format=iife --global-name=VCZE --minify --charset=utf8 --outfile=public/engine.js`
+- สร้างบันเดิล edge function:
+  `npx esbuild src/edge/index.ts --bundle --format=esm --platform=node --external:@electric-sql/pglite --external:postgres --minify --charset=utf8 --outfile=/tmp/edge.js && sed -i 's#from"postgres"#from"npm:postgres@3"#g' /tmp/edge.js` แล้ว deploy ผ่าน stub ที่ import ไฟล์จาก URL raw GitHub ที่ล็อก commit (ผ่าน branch ชั่วคราว)
+- ตรวจระบบจริง: ใช้เครื่องมือ Vercel/Supabase (เครื่องทดสอบของ Claude เข้าถึง vercel.app/supabase.co โดยตรงไม่ได้)
+
+## 12. ประวัติงานสำคัญ (ย่อ)
+1. ย้ายงานจาก Cowork มา Claude Code
+2. PvP Anti-Farming Phase 1 (เก็บข้อมูล) — deploy แล้ว
+3. Playtest Release (ซ่อนความสามารถที่ยังไม่ทำ, resume หลังรีเฟรช, ปุ่มกลับหน้าหลัก, ปุ่มแจ้งปัญหา) — deploy แล้ว
+4. งานออกแบบ UX/UI Phase 1–4 (เอกสาร)
+5. รีวิวเกมเพลย์ของ Toon 12 ข้อ → แก้ชุด B/C/D (บัฟ, สลับ, สุสาน, ข้อความการ์ด, เด็คอีโว) — deploy แล้ว
+6. ความสามารถตัวละคร F1 (31/56) — deploy แล้ว
+7. ความสามารถตัวละคร F2 (49/56) — เสร็จบน branch รอ "Deploy"
