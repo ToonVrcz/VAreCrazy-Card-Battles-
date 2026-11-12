@@ -6,12 +6,13 @@
 import { elementMultiplier, evolveHp, type Element } from './combat';
 
 export type CardType = 'character' | 'evolution' | 'fusion' | 'spell' | 'trap' | 'item';
-export interface CardDef { id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null }
+import type { Effect, EffectTrigger } from './effects';
+export interface CardDef { id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null; effects?: Effect[] }
 export const RULES = { lp: 100, handMax: 5, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, poison: { dmg: 5, turns: 3 } };
 export class EngineError extends Error {}
 
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
-export interface Unit { fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface Unit { tempAtk?: number; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[] }
 export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats] }
@@ -52,7 +53,7 @@ export type Action =
 const rnd = (g: Game) => { let t = (g.seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const fail = (m: string): never => { throw new EngineError(m); };
 const other = (i: 0 | 1) => (1 - i) as 0 | 1;
-const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk), effDef = (u: Unit) => Math.max(0, u.def + u.bonusDef);
+const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), effDef = (u: Unit) => Math.max(0, u.def + u.bonusDef);
 const els = (u: Unit) => (u.card.element ?? 'neutral') as Element;
 const hit = (a: Unit, d: Unit) => Math.max(1, Math.floor(Math.max(1, effAtk(a) - effDef(d)) * elementMultiplier(els(a), els(d))));
 const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
@@ -111,17 +112,58 @@ function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number, by: 0 | 1,
 }
 function dealLp(g: Game, pi: 0 | 1, n: number, by: 0 | 1) { const p = g.players[pi]; bump(g, by, 'dmgLp', Math.min(Math.max(0, n), p.lp)); p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); } }
 
+/** Runs the character abilities of `u` that match `trig` (abilities come from Admin card_effects, see effects.ts). */
+function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { target?: Unit; after?: boolean } = {}) {
+  (u.card.effects ?? []).forEach((e, i) => {
+    if (e.trigger !== trig) return;
+    if ((e.cond === 'target_destroyed') !== !!ctx.after) return;             // "target destroyed" abilities run after the damage, the others before it
+    if (e.cond === 'target_hp_lower' && !(ctx.target && ctx.target.hp < u.hp)) return;
+    const k = String(i); u.used ??= {};
+    if (e.limit === 'turn' && u.used[k] === g.turn) return;
+    if (e.limit === 'game' && u.used[k]) return;
+    u.used[k] = e.limit === 'game' ? 1 : g.turn;
+    const ts = e.target === 'self' ? [u] : g.players[pi].field.filter((x): x is Unit => !!x);
+    for (const t of ts) {
+      if (e.kind === 'atk') {
+        let amt = e.amount;
+        if (e.perm && e.max !== undefined) { t.stacks ??= {}; amt = Math.min(amt, e.max - (t.stacks[k] ?? 0)); if (amt <= 0) continue; t.stacks[k] = (t.stacks[k] ?? 0) + amt; }
+        t.bonusAtk += amt; if (!e.perm) t.tempAtk = (t.tempAtk ?? 0) + amt;
+      } else if (e.kind === 'heal') t.hp = Math.min(t.maxHp, t.hp + e.amount);
+      else if (e.kind === 'draw') for (let n = 0; n < e.amount; n++) draw(g, pi);
+    }
+    log(g, `${u.card.name}: ${e.text}`);
+  });
+}
+/** Passive abilities ("while on the field") are recomputed after every action, so they vanish the moment their source leaves. */
+function refreshAuras(g: Game) {
+  for (const pi of [0, 1] as const) {
+    const us = g.players[pi].field.filter((x): x is Unit => !!x), atk = new Map<Unit, number>(), hp = new Map<Unit, number>();
+    for (const src of us) for (const e of src.card.effects ?? []) {
+      if (e.trigger !== 'passive') continue;
+      for (const t of e.target === 'self' ? [src] : us) { const m = e.kind === 'atk' ? atk : e.kind === 'maxhp' ? hp : null; if (m) m.set(t, (m.get(t) ?? 0) + e.amount); }
+    }
+    for (const u of us) {
+      u.auraAtk = atk.get(u) ?? 0;
+      const want = hp.get(u) ?? 0, d = want - (u.auraHp ?? 0);
+      if (d) { u.maxHp += d; u.hp = d > 0 ? u.hp + d : Math.min(u.hp, u.maxHp); u.auraHp = want; }
+    }
+  }
+}
+
 function startTurn(g: Game) {
   const pi = g.active, p = g.players[pi]; p.summoned = false; p.evolved = false;
   p.field.forEach(u => { if (u) u.attacked = false; });
   p.field.forEach((u, i) => { if (u?.poison) { u.poison--; damageUnit(g, pi, i, RULES.poison.dmg, other(pi), true); } });
   if (fire(g, other(pi), 'turn_start')) p.field.forEach((u, i) => { if (u) damageUnit(g, pi, i, 5, other(pi), true); });
+  if (g.winner === null) p.field.forEach(u => { if (u) runEffects(g, pi, u, 'turn_start'); });
   if (g.winner === null) draw(g, pi, true);
   g.phase = 'main';
 }
 function endTurn(g: Game) {
   const pi = g.active, opp = other(pi);
   if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true); }
+  g.players[pi].field.forEach(u => { if (u) runEffects(g, pi, u, 'turn_end'); });
+  g.players.forEach(p => p.field.forEach(u => { if (u?.tempAtk) { u.bonusAtk -= u.tempAtk; u.tempAtk = 0; } }));   // "until the end of the turn" bonuses
   if (g.winner !== null) return;
   g.active = opp; g.turn++; startTurn(g);
 }
@@ -138,7 +180,7 @@ export function act(g0: Game, a: Action): Game {
 }
 function run(g0: Game, a: Action, answers: number[]): Game {
   CTX = { answers, i: 0 };
-  try { return step(structuredClone(g0), a); }
+  try { const out = step(structuredClone(g0), a); refreshAuras(out); return out; }
   catch (e) {
     if (!(e instanceof NeedAnswer)) throw e;
     const out = structuredClone(g0); out.pending = { responder: e.responder, event: e.event, options: e.options, base: structuredClone(g0), action: a, answers };
@@ -163,6 +205,7 @@ function step(g: Game, a: Action): Game {
       if (a.slot < 0 || a.slot >= RULES.fieldSlots || me.field[a.slot]) fail('ช่องไม่ว่าง');
       me.hand.splice(a.hand, 1); const u = mk(g, c); me.field[a.slot] = u; me.summoned = true; active(g, pi, 'summon'); log(g, `เรียก ${c.name}`);
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
+      runEffects(g, pi, u, 'on_summon');
       return g;
     }
     case 'evolve': {
@@ -177,7 +220,7 @@ function step(g: Game, a: Action): Game {
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
-      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk; nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
+      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
       return g;
     }
     case 'fuse': {
@@ -191,6 +234,7 @@ function step(g: Game, a: Action): Game {
       const u = mk(g, top, Math.max(1, mix('hp'))); u.maxHp = u.hp; u.atk = mix('atk'); u.def = mix('def'); u.fused = [top, bot];
       me.field[a.slot] = u; me.summoned = true; active(g, pi, 'fuse'); log(g, `ฟิวชั่น ${top.name} + ${bot.name}`);
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
+      runEffects(g, pi, u, 'on_summon');
       return g;
     }
     case 'set': {
@@ -231,10 +275,12 @@ function step(g: Game, a: Action): Game {
       const t = fire(g, opp, direct ? 'on_attack_direct' : 'on_attack');
       if (t === 'TRP-001') { log(g, 'การโจมตีถูกยกเลิก'); return g; }
       if (t === 'TRP-009') { me.field[a.from] = null; for (const c of u.fused ?? [u.card]) { if (me.hand.length < RULES.handMax) me.hand.push(c); else me.grave.push(c); } return g; }
+      runEffects(g, pi, u, 'on_attack', { target: tgt ?? undefined });
       if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp); log(g, `${u.card.name} โจมตีตรง`); return g; }
       const d1 = hit(u, tgt!); damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
       if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp);
       if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) damageUnit(g, pi, a.from, hit(tgt!, u), opp);
+      if (me.field[a.from] === u && en.field[a.to as number] !== tgt) runEffects(g, pi, u, 'on_attack', { after: true });
       return g;
     }
   }

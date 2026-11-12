@@ -34,9 +34,9 @@ async function playBot(page, tag, maxMs = 240000) {
       const n = await page.locator('.hand .c').count();
       for (let i = 0; i < n; i++) {
         await page.locator('.hand .c').nth(i).click();
-        if (!noticeChecked) {   // first card opened: if it is a character, the ability notice must be shown and no ability text
+        if (!noticeChecked) {   // first card opened: a character with abilities must list them
           const txt = await page.locator('#md .box').innerText();
-          if (/ความสามารถของตัวละครยังไม่เปิดใช้งาน/.test(txt)) { noticeChecked = true; ok(`${tag}: character detail shows "ability not active" notice`, !/เมื่อ(โจมตี|ถูกเรียก|ถูกทำลาย)/.test(txt)); }
+          if (/•/.test(txt)) { noticeChecked = true; ok(`${tag}: character detail lists its abilities (not-yet-supported ones are marked)`, /⚠ ยังไม่เปิดใช้งาน/.test(txt) || /เมื่อ|ตอน|ทุก/.test(txt)); }
         }
         const b = page.locator('#md button', { hasText: 'เรียก' });
         if (await b.count()) { await b.first().click(); break; }

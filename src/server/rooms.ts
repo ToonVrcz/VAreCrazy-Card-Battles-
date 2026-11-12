@@ -1,6 +1,7 @@
 // Online 2-player rooms. The server owns the game state (src/engine/game.ts); clients get a seat-relative, redacted view and
 // send actions. Polling transport: GET room every ~1.5s. Opponent hand/deck/face-down traps are never sent.
 import { randomBytes, randomUUID } from 'node:crypto';
+import { parseEffect, type Effect } from '../engine/effects.ts';
 import { createGame, act, EngineError, STATS_VERSION, type Action, type CardDef, type Game, type FusionPair } from '../engine/game.ts';
 import { buildDeck, buildSet, viewFor, validateDeck, validateEvoDeck, deckFromIds, EVO_RULES } from '../engine/deck-view.ts';
 import { Economy, ECONOMY } from './economy.ts';
@@ -26,7 +27,11 @@ export class Rooms {
   private async loadPool() {
     const rows = (await this.db.query<any>(`SELECT c.character_id id, c.name, c.card_type type, c.level, ch.key chain, c.hp, c.atk, c.def, el.key element
       FROM cards c LEFT JOIN evolution_chains ch ON ch.id=c.chain_id LEFT JOIN taxonomy_values el ON el.id=c.element_id WHERE c.status<>'archived'`)).rows;
-    const pool: CardDef[] = rows.map(r => ({ id: r.id, name: r.name, type: r.type, level: r.level ?? null, chain: r.chain ?? null, hp: r.hp ?? null, atk: r.atk ?? null, def: r.def ?? 0, element: r.element ?? null }));
+    const fxRows = (await this.db.query<any>(`SELECT c.character_id id, e.trigger, e.target_text, e.action_text, e.condition_text, e.cost_text, e.duration, e.use_limit, e.description
+      FROM card_effects e JOIN cards c ON c.id=e.card_id WHERE c.status<>'archived' ORDER BY c.character_id, e.sort_order`)).rows;
+    const fx = new Map<string, Effect[]>();
+    for (const r of fxRows) { const e = parseEffect(r); if (e) fx.set(r.id, [...(fx.get(r.id) ?? []), e]); }   // only abilities the engine understands exactly
+    const pool: CardDef[] = rows.map(r => ({ id: r.id, name: r.name, type: r.type, level: r.level ?? null, chain: r.chain ?? null, hp: r.hp ?? null, atk: r.atk ?? null, def: r.def ?? 0, element: r.element ?? null, effects: fx.get(r.id) }));
     const fp = (await this.db.query<any>(`SELECT a.key a, b.key b, f.hp_bonus hp, f.atk_bonus atk, f.def_bonus def FROM card_fusion_partners f
       JOIN cards c ON c.id=f.card_id JOIN evolution_chains a ON a.id=c.chain_id JOIN evolution_chains b ON b.id=f.partner_chain_id`)).rows;
     return { pool, pairs: fp as FusionPair[] };

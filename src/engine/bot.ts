@@ -1,6 +1,6 @@
 // Simple opponent AI: picks one legal action at a time (call repeatedly until it returns { t: 'next' } twice in a row = turn over).
 import { legalActions, RULES, type Action, type Game, type Unit } from './game';
-const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk), def = (u: Unit) => Math.max(0, u.def + u.bonusDef);
+const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def = (u: Unit) => Math.max(0, u.def + u.bonusDef);
 export function botPick(g: Game): Action {
   if (g.pending) return g.pending.options.length ? { t: 'respond', back: g.pending.options[0] } : { t: 'pass' };
   const L = legalActions(g), me = g.players[g.active], en = g.players[1 - g.active];
