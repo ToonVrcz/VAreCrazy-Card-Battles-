@@ -1,13 +1,14 @@
 // Character abilities (card_effects rows made in Admin) turned into values the engine can run.
 // The Admin rows keep free-text fields; this parser accepts ONLY wordings it knows exactly. Anything else returns null:
 // that ability is then not executed and the UI keeps it marked "not active" (never guessed).
-export type EffectTrigger = 'on_attack' | 'on_summon' | 'turn_start' | 'turn_end' | 'passive';
+export type EffectTrigger = 'on_attack' | 'on_summon' | 'on_evolve' | 'on_destroyed' | 'turn_start' | 'turn_end' | 'passive';
 export interface Effect {
   trigger: EffectTrigger;
-  target: 'self' | 'allies';                 // allies = every character of the owner on the field (including the source)
+  target: 'self' | 'allies' | 'ally1' | 'enemy1';   // allies = every character of the owner on the field (including the source); ally1/enemy1 = ONE character the owner chooses
   cond?: 'target_destroyed' | 'target_hp_lower';
-  kind: 'atk' | 'heal' | 'draw' | 'maxhp';
-  amount: number;
+  kind: 'atk' | 'heal' | 'draw' | 'maxhp' | 'damage';
+  amount: number;                            // atk: negative = lowering ATK
+  full?: boolean;                            // heal: back to full HP
   perm?: boolean;                            // ATK stays until the unit leaves the field (otherwise until the end of the turn)
   max?: number;                              // permanent ATK from this effect never exceeds this total per unit
   limit: 'none' | 'turn' | 'game';           // none / once per turn / once per game (per character on the field)
@@ -17,8 +18,8 @@ export interface EffectRow {
   trigger: string; target_text?: string | null; action_text?: string | null; condition_text?: string | null; cost_text?: string | null;
   duration?: string | null; use_limit?: string | null; description?: string | null;
 }
-const TRIGGERS = ['on_attack', 'on_summon', 'turn_start', 'turn_end', 'passive'];
-const TARGETS: Record<string, Effect['target']> = { 'ตัวเอง': 'self', 'ตัวละครฝ่ายเราทุกใบ': 'allies' };
+const TRIGGERS = ['on_attack', 'on_summon', 'on_evolve', 'on_destroyed', 'turn_start', 'turn_end', 'passive'];
+const TARGETS: Record<string, Effect['target']> = { 'ตัวเอง': 'self', 'ตัวละครฝ่ายเราทุกใบ': 'allies', 'ตัวละครฝ่ายเรา 1 ใบ': 'ally1', 'ตัวละครฝ่ายตรงข้าม 1 ใบ': 'enemy1' };
 const LIMITS: Record<string, Effect['limit']> = { none: 'none', once_per_turn: 'turn', once_per_game: 'game' };
 
 export function parseEffect(r: EffectRow): Effect | null {
@@ -33,6 +34,10 @@ export function parseEffect(r: EffectRow): Effect | null {
     if (ct === 'เป้าหมายถูกทำลายจากการโจมตี') cond = 'target_destroyed'; else if (ct === 'HP ของเป้าหมายน้อยกว่าตัวเอง') cond = 'target_hp_lower'; else return null;
   }
   let m: RegExpMatchArray | null;
+  if (trigger === 'passive' && target !== 'self' && target !== 'allies') return null;
+  if ((m = act.match(/^ATK −(\d+)$/)) && r.duration === 'until_end_of_turn') return { trigger, target, cond, kind: 'atk', amount: -+m[1], perm: false, limit, text };
+  if ((m = act.match(/^HP −(\d+)$/)) && r.duration === 'instant' && trigger !== 'passive') return { trigger, target, cond, kind: 'damage', amount: +m[1], limit, text };
+  if (act === 'ฟื้น HP เต็ม' && r.duration === 'instant' && trigger !== 'passive') return { trigger, target, cond, kind: 'heal', amount: 0, full: true, limit, text };
   if ((m = act.match(/^ATK \+(\d+)(?: (ถาวร)(?: \(สูงสุด \+(\d+)\))?)?$/))) {
     const perm = !!m[2] || r.duration === 'permanent';
     if (trigger === 'passive') return r.duration === 'permanent' && !m[2] ? { trigger, target, kind: 'atk', amount: +m[1], limit, text } : null;

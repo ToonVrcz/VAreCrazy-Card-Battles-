@@ -14,7 +14,8 @@ export class EngineError extends Error {}
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
 export interface Unit { tempAtk?: number; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
-export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[] }
+export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
+export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
 export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats] }
 /** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
 export interface PlayerStats {
@@ -73,7 +74,7 @@ function draw(g: Game, pi: 0 | 1, loseIfEmpty = false) {
   p.hand.push(p.deck.shift()!); return true;
 }
 const TRAP: Record<string, string> = { 'TRP-001': 'on_attack', 'TRP-002': 'on_attack', 'TRP-003': 'on_attack_direct', 'TRP-009': 'on_attack', 'TRP-004': 'on_summon', 'TRP-005': 'on_evolve', 'TRP-006': 'turn_end', 'TRP-007': 'turn_start', 'TRP-008': 'on_destroyed', 'TRP-010': 'to_graveyard' };
-class NeedAnswer extends Error { constructor(public responder: 0 | 1, public event: string, public options: number[]) { super('need answer'); } }
+class NeedAnswer extends Error { constructor(public responder: 0 | 1, public event: string, public options: number[], public info?: TargetInfo) { super('need answer'); } }
 let CTX: { answers: number[]; i: number } = { answers: [], i: 0 };
 /** Trap slots of `owner` that could answer this event (usable only from the turn after they were set). */
 export function trapOptions(g: Game, owner: 0 | 1, ev: string): number[] {
@@ -108,10 +109,31 @@ function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number, by: 0 | 1,
   if (u.hp > 0) return;
   if (fire(g, pi, 'on_destroyed')) { u.hp = 1; return; }
   p.field[slot] = null; toGrave(g, pi, u); log(g, `${u.card.name} ถูกทำลาย`);
+  runEffects(g, pi, u, 'on_destroyed');
   if (fire(g, pi, 'to_graveyard')) draw(g, pi);
 }
 function dealLp(g: Game, pi: 0 | 1, n: number, by: 0 | 1) { const p = g.players[pi]; bump(g, by, 'dmgLp', Math.min(Math.max(0, n), p.lp)); p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); } }
 
+/** Which of `options` (field slots of `side`) a bot / non-interactive game picks for an ability. */
+function autoTarget(g: Game, side: 0 | 1, options: number[], kind: TargetInfo['kind']): number {
+  const f = g.players[side].field, score = (i: number) => kind === 'heal' ? -(f[i]!.hp / f[i]!.maxHp) : effAtk(f[i]!);
+  return options.reduce((best, i) => (score(i) > score(best) ? i : best), options[0]);
+}
+/** The one character an ability targets: the owner chooses (a pending question in interactive games). Returns null when nothing can be targeted. */
+function chooseTarget(g: Game, owner: 0 | 1, e: Effect, u: Unit): Unit | null {
+  const side = e.target === 'ally1' ? owner : other(owner), f = g.players[side].field;
+  const options = f.map((x, i) => x ? i : -1).filter(i => i >= 0); if (!options.length) return null;
+  const kind: TargetInfo['kind'] = e.kind === 'heal' ? 'heal' : e.kind === 'damage' ? 'damage' : 'atk';
+  let slot: number;
+  if (options.length === 1) slot = options[0];
+  else if (!g.interactive) slot = autoTarget(g, side, options, kind);
+  else {
+    if (CTX.i >= CTX.answers.length) throw new NeedAnswer(owner, 'effect_target', options, { side: e.target === 'ally1' ? 'ally' : 'enemy', kind, amount: e.amount, text: e.text, source: u.card.name, choices: options.map(i => ({ slot: i, id: f[i]!.card.id, name: f[i]!.card.name, hp: f[i]!.hp, maxHp: f[i]!.maxHp, atk: effAtk(f[i]!) })) });
+    const ans = CTX.answers[CTX.i++];
+    if (ans === -1) slot = autoTarget(g, side, options, kind); else if (!options.includes(ans)) fail('เลือกเป้าหมายไม่ถูกต้อง'); else slot = ans;
+  }
+  return f[slot]!;
+}
 /** Runs the character abilities of `u` that match `trig` (abilities come from Admin card_effects, see effects.ts). */
 function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { target?: Unit; after?: boolean } = {}) {
   (u.card.effects ?? []).forEach((e, i) => {
@@ -121,15 +143,19 @@ function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { tar
     const k = String(i); u.used ??= {};
     if (e.limit === 'turn' && u.used[k] === g.turn) return;
     if (e.limit === 'game' && u.used[k]) return;
+    let ts: Unit[];
+    if (e.target === 'self') ts = [u];
+    else if (e.target === 'allies') ts = g.players[pi].field.filter((x): x is Unit => !!x);
+    else { const t = chooseTarget(g, pi, e, u); if (!t) return; ts = [t]; }   // nothing to target: the ability does not fire and is not used up
     u.used[k] = e.limit === 'game' ? 1 : g.turn;
-    const ts = e.target === 'self' ? [u] : g.players[pi].field.filter((x): x is Unit => !!x);
     for (const t of ts) {
       if (e.kind === 'atk') {
         let amt = e.amount;
         if (e.perm && e.max !== undefined) { t.stacks ??= {}; amt = Math.min(amt, e.max - (t.stacks[k] ?? 0)); if (amt <= 0) continue; t.stacks[k] = (t.stacks[k] ?? 0) + amt; }
         t.bonusAtk += amt; if (!e.perm) t.tempAtk = (t.tempAtk ?? 0) + amt;
-      } else if (e.kind === 'heal') t.hp = Math.min(t.maxHp, t.hp + e.amount);
+      } else if (e.kind === 'heal') t.hp = e.full ? t.maxHp : Math.min(t.maxHp, t.hp + e.amount);
       else if (e.kind === 'draw') for (let n = 0; n < e.amount; n++) draw(g, pi);
+      else if (e.kind === 'damage') { const side = e.target === 'ally1' ? pi : other(pi), slot = g.players[side].field.indexOf(t); if (slot >= 0) damageUnit(g, side, slot, e.amount, pi, true); }
     }
     log(g, `${u.card.name}: ${e.text}`);
   });
@@ -183,7 +209,7 @@ function run(g0: Game, a: Action, answers: number[]): Game {
   try { const out = step(structuredClone(g0), a); refreshAuras(out); return out; }
   catch (e) {
     if (!(e instanceof NeedAnswer)) throw e;
-    const out = structuredClone(g0); out.pending = { responder: e.responder, event: e.event, options: e.options, base: structuredClone(g0), action: a, answers };
+    const out = structuredClone(g0); out.pending = { responder: e.responder, event: e.event, options: e.options, base: structuredClone(g0), action: a, answers, info: e.info };
     return out;
   }
 }
@@ -221,6 +247,7 @@ function step(g: Game, a: Action): Game {
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
       const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
+      runEffects(g, pi, nu, 'on_evolve');
       return g;
     }
     case 'fuse': {

@@ -2,6 +2,12 @@
 import { legalActions, RULES, type Action, type Game, type Unit } from './game';
 const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def = (u: Unit) => Math.max(0, u.def + u.bonusDef);
 export function botPick(g: Game): Action {
+  if (g.pending?.event === 'effect_target') {   // choose the ability's target: hit the strongest enemy, heal the most hurt ally, buff the strongest ally
+    const p = g.pending, cs = p.info?.choices ?? [], kind = p.info?.kind;
+    const score = (c: { hp: number; maxHp: number; atk: number }) => kind === 'heal' ? -(c.hp / c.maxHp) : c.atk;
+    const best = cs.reduce((b, c) => (score(c) > score(b) ? c : b), cs[0]);
+    return { t: 'respond', back: best ? best.slot : p.options[0] };
+  }
   if (g.pending) return g.pending.options.length ? { t: 'respond', back: g.pending.options[0] } : { t: 'pass' };
   const L = legalActions(g), me = g.players[g.active], en = g.players[1 - g.active];
   const pick = <T extends Action>(t: T['t']) => L.filter(a => a.t === t) as T[];

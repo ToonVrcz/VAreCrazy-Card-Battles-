@@ -28,7 +28,7 @@ export function viewFor(g: Game, seat: 0 | 1) {
   v.seed = 0; delete v.fusion.pairs;
   delete v.stats;                                                   // server-side action counters (anti-farming data) never reach a client
   const p = g.pending;
-  if (p) { const mine = p.responder === seat; v.pending = { responder: flip ? 1 - p.responder : p.responder, event: p.event, options: mine ? p.options : [], action: p.action.t === 'attack' ? p.action : { t: p.action.t } }; }
+  if (p) { const mine = p.responder === seat; v.pending = { responder: flip ? 1 - p.responder : p.responder, event: p.event, options: mine ? p.options : [], info: mine ? p.info : undefined, action: p.action.t === 'attack' ? p.action : { t: p.action.t } }; }
   v.fusion = { pairs: g.fusion.pairs, topPct: g.fusion.topPct, bottomPct: g.fusion.bottomPct };
   v.log = g.log.slice(-30);
   return v;

@@ -25,6 +25,7 @@ async function playBot(page, tag, maxMs = 240000) {
   while (Date.now() - t0 < maxMs) {
     if (await page.locator('#again').count()) return 'finished';
     if (await page.locator('.resp [data-r="-1"]').count()) { await page.click('.resp [data-r="-1"]'); continue; }
+    if (await page.locator('.resp [data-r]').count()) { await page.locator('.resp [data-r]').first().click(); continue; }   // an ability asks for a target: take the first
     const nx = page.locator('#nx');
     if (await page.locator('#cx').count()) { await page.click('#cx'); continue; }   // leave a half-finished targeting mode
     if (!(await nx.count()) || !(await nx.isEnabled())) { await page.waitForTimeout(250); continue; }

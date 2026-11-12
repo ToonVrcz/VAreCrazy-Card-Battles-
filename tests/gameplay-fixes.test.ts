@@ -74,13 +74,15 @@ describe('effect parser reads only exact Admin wordings', () => {
     expect(parseEffect(row({ action_text: 'ป้องกันการเลือกเป็นเป้าหมาย' }))).toBeNull();           // wording not understood -> not executed
     expect(parseEffect(row({ trigger: 'to_graveyard' }))).toBeNull();
     expect(parseEffect(row({ cost_text: 'ทิ้งการ์ดจากมือ 1 ใบ' }))).toBeNull();
-    expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ' }))).toBeNull();                 // needs target selection (round F2)
+    expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ', action_text: 'HP −10', duration: 'instant', trigger: 'on_summon' }))).toMatchObject({ target: 'enemy1', kind: 'damage', amount: 10 });
+    expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ', action_text: 'ATK −10', trigger: 'on_summon' }))).toMatchObject({ kind: 'atk', amount: -10 });
+    expect(parseEffect(row({ trigger: 'passive', target_text: 'ตัวละครฝ่ายเรา 1 ใบ', action_text: 'HP +10', duration: 'permanent' }))).toBeNull();   // a passive cannot ask for a target
   });
-  it('the 56 seed abilities: 31 run in F1, the rest stay marked as not active', () => {
+  it('the 56 seed abilities: 49 run after F2, the rest stay marked as not active', () => {
     const rows = seedCards().flatMap(() => []); void rows;
     const all = (require('node:fs').readFileSync(new URL('../db/seed/toon-cards.json', import.meta.url), 'utf8') as string);
     const fx = (JSON.parse(all) as any[]).flatMap(c => c.effects ?? []);
-    expect(fx.length).toBe(56); expect(fx.filter(r => parseEffect(r)).length).toBe(31);
+    expect(fx.length).toBe(56); expect(fx.filter(r => parseEffect(r)).length).toBe(49);
   });
 });
 
@@ -127,5 +129,58 @@ describe('abilities run in the engine', () => {
     const a = g.players[0].field[1]!; expect(a.auraAtk).toBe(5); expect(a.maxHp).toBe(60); expect(a.hp).toBe(60);
     g.players[0].field[0] = null; g = run(g, { t: 'next' });                 // the source leaves; the next action recomputes
     const a2 = g.players[0].field[1]!; expect(a2.auraAtk).toBe(0); expect(a2.maxHp).toBe(50); expect(a2.hp).toBe(50);
+  });
+});
+
+// ---- character abilities (F2): the owner chooses the target ----
+const unit = (c: CardDef, uid: number, o: any = {}) => ({ uid, card: c, hp: c.hp!, maxHp: c.hp!, atk: c.atk!, def: c.def, bonusAtk: 0, bonusDef: 0, summonedTurn: 1, attacked: false, lockedUntil: 0, poison: 0, ...o });
+describe('abilities that need a target', () => {
+  const summonGame = (fx: Effect, interactive = true) => {
+    const g0 = createGame([filler(), filler()], 7, 0, { interactive }); g0.players[0].hand = [withFx('A-15', 15, [fx])];
+    g0.players[1].field[1] = unit(ch('X-15', 15, { atk: 10 }), 901); g0.players[1].field[4] = unit(ch('Y-15', 15, { atk: 70 }), 902);
+    return g0;
+  };
+  it('asks the owner which enemy to hit, then hits only that one (once per game)', () => {
+    const g = act(summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10, limit: 'game' })), { t: 'summon', hand: 0, slot: 0 });
+    expect(g.pending).toMatchObject({ responder: 0, event: 'effect_target', options: [1, 4] });
+    expect(g.pending!.info!.choices.map(c => c.name)).toEqual(['X-15', 'Y-15']);
+    expect(g.players[0].field[0]).toBeNull();                                    // the summon is replayed after the answer
+    const r = act(g, { t: 'respond', back: 4 });
+    expect(r.pending).toBeUndefined(); expect(r.players[0].field[0]!.card.id).toBe('A-15');
+    expect(r.players[1].field[4]!.hp).toBe(40); expect(r.players[1].field[1]!.hp).toBe(50);
+  });
+  it('rejects a target that is not offered', () => {
+    const g = act(summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10 })), { t: 'summon', hand: 0, slot: 0 });
+    expect(() => act(g, { t: 'respond', back: 3 })).toThrow();
+  });
+  it('a bot / non-interactive game picks the strongest enemy and does not ask', () => {
+    const r = act(summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10 }), false), { t: 'summon', hand: 0, slot: 0 });
+    expect(r.pending).toBeUndefined(); expect(r.players[1].field[4]!.hp).toBe(40);
+  });
+  it('the bot answers the question itself (strongest enemy)', () => {
+    const g = act(summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10 })), { t: 'summon', hand: 0, slot: 0 });
+    expect(botPick(g)).toEqual({ t: 'respond', back: 4 });
+  });
+  it('no prompt when only one candidate, and nothing happens (not used up) when there is none', () => {
+    const one = summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10, limit: 'game' })); one.players[1].field[4] = null;
+    const r1 = act(one, { t: 'summon', hand: 0, slot: 0 }); expect(r1.pending).toBeUndefined(); expect(r1.players[1].field[1]!.hp).toBe(40);
+    const none = summonGame(E({ trigger: 'on_summon', target: 'enemy1', kind: 'damage', amount: 10, limit: 'game' })); none.players[1].field = none.players[1].field.map(() => null);
+    const r2 = act(none, { t: 'summon', hand: 0, slot: 0 }); expect(r2.pending).toBeUndefined(); expect(r2.players[0].field[0]!.used?.['0']).toBeUndefined();
+  });
+  it('heal ability on my own end of turn asks which ally, full heal restores to max', () => {
+    const g0 = createGame([filler(), filler()], 7, 0, { interactive: true }); g0.players[0].hand = []; const a = withFx('A-15', 15, [E({ trigger: 'turn_end', target: 'ally1', kind: 'heal', amount: 10, limit: 'turn' })]);
+    g0.players[0].field[0] = unit(a, 801, { hp: 20 }); g0.players[0].field[2] = unit(ch('B-15', 15), 802, { hp: 5 });
+    let g = run(g0, { t: 'next' }); g = act(g, { t: 'next' });                  // battle -> end of turn
+    expect(g.pending).toMatchObject({ responder: 0, event: 'effect_target' });
+    const r = act(g, { t: 'respond', back: 2 });
+    expect(r.players[0].field[2]!.hp).toBe(15); expect(r.players[0].field[0]!.hp).toBe(20); expect(r.active).toBe(1);   // the turn has passed to the opponent
+  });
+  it('on_destroyed: when this character is destroyed it hits an enemy', () => {
+    const g0 = start(); g0.players[0].hand = [];
+    g0.players[0].field[0] = unit(ch('A-15', 15, { atk: 90 }), 701); g0.players[1].field[0] = unit(withFx('B-15', 15, [E({ trigger: 'on_destroyed', target: 'enemy1', kind: 'damage', amount: 20 })], { hp: 10 }), 702);
+    g0.players[1].field[3] = unit(ch('C-15', 15), 703); g0.turn = 3; g0.phase = 'battle';
+    const r = act(g0, { t: 'attack', from: 0, to: 0 });
+    expect(r.players[1].field[0]).toBeNull();                                    // B was destroyed, its owner (P2) now chooses...
+    expect(r.players[0].field[0]!.hp).toBeLessThan(50);                          // ...the only enemy of B is A (auto, single candidate)
   });
 });
