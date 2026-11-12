@@ -1,5 +1,6 @@
 // Turn timers and disconnect handling for online rooms (and the Universe module). Pure functions; no db, no clock of their own.
 import { act, type Game } from './game.ts';
+import { emit } from './events.ts';
 
 export const TIMING = { turnMs: 90_000, maxMisses: 3, absentMs: 120_000, seenRefreshMs: 10_000 } as const;
 export type EndReason = 'timeout' | 'absent' | 'left';
@@ -17,7 +18,7 @@ export function autoEndTurn(g: Game): Game {
 }
 
 export function forfeit(g: Game, seat: 0 | 1, reason: EndReason, meta: RoomMeta): void {
-  g.winner = (1 - seat) as 0 | 1; g.pending = undefined;
+  g.winner = (1 - seat) as 0 | 1; g.pending = undefined; emit(g, { t: 'game_over', p: g.winner, why: reason });
   g.log.push(`T${g.turn}: ผู้เล่น ${seat + 1} ${reason === 'timeout' ? 'หมดเวลาหลายครั้ง' : reason === 'absent' ? 'หลุดจากห้อง' : 'ยอมแพ้'}`);
   meta.deadline = null; meta.endReason = reason; meta.forfeit = seat;
 }
@@ -40,6 +41,7 @@ export function tickRoom(g: Game, meta: RoomMeta, seat: 0 | 1, now: number): { g
   if (meta.deadline !== null && now >= meta.deadline) {
     const m = mover(g);
     if (++meta.misses[m] >= TIMING.maxMisses) { forfeit(g, m, 'timeout', meta); return { game: g, changed: true }; }
+    emit(g, { t: 'turn_timeout', p: m });
     let next = g; try { next = autoEndTurn(g); } catch { /* engine refused: keep state, restart the clock */ }
     meta.deadline = next.winner !== null ? null : now + TIMING.turnMs;
     return { game: next, changed: true };

@@ -1,5 +1,6 @@
 // Pure helpers shared by the online rooms and the Universe module adapter (no node/db imports).
 import type { CardDef, Game, FusionPair } from './game.ts';
+import { viewEvents } from './events.ts';
 
 /** Same recipe as the play screen: 7 random chains (fusion-pair chains first), EVO x3, spells x4, traps x3, FUS x2 if pairs exist. */
 export function buildDeck(pool: CardDef[], pairs: FusionPair[], r: () => number = Math.random): CardDef[] {
@@ -31,6 +32,7 @@ export function viewFor(g: Game, seat: 0 | 1) {
   if (p) { const mine = p.responder === seat; v.pending = { responder: flip ? 1 - p.responder : p.responder, event: p.event, options: mine ? p.options : [], info: mine ? p.info : undefined, action: p.action.t === 'attack' ? p.action : { t: p.action.t } }; }
   v.fusion = { pairs: g.fusion.pairs, topPct: g.fusion.topPct, bottomPct: g.fusion.bottomPct };
   v.log = g.log.slice(-30);
+  v.events = viewEvents(g.events, seat);                           // viewer-relative (0 = you) and redacted; evSeq stays so a client knows how many it missed
   return v;
 }
 

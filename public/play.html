@@ -21,6 +21,13 @@ a.bl{display:block;background:#5b2d90;color:#fff;border-radius:8px;padding:10px 
 .box{background:#1b0b2e;border:1px solid #6b4a9a;border-radius:12px;padding:10px;max-width:420px;width:100%;max-height:94vh;overflow:auto}
 .box svg{width:62%;display:block;margin:0 auto}.box p{margin:5px 0;font-size:12px}.acts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
 #lg{font-size:11px;color:#bba;max-height:70px;overflow:auto;background:#0004;border-radius:6px;padding:3px 6px}
+#nt,#nts{position:fixed;top:6px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:15;padding:0 16px}#nts{z-index:30}
+#nt .n,#nts .n{max-width:520px;width:100%;display:flex;align-items:center;gap:8px;background:#2a1244ee;border:1px solid #6b4a9a;border-left:4px solid #8f7ab8;border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.35;color:#f3e2b0;box-shadow:0 4px 14px #0008;animation:ntin .18s ease-out}
+#nt .n .i{font-size:18px}#nt .n.im{border-left-color:#ffd54a;background:#3a1a5aee;font-size:15px}
+#nts{top:32%}#nt .n.sp,#nts .n.sp{justify-content:center;text-align:center;font-size:17px;font-weight:800;border:2px solid #ffd54a;background:#2a1244f5;padding:14px 16px}
+#nt .n.sm{font-size:12px;opacity:.9}
+@keyframes ntin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#nt .n,#nts .n{animation:none}}
 .t{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#a33;color:#fff;padding:6px 12px;border-radius:8px;z-index:30}
 </style></head><body><div id="app"></div><div id="md"></div>
 <script>
@@ -62,8 +69,21 @@ const isForm=c=>c.type==='character'&&c.level>15;
 // forms the seat may use: own=true -> only what the player owns (max 3 each); own=false (bot) -> one of every form of those chains
 const formsOf=(chains,own)=>DEFS.filter(c=>isForm(c)&&chains.includes(c.chain)&&(!own||(ME.inv[c.id]||0)>0)).sort((a,b)=>a.level-b.level).flatMap(c=>Array.from({length:own?Math.min(ME.inv[c.id],DK.max):1},()=>({...c}))).slice(0,DK.evoMax);
 function view(c,extra={}){const d=BY[c.id]||c;return{chain_name:d.chainName||d.name,name:d.name,level:d.level||'',hp:d.hp,atk:d.atk,def:d.def,img:d.img,...extra}}
+/* Battle notifications: events come from the engine (viewer-relative, 0 = you); this only queues, de-duplicates and shows them. */
+const NC=(()=>{const MS={normal:1200,important:2000,special:2400};let key=null,N=E.createNotifier(null),q=[],cur=null,waiters=[];
+ const store=()=>{try{if(key!==null&&N.last!==null)sessionStorage.setItem('vcz_ev_'+key,String(N.last))}catch(e){}};
+ const box=sp=>{const id=sp?'nts':'nt';let b=document.getElementById(id);if(!b){b=document.createElement('div');b.id=id;b.setAttribute('aria-live','polite');document.body.appendChild(b)}return b};
+ function pump(){if(cur)return;const it=q.shift();if(!it){const w=waiters;waiters=[];w.forEach(f=>f());return}
+  const d=document.createElement('div');d.className='n '+(it.level==='special'?'sp':it.level==='important'?'im':it.n?'sm':'');d.innerHTML='<span class="i"></span><span class="x"></span>';d.firstChild.textContent=it.icon;d.lastChild.textContent=it.text;box(it.level==='special').appendChild(d);cur=d;
+  setTimeout(()=>{d.remove();cur=null;pump()},MS[it.level]*(q.length>3?.55:1))}
+ return{
+  reset(k,start){key=k;q=[];if(cur){cur.remove();cur=null}let v=null;if(start!==undefined)v=start;else try{const x=sessionStorage.getItem('vcz_ev_'+k);v=x===null?null:+x}catch(e){}N.reset(v)},
+  ingest(evs,latest){const shown=N.ingest(evs||[],latest);store();if(!shown.length)return;q=E.squash(q.concat(shown));pump()},
+  history(n){return N.history(n)},
+  idle(max){return q.length||cur?new Promise(r=>{waiters.push(r);setTimeout(r,max)}):Promise.resolve()}}})();
+const ntSync=()=>{if(G)NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
-function start(){const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{fusionPairs:PAIRS,interactive:true,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});mode=null;sel=null;snap=take();render();drive()}
+function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{fusionPairs:PAIRS,interactive:true,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef]})});return m}
 function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
  [[0,'❤'],[1,'⚔'],[2,'🛡']].forEach(([k,ic])=>{const d=b[k]-a[k];if(d)fl(el,(d>0?'+':'')+d+ic,d>0?'#7dffa0':'#ff8a80')})});
@@ -91,7 +111,8 @@ function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active=
  <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">🧑 คุณ LP ${me.lp}</span><span>เด็ค ${me.deck.length} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${me.grave.length}</button>${me.extra?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${me.extra.length}</button>`:''}</span></div>
  ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${img(c)}"></div>`).join('')}</div>
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
- ${showLog?`<div id="lg">${G.log.slice(-8).reverse().join('<br>')}</div>`:''}`;
+ ${showLog?`<div id="lg">${NC.history(8).join('<br>')||'ยังไม่มีเหตุการณ์'}</div>`:''}`;
+ ntSync();
  if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()?`<p>${WHY()}</p>`:''}${ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${ON.reward.points} แต้ม${ON.reward.vrcoin?` และ +${ON.reward.vrcoin} Vrcoin 🪙`:''} (แมตช์ที่ ${ON.reward.matches})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">กลับหน้าหลัก</button></div>`;$('#again').onclick=()=>{clearRoom();location.href='/play'}}
  if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
  if(snap)floats(snap)}
@@ -127,7 +148,7 @@ setInterval(tickTm,500);
 const OA=(p,o={})=>API('/rooms'+p,o,ON?{authorization:'Bearer '+ON.token}:{});
 async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;if(r.status==='waiting'||r.unchanged||!r.game)return;
  if(!ON.started){ON.started=true;closeM();history.replaceState(null,'','/play')}
- G=r.game;if(!snap)snap=take();render();tickTm();if(G.winner!==null){clearInterval(poll);clearRoom()}}catch(e){}}
+ if(NC.k!==ON.code){NC.k=ON.code;NC.reset(ON.code)}G=r.game;if(!snap)snap=take();render();tickTm();if(G.winner!==null){clearInterval(poll);clearRoom()}}catch(e){}}
 function startPoll(){clearInterval(poll);pollNow();poll=setInterval(pollNow,1500)}
 function waitBox(){const link=location.origin+'/play?join='+ON.code;$('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3>🌐 ห้องของคุณ</h3><div style="font-size:34px;letter-spacing:6px;font-weight:900">${ON.code}</div><p>ส่งรหัสหรือลิงก์นี้ให้เพื่อน แล้วรอสักครู่</p><p style="word-break:break-all;color:#bba">${link}</p><div class="acts"><button id="cpy">คัดลอกลิงก์</button><button class="r" id="wx">ยกเลิก</button></div></div>`;
  $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);clearRoom();OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
@@ -262,7 +283,7 @@ document.addEventListener('click',ev=>{const gb=ev.target.closest('[data-g]');if
  else if(z==='b'&&s===0){const b=G.players[0].back[i];if(b)detail(b.card,'x',i)}});
 let driving=false;
 async function drive(){if(driving)return;driving=true;busy=true;render();let n=0;
- while(G.winner===null&&n++<80){const human=G.pending?G.pending.responder===0:G.active===0;if(human)break;await sleep(650);
+ while(G.winner===null&&n++<80){const human=G.pending?G.pending.responder===0:G.active===0;if(human)break;await sleep(650);await NC.idle(1500);
   try{G=E.act(G,E.botPick(G))}catch(e){try{G=E.act(G,{t:G.pending?'pass':'next'})}catch(e2){break}}render()}
  driving=false;busy=false;render()}
 const JN=new URLSearchParams(location.search).get('join');if(JN)joinRoom(JN.toUpperCase());else if(/demo/.test(location.search))start();else resumeRoom().then(r=>{if(r!==true)lobby(typeof r==='string'?r:'')});

@@ -7,6 +7,7 @@ import { elementMultiplier, evolveHp, type Element } from './combat';
 
 export type CardType = 'character' | 'evolution' | 'fusion' | 'spell' | 'trap' | 'item';
 import type { Effect, EffectTrigger } from './effects';
+import { emit, type GameEvent } from './events';
 export interface CardDef { id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null; effects?: Effect[] }
 export const RULES = { lp: 100, handMax: 5, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, poison: { dmg: 5, turns: 3 } };
 export class EngineError extends Error {}
@@ -16,7 +17,7 @@ export interface Unit { untargetableTurn?: number; tempAtk?: number; auraAtk?: n
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
-export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats] }
+export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats]; events?: GameEvent[]; evSeq?: number }
 /** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
 export interface PlayerStats {
   summon: number; evolve: number; fuse: number; set: number; cast: number;
@@ -70,7 +71,7 @@ export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1
 }
 function draw(g: Game, pi: 0 | 1, loseIfEmpty = false) {
   const p = g.players[pi]; if (p.hand.length >= RULES.handMax) return false;
-  if (!p.deck.length) { if (loseIfEmpty) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} จั่วไม่ได้ แพ้`); } return false; }
+  if (!p.deck.length) { if (loseIfEmpty) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} จั่วไม่ได้ แพ้`); emit(g, { t: 'game_over', p: other(pi), why: 'deck' }); } return false; }
   p.hand.push(p.deck.shift()!); return true;
 }
 const TRAP: Record<string, string> = { 'TRP-001': 'on_attack', 'TRP-002': 'on_attack', 'TRP-003': 'on_attack_direct', 'TRP-009': 'on_attack', 'TRP-004': 'on_summon', 'TRP-005': 'on_evolve', 'TRP-006': 'turn_end', 'TRP-007': 'turn_start', 'TRP-008': 'on_destroyed', 'TRP-010': 'to_graveyard' };
@@ -92,7 +93,7 @@ function fire(g: Game, owner: 0 | 1, ev: string): string | null {
     if (!opts.includes(ans)) fail('เลือกกับดักไม่ถูกต้อง'); pick = ans;
   }
   const p = g.players[owner], t = p.back[pick]!;
-  p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); bump(g, owner, 'trap'); return t.card.id;
+  p.back[pick] = null; p.grave.push(t.card); log(g, `กับดัก ${t.card.name} ทำงาน`); emit(g, { t: 'trap_fired', p: owner, card: t.card.name }); bump(g, owner, 'trap'); return t.card.id;
 }
 function toGrave(g: Game, pi: 0 | 1, u: Unit) {
   g.players[pi].grave.push(...(u.fused ?? [u.card]));
@@ -107,17 +108,18 @@ export function fusionBonus(g: Game, x: CardDef, y: CardDef) {
   return { hp: Math.max(...m.map(p => p.hp)), atk: Math.max(...m.map(p => p.atk)), def: Math.max(...m.map(p => p.def)) };
 }
 /** `by` = the player the damage is credited to in the stats; `delayed` = caused by a lingering effect rather than by the action being resolved. */
-function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number, by: 0 | 1, delayed = false) {
+function damageUnit(g: Game, pi: 0 | 1, slot: number, amount: number, by: 0 | 1, delayed = false, src?: string) {
   const p = g.players[pi], u = p.field[slot]; if (!u) return;
+  if (amount > 0 && u.hp > 0) emit(g, { t: 'dmg', p: pi, card: u.card.name, v: Math.min(amount, u.hp), ...(src ? { src } : {}) });
   bump(g, by, delayed ? 'dmgDelayed' : 'dmgUnit', Math.min(Math.max(0, amount), Math.max(0, u.hp)));
   u.hp -= amount;
   if (u.hp > 0) return;
   if (fire(g, pi, 'on_destroyed')) { u.hp = 1; return; }
-  p.field[slot] = null; toGrave(g, pi, u); log(g, `${u.card.name} ถูกทำลาย`);
+  p.field[slot] = null; toGrave(g, pi, u); log(g, `${u.card.name} ถูกทำลาย`); emit(g, { t: 'destroyed', p: pi, card: u.card.name });
   runEffects(g, pi, u, 'on_destroyed');
   if (fire(g, pi, 'to_graveyard')) draw(g, pi);
 }
-function dealLp(g: Game, pi: 0 | 1, n: number, by: 0 | 1) { const p = g.players[pi]; bump(g, by, 'dmgLp', Math.min(Math.max(0, n), p.lp)); p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); } }
+function dealLp(g: Game, pi: 0 | 1, n: number, by: 0 | 1) { const p = g.players[pi], real = Math.min(Math.max(0, n), p.lp); bump(g, by, 'dmgLp', real); if (real > 0) emit(g, { t: 'lp', p: pi, v: real }); p.lp = Math.max(0, p.lp - n); if (p.lp === 0) { g.winner = other(pi); log(g, `ผู้เล่น ${pi + 1} LP หมด`); emit(g, { t: 'game_over', p: other(pi), why: 'lp' }); } }
 
 /** Which of `options` (field slots of `side`) a bot / non-interactive game picks for an ability. */
 function autoTarget(g: Game, side: 0 | 1, options: number[], kind: TargetInfo['kind']): number {
@@ -163,22 +165,23 @@ function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { tar
     else if (e.target === 'allies') ts = g.players[pi].field.filter((x): x is Unit => !!x);
     else if (e.target === 'deck') ts = [];
     else { const t = chooseTarget(g, pi, e, u); if (!t) return; ts = [t]; }   // nothing to target: the ability does not fire and is not used up
-    if (e.cost === 'discard1') { const idx = chooseDiscard(g, pi, e, u); if (idx === null) return; const c = g.players[pi].hand.splice(idx, 1)[0]; g.players[pi].grave.push(c); log(g, `${u.card.name}: ทิ้ง ${c.name}`); }
+    if (e.cost === 'discard1') { const idx = chooseDiscard(g, pi, e, u); if (idx === null) return; const c = g.players[pi].hand.splice(idx, 1)[0]; g.players[pi].grave.push(c); log(g, `${u.card.name}: ทิ้ง ${c.name}`); emit(g, { t: 'discard', p: pi, card: u.card.name, to: c.name }); }
     if (e.kind === 'search_evo') {
       const p = g.players[pi], di = p.deck.findIndex(c => c.type === 'evolution');
       if (di < 0 || p.hand.length >= RULES.handMax) return;                       // nothing to find / hand is full: not used up
-      p.hand.push(p.deck.splice(di, 1)[0]); u.used[k] = e.limit === 'game' ? 1 : g.turn; log(g, `${u.card.name}: ${e.text}`); return;
+      p.hand.push(p.deck.splice(di, 1)[0]); u.used[k] = e.limit === 'game' ? 1 : g.turn; log(g, `${u.card.name}: ${e.text}`); emit(g, { t: 'search_evo', p: pi, card: u.card.name, to: p.hand[p.hand.length - 1].name }); return;
     }
     u.used[k] = e.limit === 'game' ? 1 : g.turn;
-    if (e.kind === 'protect') { u.untargetableTurn = g.turn; log(g, `${u.card.name}: ${e.text}`); return; }
+    if (e.kind === 'protect') { u.untargetableTurn = g.turn; log(g, `${u.card.name}: ${e.text}`); emit(g, { t: 'protect', p: pi, card: u.card.name }); return; }
     for (const t of ts) {
       if (e.kind === 'atk') {
         let amt = e.amount;
         if (e.perm && e.max !== undefined) { t.stacks ??= {}; amt = Math.min(amt, e.max - (t.stacks[k] ?? 0)); if (amt <= 0) continue; t.stacks[k] = (t.stacks[k] ?? 0) + amt; }
         t.bonusAtk += amt; if (!e.perm) t.tempAtk = (t.tempAtk ?? 0) + amt;
-      } else if (e.kind === 'heal') t.hp = e.full ? t.maxHp : Math.min(t.maxHp, t.hp + e.amount);
-      else if (e.kind === 'draw') for (let n = 0; n < e.amount; n++) draw(g, pi);
-      else if (e.kind === 'damage') { const side = e.target === 'ally1' ? pi : other(pi), slot = g.players[side].field.indexOf(t); if (slot >= 0) damageUnit(g, side, slot, e.amount, pi, true); }
+        if (amt > 0) emit(g, { t: 'buff', p: pi, card: t.card.name, stat: 'atk', v: amt, src: u.card.name });
+      } else if (e.kind === 'heal') { const before = t.hp; t.hp = e.full ? t.maxHp : Math.min(t.maxHp, t.hp + e.amount); if (t.hp > before) emit(g, { t: 'heal', p: pi, card: t.card.name, v: t.hp - before, src: u.card.name }); }
+      else if (e.kind === 'draw') { let n = 0; for (let i = 0; i < e.amount; i++) if (draw(g, pi)) n++; if (n) emit(g, { t: 'draw', p: pi, v: n, src: u.card.name }); }
+      else if (e.kind === 'damage') { const side = e.target === 'ally1' ? pi : other(pi), slot = g.players[side].field.indexOf(t); if (slot >= 0) damageUnit(g, side, slot, e.amount, pi, true, u.card.name); }
     }
     log(g, `${u.card.name}: ${e.text}`);
   });
@@ -200,17 +203,17 @@ function refreshAuras(g: Game) {
 }
 
 function startTurn(g: Game) {
-  const pi = g.active, p = g.players[pi]; p.summoned = false; p.evolved = false;
+  const pi = g.active, p = g.players[pi]; p.summoned = false; p.evolved = false; emit(g, { t: 'turn_start', p: pi });
   p.field.forEach(u => { if (u) u.attacked = false; });
-  p.field.forEach((u, i) => { if (u?.poison) { u.poison--; damageUnit(g, pi, i, RULES.poison.dmg, other(pi), true); } });
-  if (fire(g, other(pi), 'turn_start')) p.field.forEach((u, i) => { if (u) damageUnit(g, pi, i, 5, other(pi), true); });
+  p.field.forEach((u, i) => { if (u?.poison) { u.poison--; damageUnit(g, pi, i, RULES.poison.dmg, other(pi), true, 'พิษ'); } });
+  if (fire(g, other(pi), 'turn_start')) p.field.forEach((u, i) => { if (u) damageUnit(g, pi, i, 5, other(pi), true, 'กับดัก'); });
   if (g.winner === null) p.field.forEach(u => { if (u) runEffects(g, pi, u, 'turn_start'); });
   if (g.winner === null) draw(g, pi, true);
   g.phase = 'main';
 }
 function endTurn(g: Game) {
   const pi = g.active, opp = other(pi);
-  if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true); }
+  if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true, 'กับดัก'); }
   g.players[pi].field.forEach(u => { if (u) runEffects(g, pi, u, 'turn_end'); });
   g.players.forEach(p => p.field.forEach(u => { if (u?.tempAtk) { u.bonusAtk -= u.tempAtk; u.tempAtk = 0; } }));   // "until the end of the turn" bonuses
   if (g.winner !== null) return;
@@ -246,13 +249,13 @@ function step(g: Game, a: Action): Game {
   switch (a.t) {
     case 'respond': case 'pass': return fail('ไม่มีอะไรให้ตอบโต้');
     case 'next':
-      if (g.phase === 'main') g.phase = 'battle'; else endTurn(g);
+      if (g.phase === 'main') { g.phase = 'battle'; emit(g, { t: 'phase_battle', p: pi }); } else endTurn(g);
       return g;
     case 'summon': {
       main(); const c = card(a.hand);
       if (c.type !== 'character' || c.level !== 15) fail('เรียกได้เฉพาะตัวละคร Lv.15'); if (me.summoned) fail('เรียกได้ 1 ใบต่อเทิร์น');
       if (a.slot < 0 || a.slot >= RULES.fieldSlots || me.field[a.slot]) fail('ช่องไม่ว่าง');
-      me.hand.splice(a.hand, 1); const u = mk(g, c); me.field[a.slot] = u; me.summoned = true; active(g, pi, 'summon'); log(g, `เรียก ${c.name}`);
+      me.hand.splice(a.hand, 1); const u = mk(g, c); me.field[a.slot] = u; me.summoned = true; active(g, pi, 'summon'); log(g, `เรียก ${c.name}`); emit(g, { t: 'summon', p: pi, card: c.name });
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
       runEffects(g, pi, u, 'on_summon');
       return g;
@@ -267,9 +270,9 @@ function step(g: Game, a: Action): Game {
       if (sac.length !== need || sac.some(s => s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
       if (ex) { me.hand.splice(a.evo, 1); ex.splice(a.form, 1); } else { const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1); }
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
-      if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); return g; }
+      if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); emit(g, { t: 'evolve_cancelled', p: pi, card: u.card.name }); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
-      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`);
+      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`); emit(g, { t: 'evolve', p: pi, card: u.card.name, to: form.name });
       runEffects(g, pi, nu, 'on_evolve');
       return g;
     }
@@ -282,7 +285,7 @@ function step(g: Game, a: Action): Game {
       const f = g.fusion, mix = (k: 'hp' | 'atk' | 'def') => Math.floor((top[k] ?? 0) * f.topPct / 100) + Math.floor((bot[k] ?? 0) * f.bottomPct / 100) + b[k];
       [a.fusion, a.top, a.bottom].sort((x, y) => y - x).forEach(i => me.hand.splice(i, 1)); sendTo(fc);
       const u = mk(g, top, Math.max(1, mix('hp'))); u.maxHp = u.hp; u.atk = mix('atk'); u.def = mix('def'); u.fused = [top, bot];
-      me.field[a.slot] = u; me.summoned = true; active(g, pi, 'fuse'); log(g, `ฟิวชั่น ${top.name} + ${bot.name}`);
+      me.field[a.slot] = u; me.summoned = true; active(g, pi, 'fuse'); log(g, `ฟิวชั่น ${top.name} + ${bot.name}`); emit(g, { t: 'fuse', p: pi, card: top.name, to: bot.name });
       if (fire(g, opp, 'on_summon')) u.lockedUntil = g.turn + 3;
       runEffects(g, pi, u, 'on_summon');
       return g;
@@ -290,27 +293,27 @@ function step(g: Game, a: Action): Game {
     case 'set': {
       main(); const c = card(a.hand); if (c.type !== 'trap') fail('ต้องเป็นกับดัก');
       const i = me.back.findIndex(x => !x); if (i < 0) fail('ช่องหลังเต็ม');
-      me.hand.splice(a.hand, 1); me.back[i] = { card: c, setTurn: g.turn }; active(g, pi, 'set'); return g;
+      me.hand.splice(a.hand, 1); me.back[i] = { card: c, setTurn: g.turn }; active(g, pi, 'set'); emit(g, { t: 'set_trap', p: pi, card: c.name }); return g;
     }
     case 'cast': {
       main(); const c = card(a.hand); if (c.type !== 'spell') fail('ต้องเป็นเวทมนตร์');
       const t = a.target ?? {}; const need = (v: number | undefined) => v ?? fail('ต้องเลือกเป้าหมาย');
       switch (c.id) {
-        case 'SPL-001': { const x = need(t.slot); if (!targetable(g, theirs(x))) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); damageUnit(g, opp, x, 20, pi); break; }
-        case 'SPL-002': { const u = mine(need(t.slot)); u.hp = Math.min(u.maxHp, u.hp + 30); break; }
-        case 'SPL-003': mine(need(t.slot)).bonusDef += 15; break;
-        case 'SPL-004': mine(need(t.slot)).bonusAtk += 15; break;
-        case 'SPL-005': draw(g, pi); draw(g, pi); break;
+        case 'SPL-001': { const x = need(t.slot); if (!targetable(g, theirs(x))) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); emit(g, { t: 'cast', p: pi, card: c.name }); damageUnit(g, opp, x, 20, pi, false, c.name); break; }
+        case 'SPL-002': { const u = mine(need(t.slot)), b = u.hp; u.hp = Math.min(u.maxHp, u.hp + 30); emit(g, { t: 'cast', p: pi, card: c.name }); if (u.hp > b) emit(g, { t: 'heal', p: pi, card: u.card.name, v: u.hp - b, src: c.name }); break; }
+        case 'SPL-003': { const u = mine(need(t.slot)); u.bonusDef += 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'def', v: 15, src: c.name }); break; }
+        case 'SPL-004': { const u = mine(need(t.slot)); u.bonusAtk += 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'atk', v: 15, src: c.name }); break; }
+        case 'SPL-005': { emit(g, { t: 'cast', p: pi, card: c.name }); const n = (draw(g, pi) ? 1 : 0) + (draw(g, pi) ? 1 : 0); if (n) emit(g, { t: 'draw', p: pi, v: n, src: c.name }); break; }
         case 'SPL-006': {
           if (me.hand.length - 1 >= RULES.handMax) fail('มือเต็ม');
           const gi = t.grave ?? me.grave.findIndex(x => x.type === 'character' && x.level === 15);
           const gc = me.grave[gi]; if (!gc || gc.type !== 'character' || gc.level !== 15) fail('ไม่มีตัวละคร Lv.15 ในสุสาน');
-          me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
+          me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'revive', p: pi, card: gc.name }); return g;
         }
-        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); if (!targetable(g, eu)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); [me.field[x], en.field[y]] = [eu, mu]; log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
-        case 'SPL-008': en.noAttackUntil = g.turn + 2; break;
-        case 'SPL-009': { const x = theirs(need(t.slot)); if (!targetable(g, x)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); x.poison = RULES.poison.turns; break; }
-        case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; break; }
+        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); if (!targetable(g, eu)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); [me.field[x], en.field[y]] = [eu, mu]; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'swap', p: pi, card: mu.card.name, to: eu.card.name }); log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
+        case 'SPL-008': en.noAttackUntil = g.turn + 2; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'noattack', p: opp }); break;
+        case 'SPL-009': { const x = theirs(need(t.slot)); if (!targetable(g, x)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); x.poison = RULES.poison.turns; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'poison', p: opp, card: x.card.name }); break; }
+        case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'trap_destroyed', p: opp, card: b.card.name }); break; }
         default: fail('ยังไม่รองรับเวทมนตร์ใบนี้');
       }
       me.hand.splice(a.hand, 1); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); return g;
@@ -322,14 +325,15 @@ function step(g: Game, a: Action): Game {
       const direct = a.to === 'player';
       if (direct && units(en).length) fail('โจมตีผู้เล่นได้เมื่อฝั่งตรงข้ามไม่มีตัวละคร');
       const tgt = direct ? null : theirs(a.to as number); u.attacked = true; active(g, pi, 'attack'); if (direct) bump(g, pi, 'attackDirect');
+      emit(g, { t: 'attack', p: pi, card: u.card.name, to: tgt ? tgt.card.name : null });
       const t = fire(g, opp, direct ? 'on_attack_direct' : 'on_attack');
-      if (t === 'TRP-001') { log(g, 'การโจมตีถูกยกเลิก'); return g; }
-      if (t === 'TRP-009') { me.field[a.from] = null; for (const c of u.fused ?? [u.card]) { if (me.hand.length < RULES.handMax) me.hand.push(c); else me.grave.push(c); } return g; }
+      if (t === 'TRP-001') { log(g, 'การโจมตีถูกยกเลิก'); emit(g, { t: 'attack_cancelled', p: pi, card: u.card.name }); return g; }
+      if (t === 'TRP-009') { emit(g, { t: 'attack_returned', p: pi, card: u.card.name }); me.field[a.from] = null; for (const c of u.fused ?? [u.card]) { if (me.hand.length < RULES.handMax) me.hand.push(c); else me.grave.push(c); } return g; }
       runEffects(g, pi, u, 'on_attack', { target: tgt ?? undefined });
-      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp); log(g, `${u.card.name} โจมตีตรง`); return g; }
+      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp, false, 'สะท้อนความเสียหาย'); log(g, `${u.card.name} โจมตีตรง`); return g; }
       const d1 = hit(u, tgt!); damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
-      if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp);
-      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) damageUnit(g, pi, a.from, hit(tgt!, u), opp);
+      if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp, false, 'สะท้อนความเสียหาย');
+      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) damageUnit(g, pi, a.from, hit(tgt!, u), opp, false, 'สวนกลับ');
       if (me.field[a.from] === u && en.field[a.to as number] !== tgt) runEffects(g, pi, u, 'on_attack', { after: true });
       return g;
     }

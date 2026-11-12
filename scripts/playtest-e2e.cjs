@@ -16,6 +16,8 @@ function watch(page, tag) {
   page.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.text()) && !(expectStale && /403/.test(m.text()))) errors.push(`${tag} console: ${m.text()}`); });
   page.on('response', r => { if (r.status() >= 400 && !/favicon/.test(r.url()) && !(expectStale && /\/rooms\/[A-Z0-9]{5}\?since=-1/.test(r.url()))) errors.push(`${tag} HTTP ${r.status()} ${r.url()}`); });
 }
+// records every battle notification the page draws (text only) so the checks below can compare both screens
+const spy = ctx => ctx.addInitScript(() => { window.__nt = []; new MutationObserver(ms => ms.forEach(r => r.addedNodes.forEach(n => { const x = n.querySelector && n.querySelector('.x'); if (x && /^(n|n )/.test(n.className || '')) window.__nt.push(x.textContent); }))).observe(document, { subtree: true, childList: true }); });
 const turnOf = async page => +((await page.locator('#app .bar').first().innerText()).match(/เทิร์น\s+(\d+)/) || [0, 0])[1];
 
 /** Plays one game against the bot through the UI: summon, attack when possible, end turns. Returns 'finished' or 'stuck'. */
@@ -98,10 +100,13 @@ async function playBot(page, tag, maxMs = 240000) {
 
     // ---- 2. five bot games in parallel to the end ----
     { const ctxs = await Promise.all(Array.from({ length: BOT_GAMES }, () => browser.newContext({ viewport: { width: 420, height: 900 } })));
-      const outs = await Promise.all(ctxs.map(async (c, i) => { const p = await c.newPage(); watch(p, `bot${i + 1}`); await p.goto(BASE + '/play'); await p.waitForSelector('#lb'); const r = await playBot(p, `bot${i + 1}`);
+      const outs = await Promise.all(ctxs.map(async (c, i) => { await spy(c); const p = await c.newPage(); watch(p, `bot${i + 1}`); await p.goto(BASE + '/play'); await p.waitForSelector('#lb'); const r = await playBot(p, `bot${i + 1}`);
         let again = null; if (r === 'finished') { again = await p.locator('#again').innerText(); }
-        return { r, again, p }; }));
+        const nt = await p.evaluate(() => window.__nt); return { r, again, p, nt }; }));
       ok(`bot: ${BOT_GAMES} games played to the end without hanging`, outs.every(o => o.r === 'finished'), outs.map(o => o.r).join(','));
+      ok('Notify bot: notices appear, are Thai, perspective-correct and never repeat a turn-start', outs.every(o => o.nt.length > 3 && o.nt.every(t => !/ผู้เล่น \d|Player [12]|มอนสเตอร์|undefined|NaN/.test(t)) && o.nt.some(t => /คุณ/.test(t)) && o.nt.some(t => /ฝ่ายตรงข้าม/.test(t)) && new Set(o.nt.filter(t => /เริ่มแล้ว/.test(t))).size === o.nt.filter(t => /เริ่มแล้ว/.test(t)).length), outs.map(o => o.nt.length).join(','));
+      await Promise.all(outs.map(async o => { await o.p.waitForTimeout(9000); o.nt = await o.p.evaluate(() => window.__nt); }));
+      ok('Notify bot: a win/lose notice is shown at the end', outs.every(o => o.nt.some(t => /ชนะ|แพ้/.test(t))));
       ok('game-over button says "กลับหน้าหลัก"', outs.every(o => o.again === 'กลับหน้าหลัก'), outs.map(o => o.again).join(','));
       const o = outs[0]; if (o.r === 'finished') { await o.p.click('#again'); await o.p.waitForSelector('#lb'); ok('"กลับหน้าหลัก" returns to the lobby (no new game started)', (await o.p.locator('#nx').count()) === 0); }
       await Promise.all(ctxs.map(c => c.close())); }
@@ -120,7 +125,7 @@ async function playBot(page, tag, maxMs = 240000) {
 
     // ---- 4. PvP with two contexts: create, join by link, refresh mid-game (resume), surrender, no re-entry ----
     { const ca = await browser.newContext({ viewport: { width: 420, height: 900 } }), cb = await browser.newContext({ viewport: { width: 420, height: 900 } });
-      const a = await ca.newPage(), b = await cb.newPage(); watch(a, 'pvpA'); watch(b, 'pvpB'); b.on('dialog', d => d.accept()); a.on('dialog', d => d.accept());
+      await spy(ca); await spy(cb); const a = await ca.newPage(), b = await cb.newPage(); watch(a, 'pvpA'); watch(b, 'pvpB'); b.on('dialog', d => d.accept()); a.on('dialog', d => d.accept());
       await a.goto(BASE + '/play'); await a.waitForSelector('#lc'); await a.click('#lc'); await a.waitForSelector('.box.wait');
       const code = (await a.locator('.box.wait div').first().innerText()).trim(); ok('PvP: creator gets a 5-letter room code', /^[A-Z0-9]{5}$/.test(code), code);
       // creator refreshes while waiting -> back in the waiting room
@@ -129,11 +134,18 @@ async function playBot(page, tag, maxMs = 240000) {
       ok('PvP: invite link joins and both boards appear', true);
       // a few turns of plain end-turn
       for (let i = 0; i < 6; i++) for (const pg of [a, b]) { const nx = pg.locator('#nx'); if (await nx.isEnabled()) { await nx.click(); await pg.waitForTimeout(250); } }
+      await a.waitForTimeout(2500); await b.waitForTimeout(2500);
+      { const na = await a.evaluate(() => window.__nt), nb = await b.evaluate(() => window.__nt), flip = t => t.replace('ของคุณเริ่ม', 'ของ§เริ่ม').replace('ของฝ่ายตรงข้ามเริ่ม', 'ของคุณเริ่ม').replace('ของ§เริ่ม', 'ของฝ่ายตรงข้ามเริ่ม'), starts = l => l.filter(t => /เริ่มแล้ว/.test(t));
+        ok('Notify PvP: same turn reads "ของคุณ" on one screen and "ของฝ่ายตรงข้าม" on the other', starts(na).length > 0 && starts(na).length === starts(nb).length && starts(na).every(t => starts(nb).includes(flip(t))), `A:${starts(na).join(' / ')} | B:${starts(nb).join(' / ')}`);
+        ok('Notify PvP: no event shown twice on a screen', [na, nb].every(l => new Set(l).size === l.length), `A:${na.length} B:${nb.length}`);
+        ok('Notify PvP: no "ผู้เล่น N"/"Player"/"มอนสเตอร์" in any notice', [...na, ...nb].every(t => !/ผู้เล่น \d|Player [12]|มอนสเตอร์/.test(t))); }
       const tBefore = await turnOf(b);
       await b.reload(); await b.waitForSelector('#nx', { timeout: 20000 });
+      await b.waitForTimeout(2500); ok('Notify PvP: after refresh old events are not replayed', (await b.evaluate(() => window.__nt.length)) <= 1, `shown after refresh: ${await b.evaluate(() => window.__nt.length)}`);
       ok('PvP: refresh mid-game resumes the same match (no lobby, same or later turn)', (await b.locator('#lb').count()) === 0 && (await turnOf(b)) >= tBefore, `turn ${tBefore} -> ${await turnOf(b)}`);
       ok('PvP: room is stored for resume while playing', !!(await b.evaluate(() => localStorage.getItem('vcz_room'))));
       await b.click('#lv'); await b.waitForSelector('#again', { timeout: 20000 }); await a.waitForSelector('#again', { timeout: 20000 });
+      { await a.waitForTimeout(800); const l = await a.evaluate(() => window.__nt); ok('Notify PvP: opponent surrender is announced to the other screen', l.some(t => /ฝ่ายตรงข้ามยอมแพ้/.test(t)), l.slice(-2).join(' | ')); }
       ok('PvP: surrender ends the match for both; button says "กลับหน้าหลัก"', (await b.locator('#again').innerText()) === 'กลับหน้าหลัก' && (await a.locator('#again').innerText()) === 'กลับหน้าหลัก');
       ok('PvP: stored room cleared after the match ends', !(await b.evaluate(() => localStorage.getItem('vcz_room'))) && !(await a.evaluate(() => localStorage.getItem('vcz_room'))));
       await b.reload(); await b.waitForSelector('#lb'); ok('PvP: refresh after the match shows the lobby (finished room is not re-entered)', (await b.locator('#nx').count()) === 0);
