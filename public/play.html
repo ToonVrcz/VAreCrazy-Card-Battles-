@@ -85,7 +85,7 @@ const NC=(()=>{const MS={normal:1200,important:2000,special:2400};let key=null,N
   ingest(evs,latest){const shown=N.ingest(evs||[],latest);store();if(!shown.length)return;q=E.squash(q.concat(shown));pump()},
   history(n){return N.history(n)},
   idle(max){return q.length||cur?new Promise(r=>{waiters.push(r);setTimeout(r,max)}):Promise.resolve()}}})();
-const ntSync=()=>{if(G)NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
+const ntSync=()=>{if(G&&!(ON&&ON.spec))NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
 function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{fusionPairs:PAIRS,interactive:true,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef]})});return m}
@@ -104,21 +104,21 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
   else if(id==='SPL-010')en.back.forEach((b,i)=>b&&t.b1.push(i))}
  if(mode.k==='fuse'){me.hand.forEach((c,i)=>{if(i===mode.f||mode.picks.includes(i))return;if(mode.picks.length?E.fusionBonus(G,me.hand[mode.picks[0]],c):me.hand.some((o,j)=>j!==i&&j!==mode.f&&E.fusionBonus(G,c,o)))t.h.push(i)})}
  if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&t.f0.push(i));return t}
-function render(){const me=G.players[0],en=G.players[1],T=targets(),my=G.active===0&&!G.winner&&!busy&&!G.pending;
+function render(){const me=G.players[0],en=G.players[1],T=targets(),SP=!!(ON&&ON.spec),my=!SP&&G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${mode.sac.length}/${mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'สลับ 1/2: เลือกตัวละครของคุณ':'สลับ 2/2: เลือกตัวละครของศัตรูที่จะสลับด้วย'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
- $('#app').innerHTML=`<div class="bar"><span>เทิร์น ${G.turn} · ${G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?' <button id="lv" class="r" style="padding:3px 8px;font-size:12px">ยอมแพ้</button>':''}</span></div>
- <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">👾 ศัตรู LP ${en.lp}</span><span>มือ ${en.hand.length} · เด็ค ${en.deck.length} · <button data-g="1" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${en.grave.length}</button>${en.extra?` · อีโว ${en.extra.length}`:''}</span></div>
+ $('#app').innerHTML=`<div class="bar"><span>${SP?'👁 ผู้ชม · ':''}เทิร์น ${G.turn} · ${SP?(G.active===0?'ฝั่งล่าง':'ฝั่งบน'):G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?` <button id="lv" class="r" style="padding:3px 8px;font-size:12px">${SP?'ออก':'ยอมแพ้'}</button>`:''}</span></div>
+ <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">${SP?'ฝั่งบน':'👾 ศัตรู'} LP ${en.lp}</span><span>มือ ${en.hand.length} · เด็ค ${en.deck.length} · <button data-g="1" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${en.grave.length}</button>${en.extra?` · อีโว ${en.extra.length}`:''}</span></div>
  <div class="row b">${en.back.map((b,i)=>`<div class="c ${T.b1.includes(i)?'tg':''}" data-z="b" data-s="1" data-i="${i}">${b?`<img src="/assets/card-back.jpg">`:''}</div>`).join('')}</div>
  <div class="row f">${en.field.map((u,i)=>cell(u,1,i,T.f1.includes(i)?'tg':'')).join('')}</div>
  <div class="row f">${me.field.map((u,i)=>cell(u,0,i,T.f0.includes(i)?'tg':'')).join('')}</div>
- <div class="row b">${me.back.map((b,i)=>`<div class="c" data-z="b" data-s="0" data-i="${i}">${b?`<img src="${img(b.card)}" style="opacity:.8">`:''}</div>`).join('')}</div>
- <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">🧑 คุณ LP ${me.lp}</span><span>เด็ค ${me.deck.length} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${me.grave.length}</button>${me.extra?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${me.extra.length}</button>`:''}</span></div>
- ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${img(c)}"></div>`).join('')}</div>
+ <div class="row b">${me.back.map((b,i)=>`<div class="c" data-z="b" data-s="0" data-i="${i}">${b?`<img src="${SP?'/assets/card-back.jpg':img(b.card)}" style="opacity:.8">`:''}</div>`).join('')}</div>
+ <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">${SP?'ฝั่งล่าง':'🧑 คุณ'} LP ${me.lp}</span><span>เด็ค ${me.deck.length} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${me.grave.length}</button>${me.extra&&!SP?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${me.extra.length}</button>`:''}</span></div>
+ ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${SP?'/assets/card-back.jpg':img(c)}"></div>`).join('')}</div>
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
  ${showLog?`<div id="lg">${NC.history(8).join('<br>')||'ยังไม่มีเหตุการณ์'}</div>`:''}`;
  ntSync();
- if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()?`<p>${WHY()}</p>`:''}${ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${ON.reward.points} แต้ม${ON.reward.vrcoin?` และ +${ON.reward.vrcoin} Vrcoin 🪙`:''} (แมตช์ที่ ${ON.reward.matches})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">กลับหน้าหลัก</button></div>`;$('#again').onclick=()=>{clearRoom();location.href='/play'}}
- if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
+ if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${SP?(w?'จบเกม: ฝั่งล่างชนะ':'จบเกม: ฝั่งบนชนะ'):w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()&&!SP?`<p>${WHY()}</p>`:''}${SP?'':ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${ON.reward.points} แต้ม${ON.reward.vrcoin?` และ +${ON.reward.vrcoin} Vrcoin 🪙`:''} (แมตช์ที่ ${ON.reward.matches})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">กลับหน้าหลัก</button></div>`;$('#again').onclick=()=>{clearRoom();location.href='/play'}}
+ if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy&&!SP)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
  if(snap)floats(snap)}
 const EV={on_attack:'ศัตรูโจมตี',on_attack_direct:'ศัตรูโจมตีตรงที่ผู้เล่น',on_summon:'ศัตรูเรียกตัวละคร',on_evolve:'ศัตรูกำลังวิวัฒนาการ',turn_start:'เทิร์นของศัตรูเริ่ม',turn_end:'เทิร์นของศัตรูกำลังจบ',on_destroyed:'ตัวละครของคุณกำลังจะถูกทำลาย',to_graveyard:'ตัวละครของคุณลงสุสาน'};
 function respModal(){const P=G.pending,b=G,ac=P.action;let more='';
@@ -135,14 +135,14 @@ const FEEDBACK_URL='';
 const FB=s=>FEEDBACK_URL?`<a class="bl" href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer"${s?' style="padding:3px 8px;font-size:12px;display:inline-block"':''}>🐞 แจ้งปัญหา</a>`:'';
 // Resume after refresh / app switch: the room code + seat token are kept in this browser until the match is over (or the room is gone).
 const RK='vcz_room';
-function saveRoom(){try{if(ON)localStorage.setItem(RK,JSON.stringify({code:ON.code,token:ON.token,seat:ON.seat}))}catch(e){}}
+function saveRoom(){try{if(ON)localStorage.setItem(RK,JSON.stringify({code:ON.code,token:ON.token,seat:ON.seat,spec:!!ON.spec}))}catch(e){}}
 function clearRoom(){try{localStorage.removeItem(RK)}catch(e){}}
 async function resumeRoom(){let s=null;try{s=JSON.parse(localStorage.getItem(RK)||'null')}catch(e){}
  if(!s)return null;if(!/^[A-Z0-9]{5}$/.test(s.code||'')||typeof s.token!=='string'||!s.token){clearRoom();return null}
  $('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังกลับเข้าห้อง…</div>';
  try{const r=await API('/rooms/'+s.code+'?since=-1',{},{authorization:'Bearer '+s.token});
   if(r.status==='finished'){clearRoom();return'ห้องเดิมจบไปแล้ว'}
-  ON={code:s.code,token:s.token,seat:s.seat};if(r.status==='waiting')waitBox();startPoll();return true}
+  ON={code:s.code,token:s.token,seat:s.seat,spec:r.spectator===true};startPoll();return true}
  catch(e){if(e instanceof TypeError)return'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองรีเฟรชอีกครั้ง (ห้องของคุณยังไม่ถูกลบ)';clearRoom();return'ห้องเดิมไม่มีอยู่แล้ว'}}
 function WHY(){if(!ON||!ON.endReason)return'';const y=ON.forfeitedYou;return({timeout:y?'คุณหมดเวลาติดกันหลายครั้ง':'ศัตรูหมดเวลาติดกันหลายครั้ง',absent:y?'คุณหลุดจากห้อง':'ศัตรูหลุดจากห้อง',left:y?'คุณยอมแพ้':'ศัตรูยอมแพ้หรือออกจากห้อง'})[ON.endReason]||''}
 function tickTm(){const el=$('#tm');if(!el)return;if(!ON||!ON.deadline||!G||G.winner!==null){el.textContent='';return}
@@ -150,12 +150,52 @@ function tickTm(){const el=$('#tm');if(!el)return;if(!ON||!ON.deadline||!G||G.wi
  el.textContent=(mine?'⏱ คุณ ':'⏱ ศัตรู ')+left+' วิ';el.style.color=left<=15?'#ff8a80':'#f3e2b0'}
 setInterval(tickTm,500);
 const OA=(p,o={})=>API('/rooms'+p,o,ON?{authorization:'Bearer '+ON.token}:{});
-async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;if(r.status==='waiting'||r.unchanged||!r.game)return;
+async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;ON.spec=r.spectator===true;
+ if(r.status==='kicked'){clearInterval(poll);clearRoom();ON=null;lobby('คุณถูกเชิญออกจากห้อง');return}
+ if(r.status==='waiting'||r.status==='lobby'){ON.started=false;const k=JSON.stringify([r.status,r.room]);if(ON.lk!==k){ON.lk=k;ON.room=r.room;ON.rs=r.status;roomLobby()}return}
+ if(r.unchanged||!r.game)return;
  if(!ON.started){ON.started=true;closeM();history.replaceState(null,'','/play')}
  if(NC.k!==ON.code){NC.k=ON.code;NC.reset(ON.code)}G=r.game;if(!snap)snap=take();render();tickTm();if(G.winner!==null){clearInterval(poll);clearRoom()}}catch(e){}}
 function startPoll(){clearInterval(poll);pollNow();poll=setInterval(pollNow,1500)}
-function waitBox(){const link=location.origin+'/play?join='+ON.code;$('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3>🌐 ห้องของคุณ</h3><div style="font-size:34px;letter-spacing:6px;font-weight:900">${ON.code}</div><p>ส่งรหัสหรือลิงก์นี้ให้เพื่อน แล้วรอสักครู่</p><p style="word-break:break-all;color:#bba">${link}</p><div class="acts"><button id="cpy">คัดลอกลิงก์</button><button class="r" id="wx">ยกเลิก</button></div></div>`;
- $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);clearRoom();OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
+function leaveRoom(){clearInterval(poll);clearRoom();if(ON)OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;G=null;snap=null;lobby()}
+function roomGuide(){const R=ON.room,host=ON.seat===0&&!ON.spec,g=R.players[1],ok=g&&R.ready[1]&&g.here;
+ if(ON.spec)return'คุณเป็นผู้ชม: ดูได้อย่างเดียว ไม่เห็นการ์ดบนมือของผู้เล่น เกมจะเริ่มเมื่อเจ้าของห้องกดเริ่ม';
+ if(host)return!g?'ขั้นตอน: 1) ส่งรหัสหรือลิงก์ให้เพื่อน 2) รอเพื่อนเข้าห้อง 3) เมื่อเพื่อนกด "พร้อม" คุณกด "เริ่มเกม"':!g.here?'ผู้เล่นอีกคนหลุดการเชื่อมต่อ รอสักครู่หรือเชิญออกได้':!R.ready[1]?'รอผู้เล่นอีกคนกด "พร้อม" แล้วคุณจึงเริ่มเกมได้':'ทุกอย่างพร้อมแล้ว กด "เริ่มเกม" ได้เลย';
+ return R.ready[1]?'คุณพร้อมแล้ว รอเจ้าของห้องกดเริ่มเกม (กด "ยกเลิกพร้อม" ได้ถ้ายังไม่พร้อม)':'ตรวจเด็คของคุณให้เรียบร้อย แล้วกด "พร้อม" เพื่อบอกเจ้าของห้อง'}
+function roomLobby(){const R=ON.room,host=ON.seat===0&&!ON.spec,spec=ON.spec,link=location.origin+'/play?join='+ON.code,g=R.players[1],ok=g&&R.ready[1]&&g.here;
+ const why=host&&!ok?(!g?'ยังไม่มีผู้เล่นอีกคน':!g.here?'ผู้เล่นอีกคนหลุดการเชื่อมต่อ':'ผู้เล่นอีกคนยังไม่กดพร้อม'):'';
+ const pl=(x,k)=>x?`<div class="tile" style="display:flex;justify-content:space-between"><span>${k===0?'👑':'🧑'} ${x.name}${k===0?' (เจ้าของห้อง)':''}</span><span>${x.here?'🟢':'⚪ หลุด'}${k===1?(R.ready[1]?' · ✅ พร้อม':' · ⏳ ยังไม่พร้อม'):''}</span></div>`:'<div class="tile" style="color:#bba">⌛ รอผู้เล่นอีกคน…</div>';
+ $('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3 style="margin:2px 0">${spec?'👁 ห้อง':'🌐 ห้อง'}${R.name?` “${R.name}”`:''}</h3><div style="font-size:30px;letter-spacing:6px;font-weight:900">${ON.code}</div>
+ <p style="margin:2px 0;font-size:12px;color:#bba">${R.isPublic?'🌍 สาธารณะ (มีผู้ชมได้)':'🔒 ส่วนตัว'} · ⏱ ${R.turnSec} วิ/เทิร์น · 👁 ผู้ชม ${R.spectators}/${R.spectatorMax}</p>
+ ${host&&!g?`<p style="word-break:break-all;color:#bba;font-size:11px;margin:2px 0">${link}</p><div class="acts" style="margin:2px 0"><button id="cpy">คัดลอกลิงก์</button></div>`:''}
+ <div style="text-align:left;display:flex;flex-direction:column;gap:5px;margin:6px 0">${pl(R.players[0],0)}${pl(g,1)}</div>
+ <div class="hintl" style="text-align:left">💡 ${roomGuide()}</div>
+ ${!spec&&ON.deckName?`<p style="font-size:11px;color:#bba;margin:4px 0">เด็คที่ใช้: ${ON.deckName} (ล็อกตอนเข้าห้อง — อยากเปลี่ยนให้ออกจากห้องแล้วเลือกเด็คใหม่)</p>`:''}
+ ${host&&why?`<p style="color:#f99;font-size:12px;margin:4px 0">เริ่มเกมไม่ได้: ${why}</p>`:''}
+ <div class="acts">${host?`<button class="g" id="rst" ${ok?'':'disabled'}>▶ เริ่มเกม</button>${g?'<button id="rkk" class="r">เชิญออก</button>':''}`:!spec?`<button class="g" id="rrd">${R.ready[1]?'ยกเลิกพร้อม':'✅ พร้อม'}</button>`:''}<button class="r" id="wx">${host?'ปิดห้อง':'ออกจากห้อง'}</button></div></div>`;
+ if($('#cpy'))$('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};
+ $('#wx').onclick=()=>{if(host&&g&&!confirm('ปิดห้อง? ผู้เล่นอีกคนจะถูกเชิญออก'))return;leaveRoom()};
+ if($('#rst'))$('#rst').onclick=async()=>{$('#rst').disabled=true;try{await OA('/'+ON.code+'/start',{method:'POST'});pollNow()}catch(e){toast(e.message);ON.lk=null;pollNow()}};
+ if($('#rkk'))$('#rkk').onclick=async()=>{if(!confirm('เชิญ '+(g.name||'ผู้เล่น')+' ออกจากห้อง?'))return;try{await OA('/'+ON.code+'/kick',{method:'POST',body:JSON.stringify({target:'guest'})});ON.lk=null;pollNow()}catch(e){toast(e.message)}};
+ if($('#rrd'))$('#rrd').onclick=async()=>{try{await OA('/'+ON.code+'/ready',{method:'POST',body:JSON.stringify({ready:!R.ready[1]})});ON.lk=null;pollNow()}catch(e){toast(e.message)}}}
+function waitBox(){ON.room=ON.room||{name:null,isPublic:false,turnSec:90,ready:[false,false],players:[{name:'คุณ',here:true},null],spectators:0,spectatorMax:10};roomLobby()}
+function createRoom(msg=''){$('#md').className='on';
+ $('#md').innerHTML=`<div class="box">${subHead('🌐 สร้างห้อง')}${msg?`<p style="color:#f99">${msg}</p>`:''}
+ <div class="tile"><small style="color:#bba">ชื่อห้อง (ไม่ใส่ก็ได้)</small><input id="rnm" maxlength="24" placeholder="เช่น ห้องซ้อมมือ" style="width:100%;font-size:16px;padding:8px;margin-top:4px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"></div>
+ <div class="tile" style="margin-top:6px"><label><input type="checkbox" id="rpb"> 🌍 ห้องสาธารณะ</label><br><small style="color:#bba">แสดงในรายชื่อห้อง และมีผู้ชมได้ (ห้องส่วนตัว: เข้าได้ด้วยรหัส/ลิงก์ ไม่มีผู้ชม)</small></div>
+ <div class="tile" style="margin-top:6px"><label>⏱ เวลาต่อเทิร์น <select id="rtm" style="font-size:15px;padding:4px;margin-left:6px">${[30,60,90,120,180].map(x=>`<option value="${x}" ${x===90?'selected':''}>${x} วินาที</option>`).join('')}</select></label><br><small style="color:#bba">หมดเวลาแล้วระบบจบเทิร์นให้ ติดกัน 3 ครั้ง = แพ้</small></div>
+ <p style="font-size:12px;color:#bba;margin:6px 0">เด็คที่ใช้: ${activeDeck()?activeDeck().name:'สุ่มให้'} (เปลี่ยนได้ที่แท็บ "เด็ค" ก่อนสร้างห้อง)</p>
+ <div class="acts"><button class="g" id="rgo">สร้างห้อง</button></div></div>`;
+ $('#sbk').onclick=()=>lobby();
+ $('#rgo').onclick=async()=>{$('#rgo').disabled=true;try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined,name:$('#rnm').value.trim()||undefined,public:$('#rpb').checked,turnSec:+$('#rtm').value})});ON={code:r.code,token:r.token,seat:r.seat,deckName:activeDeck()?.name||'สุ่มให้'};saveRoom();waitBox();startPoll()}catch(e){createRoom(e.message)}}}
+async function roomList(msg=''){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลดรายชื่อห้อง…</div>';
+ let r;try{r=await API('/rooms/public')}catch(e){lobby('โหลดรายชื่อห้องไม่ได้: '+e.message);return}
+ $('#md').innerHTML=`<div class="box">${subHead('🌍 ห้องสาธารณะ')}${msg?`<p style="color:#f99">${msg}</p>`:''}
+ ${r.rooms.map(x=>`<div class="tile" style="margin:5px 0"><b>${x.name||'ห้องของ '+(x.host||'ผู้เล่น')}</b> <small style="color:#bba">· ${x.code}</small><br><small>${x.status==='waiting'?'🟢 รอผู้เล่น':x.status==='lobby'?'🟡 ผู้เล่นครบ กำลังเตรียมตัว':'🔴 กำลังเล่น'} · ⏱ ${x.turnSec} วิ · 👁 ${x.spectators}/${x.spectatorMax}</small><div class="acts" style="justify-content:flex-start;margin:4px 0 0">${x.canJoin?`<button class="g" data-jn="${x.code}" style="padding:6px 12px">เข้าร่วม</button>`:''}${x.canWatch?`<button data-wt="${x.code}" style="padding:6px 12px">👁 ดู</button>`:''}</div></div>`).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีห้องสาธารณะ — สร้างห้องแล้วติ๊ก "ห้องสาธารณะ" ได้</p>'}
+ <div class="acts"><button id="rrf">🔄 รีเฟรช</button></div></div>`;
+ $('#sbk').onclick=()=>lobby();$('#rrf').onclick=()=>roomList();
+ document.querySelectorAll('[data-jn]').forEach(el=>el.onclick=()=>joinRoom(el.dataset.jn));document.querySelectorAll('[data-wt]').forEach(el=>el.onclick=()=>spectateRoom(el.dataset.wt))}
+async function spectateRoom(code){try{const r=await OA('/'+code+'/spectate',{method:'POST'});ON={code:r.code,token:r.token,seat:0,spec:true};saveRoom();closeM();startPoll()}catch(e){roomList(e.message)}}
 const GK='vcz_guide',guideSeen=()=>{try{return localStorage.getItem(GK)==='1'}catch(e){return true}},guideDone=()=>{try{localStorage.setItem(GK,'1')}catch(e){}};
 const NAVS=[['home','🏠','หน้าหลัก'],['deck','🃏','เด็ค'],['col','📚','คลังการ์ด'],['shop','🛒','ร้านค้า'],['more','⋯','เพิ่มเติม']];
 const NAV=on=>`<div class="nav">${NAVS.map(n=>`<button data-nav="${n[0]}" class="${n[0]===on?'on':''}">${n[1]}<br>${n[2]}</button>`).join('')}</div>`;
@@ -167,11 +207,11 @@ function lobby(msg=''){$('#md').className='on';
  ${msg?`<p style="color:#f99;margin:0">${msg}</p>`:''}
  <div class="tile"><div style="display:flex;justify-content:space-between"><b>${ME.ok?(ME.name||'ผู้เล่น'):'ผู้เล่น (ออฟไลน์)'}</b><span>${ME.ok?`💰 ${ME.points} · 🪙 ${ME.vrcoin}`:'—'}</span></div>${ME.ok?`<small style="color:#bba">แมตช์ PvP ${ME.matches} · อีก ${ME.matchesToVrcoin} แมตช์ได้ Vrcoin โบนัส</small>`:''}<br><small>เด็คที่ใช้: ${ad?ad.name:'สุ่มให้'}</small></div>
  ${hint?`<div class="hintl">💡 ${hint}</div>`:''}
- <b style="font-size:12px">⚔ ต่อสู้</b><div class="acts" style="flex-direction:column;align-items:stretch;margin:0"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง 5 ตัว" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div>
+ <b style="font-size:12px">⚔ ต่อสู้</b><div class="acts" style="flex-direction:column;align-items:stretch;margin:0"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="lrl">🌍 รายชื่อห้องสาธารณะ / ดูเกม</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง 5 ตัว" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div>
  <div class="tile" style="color:#bba">🎯 ภารกิจ · 🎉 กิจกรรม — เร็ว ๆ นี้ (ยังไม่เปิดใช้งาน)</div>${FB()}</div>${NAV('home')}</div>`;
  wireNav();$('#lgd').onclick=()=>guide(0);
  $('#lb').onclick=()=>{closeM();start()};if(!ME.ok&&!lobby.tried){lobby.tried=1;refreshMe().then(()=>{if($('#lgd'))lobby(msg)})}
- $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();waitBox();startPoll()}catch(e){lobby(e.message)}};
+ $('#lc').onclick=()=>createRoom();$('#lrl').onclick=()=>roomList();
  $('#ljb').onclick=()=>joinRoom($('#lj').value.trim().toUpperCase());
  if(!msg&&!guideSeen())guide(0)}
 const GSTEPS=[['ยินดีต้อนรับ 👋','เกมการ์ดต่อสู้ 2 ผู้เล่น ลด LP ของอีกฝ่ายจาก 100 ให้เหลือ 0 เริ่มได้ทันทีด้วย "เล่นกับบอท" ไม่ต้องสมัครสมาชิก — ระบบสร้างโปรไฟล์แขกให้อัตโนมัติ (ผูกกับเบราว์เซอร์นี้)'],
@@ -221,13 +261,13 @@ function collection(cat='e40',only=false){$('#md').className='on';
  wireNav();document.querySelectorAll('[data-cat]').forEach(el=>el.onclick=()=>collection(el.dataset.cat,false));if($('#conly'))$('#conly').onchange=e=>collection(cat,e.target.checked);
  document.querySelectorAll('[data-cd]').forEach(el=>el.onclick=()=>detail(BY[el.dataset.cd],'col',0));
  if(!ME.ok&&!collection.tried){collection.tried=1;refreshMe().then(()=>{if($('#conly')||$('.cgrid'))collection(cat,only)})}}
-async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();closeM();startPoll()}catch(e){lobby(e.message)}}
+async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat,deckName:activeDeck()?.name||'สุ่มให้'};saveRoom();closeM();startPoll()}catch(e){lobby(e.message)}}
 function go(a){if(ON){mode=null;sel=null;OA('/'+ON.code+'/act',{method:'POST',body:JSON.stringify({action:a})}).then(pollNow).catch(e=>{toast(e.message);pollNow()});if(G)render();return true}
  try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
 const DEFF='/assets/frame/frame.webp';let FR={};fetch('/api/play/frames').then(r=>r.ok?r.json():[]).then(l=>{FR=Object.fromEntries(l.map(f=>[f.scope,'/'+f.path]))}).catch(()=>{});
 const frameOf=d=>FR['card:'+d.id]||(d.type==='character'&&[40,70,99].includes(+d.level)&&FR['level:'+d.level])||FR['type:'+d.type]||DEFF;
-function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
- const me=(z==='shop'||z==='col')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&G.phase==='battle',b=[];
+function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
+ const me=(z==='shop'||z==='col')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&!(ON&&ON.spec)&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
   if(d.type==='trap'&&main)b.push(['วางกับดัก',()=>go({t:'set',hand:i})]);
   if(d.type==='spell'&&main)b.push(['ใช้เวทมนตร์',()=>castStart(i,d.id)]);
@@ -344,7 +384,7 @@ function reviveChoose(h){const L=G.players[0].grave.map((c,i)=>({c,i})).filter(x
 function castStart(h,id){if(id==='SPL-006'){reviveChoose(h);return}const need=['SPL-001','SPL-002','SPL-003','SPL-004','SPL-007','SPL-009','SPL-010'].includes(id);
  if(!need){go({t:'cast',hand:h});return}mode={k:'cast',hand:h,id};render()}
 document.addEventListener('click',ev=>{const gb=ev.target.closest('[data-g]');if(gb){graveView(+gb.dataset.g);return}const el=ev.target.closest('[data-z]');
- if(ev.target.id==='cx'){mode=null;render();return}if(ev.target.id==='nx'){go({t:'next'});return}if(ev.target.id==='lgb'){showLog=!showLog;render();return}if(ev.target.id==='exb'){extraView();return}if(ev.target.id==='lv'){if(confirm('ยอมแพ้และออกจากห้อง?'))OA('/'+ON.code+'/leave',{method:'POST'}).then(pollNow).catch(e=>toast(e.message));return}
+ if(ev.target.id==='cx'){mode=null;render();return}if(ev.target.id==='nx'){go({t:'next'});return}if(ev.target.id==='lgb'){showLog=!showLog;render();return}if(ev.target.id==='exb'){extraView();return}if(ev.target.id==='lv'){if(ON&&ON.spec){leaveRoom();return}if(confirm('ยอมแพ้และออกจากห้อง?'))OA('/'+ON.code+'/leave',{method:'POST'}).then(pollNow).catch(e=>toast(e.message));return}
  if(!el||busy||G.pending)return;const z=el.dataset.z,s=+el.dataset.s,i=+el.dataset.i;
  if(mode){const T=targets(),k=mode.k;
   if(k==='attack'){if(z==='f'&&s===1&&T.f1.includes(i))go({t:'attack',from:mode.from,to:i});else if(z==='lp'&&s===1&&T.lp1)go({t:'attack',from:mode.from,to:'player'});return}

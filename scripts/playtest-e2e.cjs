@@ -127,11 +127,11 @@ async function playBot(page, tag, maxMs = 240000) {
     // ---- 4. PvP with two contexts: create, join by link, refresh mid-game (resume), surrender, no re-entry ----
     { const ca = await browser.newContext({ viewport: { width: 420, height: 900 } }), cb = await browser.newContext({ viewport: { width: 420, height: 900 } });
       await spy(ca); await spy(cb); const a = await ca.newPage(), b = await cb.newPage(); watch(a, 'pvpA'); watch(b, 'pvpB'); b.on('dialog', d => d.accept()); a.on('dialog', d => d.accept());
-      await a.goto(BASE + '/play'); await a.waitForSelector('#lc'); await a.click('#lc'); await a.waitForSelector('.box.wait');
+      await a.goto(BASE + '/play'); await a.waitForSelector('#lc'); await a.click('#lc'); await a.waitForSelector('#rgo'); await a.click('#rgo'); await a.waitForSelector('.box.wait');
       const code = (await a.locator('.box.wait div').first().innerText()).trim(); ok('PvP: creator gets a 5-letter room code', /^[A-Z0-9]{5}$/.test(code), code);
       // creator refreshes while waiting -> back in the waiting room
       await a.reload(); await a.waitForSelector('.box.wait'); ok('PvP: refresh while waiting returns to the same waiting room', (await a.locator('.box.wait div').first().innerText()).trim() === code);
-      await b.goto(`${BASE}/play?join=${code}`); await a.waitForSelector('#nx', { timeout: 20000 }); await b.waitForSelector('#nx', { timeout: 20000 });
+      await b.goto(`${BASE}/play?join=${code}`); await b.waitForSelector('#rrd', { timeout: 20000 }); await b.click('#rrd'); await a.waitForSelector('#rst:not([disabled])', { timeout: 20000 }); await a.click('#rst'); await a.waitForSelector('#nx', { timeout: 20000 }); await b.waitForSelector('#nx', { timeout: 20000 });
       ok('PvP: invite link joins and both boards appear', true);
       // a few turns of plain end-turn
       for (let i = 0; i < 6; i++) for (const pg of [a, b]) { const nx = pg.locator('#nx'); if (await nx.isEnabled()) { await nx.click(); await pg.waitForTimeout(250); } }

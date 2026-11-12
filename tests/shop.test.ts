@@ -8,6 +8,7 @@ import { Economy, ECONOMY } from '../src/server/economy';
 import { botPick } from '../src/engine/bot';
 import { createGame, act, legalActions, type CardDef } from '../src/engine/game';
 import { validateEvoDeck, validateDeck, buildSet, viewFor, isForm } from '../src/engine/deck-view';
+import { joinStart } from './room-helpers';
 
 const load = (f: string) => JSON.parse(readFileSync(`db/seed/${f}`, 'utf8'));
 async function world() {
@@ -120,21 +121,21 @@ describe('online: owned forms, evo decks and match rewards', () => {
     await expect(w.rooms.create(main, [w.f40[0]], undefined)).rejects.toThrow(/โปรไฟล์/);
     await expect(w.rooms.create(main, [w.f40[0]], p.key)).rejects.toThrow(/ไม่พอ/);
     await w.eco.buy(p.key, w.f40[0]);
-    const a = await w.rooms.create(main, [w.f40[0]], p.key), b = await w.rooms.join(a.code, undefined, undefined, undefined);
+    const a = await w.rooms.create(main, [w.f40[0]], p.key), b = await joinStart(w.rooms, a, undefined, undefined, undefined);
     const st = (await w.db.query<any>(`SELECT state FROM play_rooms WHERE code=$1`, [a.code])).rows[0].state;
     expect(st.players[0].extra.map((c: any) => c.id)).toEqual([w.f40[0]]); expect(st.players[1].extra).toEqual([]);   // guest owns nothing
     const v: any = await w.rooms.view(a.code, b.token); expect(v.game.players[1].extra).toHaveLength(1); expect(v.game.players[1].extra.every((c: any) => c.id === '?')).toBe(true);   // opponent's forms stay hidden
   });
   it('no evo deck chosen: every owned form that fits the main deck is used automatically; unowned forms never appear', async () => {
     const w = await world(), p = await w.eco.createProfile(); await w.eco.buy(p.key, w.f40[0]);
-    const a = await w.rooms.create(undefined, undefined, p.key); await w.rooms.join(a.code);
+    const a = await w.rooms.create(undefined, undefined, p.key); await joinStart(w.rooms, a);
     const ex = (await w.db.query<any>(`SELECT state FROM play_rooms WHERE code=$1`, [a.code])).rows[0].state.players[0].extra.map((c: any) => c.id);
     expect(ex.every((id: string) => id === w.f40[0])).toBe(true); expect(ex.length).toBeLessThanOrEqual(1);
   });
   it('a finished PvP match pays both profiles once (200 points) and shows the reward; 10th match adds 10 Vrcoin', async () => {
     const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
     for (let m = 1; m <= ECONOMY.vrcoinEvery; m++) {
-      const a = await w.rooms.create(undefined, undefined, p1.key), b = await w.rooms.join(a.code, undefined, undefined, p2.key);
+      const a = await w.rooms.create(undefined, undefined, p1.key), b = await joinStart(w.rooms, a, undefined, undefined, p2.key);
       const v = await playOut(w, a, b, a.code);
       expect(v.reward).toMatchObject({ points: 200, matches: m, vrcoin: m === 10 ? 10 : 0 });
       await w.rooms.view(a.code, a.token); await w.rooms.view(a.code, b.token);   // polling again must not pay twice
@@ -144,10 +145,10 @@ describe('online: owned forms, evo decks and match rewards', () => {
   }, 120000);
   it('an instant resign earns nothing; guests earn nothing; you cannot join your own room', async () => {
     const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
-    const a = await w.rooms.create(undefined, undefined, p1.key); await expect(w.rooms.join(a.code, undefined, undefined, p1.key)).rejects.toThrow(/ของตัวเอง/);
-    const b = await w.rooms.join(a.code, undefined, undefined, p2.key); await w.rooms.leave(a.code, b.token);
+    const a = await w.rooms.create(undefined, undefined, p1.key); await expect(joinStart(w.rooms, a, undefined, undefined, p1.key)).rejects.toThrow(/ของตัวเอง/);
+    const b = await joinStart(w.rooms, a, undefined, undefined, p2.key); await w.rooms.leave(a.code, b.token);
     const va: any = await w.rooms.view(a.code, a.token); expect(va.status).toBe('finished'); expect(va.reward).toBeNull();
     expect(((await w.eco.me(p1.key)) as any).points).toBe(ECONOMY.starterPoints);
-    const g1 = await w.rooms.create(), g2 = await w.rooms.join(g1.code); const v = await playOut(w, g1, g2, g1.code); expect(v.reward).toBeNull();
+    const g1 = await w.rooms.create(), g2 = await joinStart(w.rooms, g1); const v = await playOut(w, g1, g2, g1.code); expect(v.reward).toBeNull();
   }, 120000);
 });
