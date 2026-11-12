@@ -29,6 +29,10 @@ a.bl{display:block;background:#5b2d90;color:#fff;border-radius:8px;padding:10px 
 @keyframes ntin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){#nt .n,#nts .n{animation:none}}
 .t{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#a33;color:#fff;padding:6px 12px;border-radius:8px;z-index:30}
+.nav{display:flex;gap:4px;margin-top:8px;position:sticky;bottom:-10px;background:#1b0b2e;padding:4px 0 2px;z-index:2}.nav button{flex:1;padding:8px 2px;font-size:11px;background:#2a1244;line-height:1.25}.nav button.on{background:#5b2d90;outline:2px solid #ffd54a}
+.chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:4px 0}.chip{padding:6px 9px;font-size:12px;background:#2a1244}.chip.on{background:#5b2d90;outline:2px solid #ffd54a}.chip.soon{opacity:.55}
+.dash{display:flex;flex-direction:column;gap:6px;text-align:left}.tile{background:#2a1244;border:1px solid #4a3270;border-radius:8px;padding:6px 8px;font-size:12px}.hintl{background:#3b2a00;border:1px solid #e2b440;border-radius:8px;padding:6px 8px;font-size:12px}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.cgrid>div{position:relative;text-align:center;font-size:10px}.cgrid img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:5px;border:1px solid #4a3270}.cgrid .bd{position:absolute;top:2px;right:2px;background:#000c;border-radius:6px;padding:0 4px;font-size:10px}
 </style></head><body><div id="app"></div><div id="md"></div>
 <script>
 const E=VCZE.engine,DEFS=VCZE.defs,BY=Object.fromEntries(DEFS.map(d=>[d.id,d]));
@@ -152,17 +156,53 @@ async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since=
 function startPoll(){clearInterval(poll);pollNow();poll=setInterval(pollNow,1500)}
 function waitBox(){const link=location.origin+'/play?join='+ON.code;$('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3>🌐 ห้องของคุณ</h3><div style="font-size:34px;letter-spacing:6px;font-weight:900">${ON.code}</div><p>ส่งรหัสหรือลิงก์นี้ให้เพื่อน แล้วรอสักครู่</p><p style="word-break:break-all;color:#bba">${link}</p><div class="acts"><button id="cpy">คัดลอกลิงก์</button><button class="r" id="wx">ยกเลิก</button></div></div>`;
  $('#cpy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>toast('คัดลอกแล้ว'),()=>toast(link))};$('#wx').onclick=()=>{clearInterval(poll);clearRoom();OA('/'+ON.code+'/leave',{method:'POST'}).catch(()=>{});ON=null;lobby()}}
-function lobby(msg=''){$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2 style="margin:4px 0">VAreCrazy Card Battle</h2><p style="color:#f99">${msg}</p><div class="acts" style="flex-direction:column;align-items:stretch"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><button id="ld">🃏 เด็คของฉัน: ${activeDeck()?activeDeck().name:'สุ่มให้'}</button><button id="lsh">🛒 ร้านค้า${ME.ok?` · 💰${ME.points} · 🪙${ME.vrcoin}`:''}</button>${FB()}<div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div></div>`;
- $('#lb').onclick=()=>{closeM();start()};$('#ld').onclick=()=>deckList();$('#lsh').onclick=()=>shop();if(!ME.ok&&!lobby.tried){lobby.tried=1;refreshMe().then(()=>{if($('#lsh'))lobby(msg)})}
+const GK='vcz_guide',guideSeen=()=>{try{return localStorage.getItem(GK)==='1'}catch(e){return true}},guideDone=()=>{try{localStorage.setItem(GK,'1')}catch(e){}};
+const NAVS=[['home','🏠','หน้าหลัก'],['deck','🃏','เด็ค'],['col','📚','คลังการ์ด'],['shop','🛒','ร้านค้า'],['more','⋯','เพิ่มเติม']];
+const NAV=on=>`<div class="nav">${NAVS.map(n=>`<button data-nav="${n[0]}" class="${n[0]===on?'on':''}">${n[1]}<br>${n[2]}</button>`).join('')}</div>`;
+function wireNav(){document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>({home:()=>lobby(),deck:()=>deckList(),col:()=>collection(),shop:()=>shop(),more:()=>more()})[el.dataset.nav]())}
+const ownedForms=()=>DEFS.filter(c=>isForm(c)&&(ME.inv[c.id]||0)>0).length;
+function lobby(msg=''){$('#md').className='on';
+ const ad=activeDeck(),hint=!ME.ok?'ยังเชื่อมต่อโปรไฟล์ไม่ได้ จึงยังซื้อการ์ดและรับรางวัลไม่ได้ (เล่นกับบอทได้ตามปกติ)':!ad?'ยังไม่ได้เลือกเด็ค ระบบจะสุ่มเด็คให้ — จัดเด็คของคุณเองได้ที่แท็บ "เด็ค"':ME.points>0&&!ownedForms()?'ยังไม่มีการ์ดอีโว ลองดูที่ร้านค้าได้ (ซื้อด้วยแต้มหรือ Vrcoin)':'';
+ $('#md').innerHTML=`<div class="box"><div class="dash"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">VAreCrazy Card Battle</h3><button id="lgd" style="padding:4px 10px;font-size:13px" aria-label="คู่มือ">❓</button></div>
+ ${msg?`<p style="color:#f99;margin:0">${msg}</p>`:''}
+ <div class="tile"><div style="display:flex;justify-content:space-between"><b>${ME.ok?(ME.name||'ผู้เล่น'):'ผู้เล่น (ออฟไลน์)'}</b><span>${ME.ok?`💰 ${ME.points} · 🪙 ${ME.vrcoin}`:'—'}</span></div>${ME.ok?`<small style="color:#bba">แมตช์ PvP ${ME.matches} · อีก ${ME.matchesToVrcoin} แมตช์ได้ Vrcoin โบนัส</small>`:''}<br><small>เด็คที่ใช้: ${ad?ad.name:'สุ่มให้'}</small></div>
+ ${hint?`<div class="hintl">💡 ${hint}</div>`:''}
+ <b style="font-size:12px">⚔ ต่อสู้</b><div class="acts" style="flex-direction:column;align-items:stretch;margin:0"><button id="lb">🤖 เล่นกับบอท</button><button id="lc" class="g">🌐 สร้างห้อง (เล่นกับเพื่อน)</button><div style="display:flex;gap:6px"><input id="lj" maxlength="5" placeholder="รหัสห้อง 5 ตัว" style="flex:1;min-width:0;font-size:16px;text-transform:uppercase;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="ljb">เข้าห้อง</button></div></div>
+ <div class="tile" style="color:#bba">🎯 ภารกิจ · 🎉 กิจกรรม — เร็ว ๆ นี้ (ยังไม่เปิดใช้งาน)</div>${FB()}</div>${NAV('home')}</div>`;
+ wireNav();$('#lgd').onclick=()=>guide(0);
+ $('#lb').onclick=()=>{closeM();start()};if(!ME.ok&&!lobby.tried){lobby.tried=1;refreshMe().then(()=>{if($('#lgd'))lobby(msg)})}
  $('#lc').onclick=async()=>{try{const r=await OA('',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();waitBox();startPoll()}catch(e){lobby(e.message)}};
- $('#ljb').onclick=()=>joinRoom($('#lj').value.trim().toUpperCase())}
+ $('#ljb').onclick=()=>joinRoom($('#lj').value.trim().toUpperCase());
+ if(!msg&&!guideSeen())guide(0)}
+const GSTEPS=[['ยินดีต้อนรับ 👋','เกมการ์ดต่อสู้ 2 ผู้เล่น ลด LP ของอีกฝ่ายจาก 100 ให้เหลือ 0 เริ่มได้ทันทีด้วย "เล่นกับบอท" ไม่ต้องสมัครสมาชิก — ระบบสร้างโปรไฟล์แขกให้อัตโนมัติ (ผูกกับเบราว์เซอร์นี้)'],
+ ['จัดเด็ค 🃏','แท็บ "เด็ค": เด็คหลัก 40 ใบ (ซ้ำได้ไม่เกิน 3 ใบ, ตัวละคร Lv.15 อย่างน้อย 3 ใบ) และ "เด็คอีโว" แยกต่างหากไม่เกิน 15 ใบ สำหรับร่าง Lv.40/70/99 — ถ้าไม่จัดเอง ระบบสุ่มให้ได้'],
+ ['คลังการ์ดและร้านค้า 📚🛒','การ์ดพื้นฐาน (ตัวละคร Lv.15, เวท, กับดัก) ใช้ได้ฟรี ส่วนการ์ดอีโว Lv.40/70/99 ซื้อได้ที่ร้านค้าด้วยแต้มหรือ Vrcoin (ได้จากการเล่น PvP) การ์ดที่ซื้อจะอยู่ใน "คลังการ์ด"'],
+ ['เล่นกับเพื่อน 🌐','กด "สร้างห้อง" แล้วส่งลิงก์หรือรหัส 5 ตัวให้เพื่อน เมื่อเพื่อนเข้าห้อง เกมจะเริ่มทันที ถ้าหลุดเชื่อมต่อ กลับเข้าห้องเดิมได้ แต่หายเกิน 2 นาทีจะถือว่าแพ้']];
+function guide(i){const g=GSTEPS[i],last=i===GSTEPS.length-1;$('#md').className='on';
+ $('#md').innerHTML=`<div class="box" style="text-align:center"><small style="color:#bba">คู่มือ ${i+1}/${GSTEPS.length}</small><h3 style="margin:4px 0">${g[0]}</h3><p style="font-size:13px;text-align:left">${g[1]}</p><div class="acts"><button class="r" id="gsk">${last?'ปิด':'ข้าม'}</button>${i?'<button id="gpv">ก่อนหน้า</button>':''}${last?'':'<button class="g" id="gnx">ถัดไป</button>'}</div></div>`;
+ $('#gsk').onclick=()=>{guideDone();lobby(guide.msg||'')};if($('#gpv'))$('#gpv').onclick=()=>guide(i-1);if($('#gnx'))$('#gnx').onclick=()=>guide(i+1);if(last)guideDone()}
+function more(){$('#md').className='on';
+ const L=[['🏆','อันดับ (Ranking)','ยังไม่เปิดใช้งาน — ต้องมีระบบป้องกันการปั๊มแต้มก่อน'],['👤','โปรไฟล์','ยังไม่เปิดใช้งาน — ตอนนี้ชื่อเป็น "ผู้เล่น" และบัญชีแขกผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเบราว์เซอร์จะเสียแต้มและการ์ด'],['📜','ประวัติแมตช์','ยังไม่เปิดใช้งาน'],['🔔','การแจ้งเตือน','ยังไม่เปิดใช้งาน — ในแมตช์มีการแจ้งเตือนอยู่แล้ว'],['🎯','ภารกิจ','ยังไม่เปิดใช้งาน'],['🎉','กิจกรรม','ยังไม่เปิดใช้งาน']];
+ $('#md').innerHTML=`<div class="box"><h3 style="margin:2px 0;text-align:center">เพิ่มเติม</h3>${L.map(x=>`<div class="tile" style="margin:5px 0;opacity:.85"><b>${x[0]} ${x[1]}</b><br><small style="color:#bba">${x[2]}</small></div>`).join('')}<div class="acts"><button id="gh2">❓ คู่มือ</button></div>${NAV('more')}</div>`;
+ wireNav();$('#gh2').onclick=()=>guide(0)}
+function collection(cat='evo',only=false){$('#md').className='on';
+ const CATS=[['evo','อีโว Lv.40+'],['c15','ตัวละคร Lv.15'],['spell','เวท'],['trap','กับดัก']],isEvo=cat==='evo';
+ let L=DEFS.filter(c=>cat==='evo'?isForm(c):cat==='c15'?c.type==='character'&&c.level===15:c.type===cat).sort((a,b)=>(a.chain||'').localeCompare(b.chain||'')||(a.level||0)-(b.level||0)||a.id.localeCompare(b.id));
+ const own=c=>ME.inv[c.id]||0,have=L.filter(c=>own(c)>0).length;if(isEvo&&only)L=L.filter(c=>own(c)>0);
+ $('#md').innerHTML=`<div class="box" style="max-width:480px"><h3 style="margin:2px 0;text-align:center">📚 คลังการ์ด</h3><div class="chips">${CATS.map(x=>`<button class="chip ${x[0]===cat?'on':''}" data-cat="${x[0]}">${x[1]}</button>`).join('')}</div>
+ ${isEvo?`<p style="text-align:center;margin:2px 0;font-size:12px">มี ${have}/${DEFS.filter(isForm).length} ใบ ${ME.ok?'':'<span style="color:#f99">(โปรไฟล์ยังไม่พร้อม)</span>'} <label style="margin-left:6px"><input type="checkbox" id="conly" ${only?'checked':''}> เฉพาะที่มี</label></p>`:`<p style="text-align:center;margin:2px 0;font-size:12px;color:#7dffa0">การ์ดพื้นฐาน ใช้ได้ฟรีทุกคน (${L.length} ใบ)</p>`}
+ <div class="cgrid">${L.map(c=>`<div data-cd="${c.id}" style="${isEvo&&!own(c)?'opacity:.45':''}"><img src="${c.img||''}" alt="">${isEvo?`<span class="bd">${own(c)?'×'+own(c):'ยังไม่มี'}</span>`:'<span class="bd">ฟรี</span>'}<br>${c.name}${c.level?` Lv.${c.level}`:''}</div>`).join('')||'<p style="grid-column:1/-1;text-align:center;color:#bba">ยังไม่มีการ์ดในหมวดนี้'+(isEvo&&only?' — ซื้อได้ที่ร้านค้า':'')+'</p>'}</div>
+ ${NAV('col')}</div>`;
+ wireNav();document.querySelectorAll('[data-cat]').forEach(el=>el.onclick=()=>collection(el.dataset.cat,false));if($('#conly'))$('#conly').onchange=e=>collection(cat,e.target.checked);
+ document.querySelectorAll('[data-cd]').forEach(el=>el.onclick=()=>detail(BY[el.dataset.cd],'col',0));
+ if(!ME.ok&&!collection.tried){collection.tried=1;refreshMe().then(()=>{if($('#conly')||$('.cgrid'))collection(cat,only)})}}
 async function joinRoom(code){if(!/^[A-Z0-9]{5}$/.test(code)){lobby('รหัสห้องต้องมี 5 ตัวอักษร');return}try{const r=await OA('/'+code+'/join',{method:'POST',body:JSON.stringify({deck:myIds()||undefined,evo:myEvoIds()||undefined})});ON={code:r.code,token:r.token,seat:r.seat};saveRoom();closeM();startPoll()}catch(e){lobby(e.message)}}
 function go(a){if(ON){mode=null;sel=null;OA('/'+ON.code+'/act',{method:'POST',body:JSON.stringify({action:a})}).then(pollNow).catch(e=>{toast(e.message);pollNow()});if(G)render();return true}
  try{G=E.act(G,a)}catch(e){toast(e.message);return false}mode=null;sel=null;render();drive();return true}
 const DEFF='/assets/frame/frame.webp';let FR={};fetch('/api/play/frames').then(r=>r.ok?r.json():[]).then(l=>{FR=Object.fromEntries(l.map(f=>[f.scope,'/'+f.path]))}).catch(()=>{});
 const frameOf=d=>FR['card:'+d.id]||(d.type==='character'&&[40,70,99].includes(+d.level)&&FR['level:'+d.level])||FR['type:'+d.type]||DEFF;
 function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
- const me=z==='shop'?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&G.phase==='main',bt=z!=='shop'&&G.phase==='battle',b=[];
+ const me=(z==='shop'||z==='col')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
   if(d.type==='trap'&&main)b.push(['วางกับดัก',()=>go({t:'set',hand:i})]);
   if(d.type==='spell'&&main)b.push(['ใช้เวทมนตร์',()=>castStart(i,d.id)]);
@@ -172,7 +212,7 @@ function detail(c,z,i){const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr})
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
  $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${d.name}</b> ${d.type!=='character'?'· '+d.type:''}</p><p>${d.text||''}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${u.fused.map(x=>x.name).join(' + ')}</p>`:''})():''}${(d.fx||[]).map(x=>`<p>• ${x.t}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${d.flavor}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
- $('#cl').onclick=z==='shop'?()=>shop(d.level):z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
+ $('#cl').onclick=z==='shop'?()=>shop(d.level):z==='col'?()=>collection():z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
 const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
 function summ(cards){const n={};cards.forEach(id=>{const t=BY[id].type;n[t]=(n[t]||0)+1});return Object.keys(n).sort((x,y)=>(TORD[x]??9)-(TORD[y]??9)).map(t=>`${TN[t]||t} ${n[t]}`).join(' · ')||'ยังไม่มีการ์ด'}
 function deckList(msg=''){if(!ME.ok&&!deckList.tried){deckList.tried=1;refreshMe().then(()=>deckList(msg));}const row=d=>{const pr=deckProblem(d.cards)||evoProblem(d.evo),on=DS.active===d.id&&!pr;
@@ -242,20 +282,29 @@ function deckEditor(d){const cnt={},ecnt={};d.cards.forEach(id=>cnt[id]=(cnt[id]
 function addToEvoDecks(id,owned){const own=Math.min(DK.max,owned);let n=0,full=0;DS.list.forEach(d=>{if(!d.evo)return;if(d.evo.filter(x=>x===id).length>=own)return;if(d.evo.length>=DK.evoMax){full++;return}d.evo.push(id);n++});if(n)saveStore();return{n,full}}
 async function shop(lv=40,msg=''){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลดร้านค้า…</div>';
  let sh;try{await refreshMe();sh=await API('/shop')}catch(e){lobby('เปิดร้านค้าไม่ได้: '+e.message);return}
- const items=sh.items.filter(i=>i.level===lv),cur=c=>c==='points'?'แต้ม 💰':'Vrcoin 🪙',pr=items[0]?.price;
+ const items=sh.items.filter(i=>i.level===lv),cap=sh.maxCopies;
+ const SOON=[['เวท/กับดัก','เวทและกับดักพื้นฐานใช้ได้ฟรีอยู่แล้ว การขายชุดพิเศษด้วยแต้ม/Vrcoin จะเปิดในอนาคต'],['แพ็กการ์ด','ยังไม่เปิดขาย'],['กรอบการ์ด','ยังไม่เปิดขาย'],['สกิน','ยังไม่เปิดขาย'],['ของตกแต่งโปรไฟล์','ยังไม่เปิดขาย']];
  $('#md').innerHTML=`<div class="box" style="max-width:480px"><h3 style="margin:2px 0;text-align:center">🛒 ร้านค้า</h3>
  <div class="bar" style="position:sticky;top:-10px;z-index:2"><b>💰 ${ME.points} แต้ม</b><b>🪙 ${ME.vrcoin} Vrcoin</b></div>
- <p style="text-align:center;font-size:11px;color:#bba;margin:4px 0">เล่น PvP จบ 1 แมตช์ได้ ${ME.rules?.matchPoints||200} แต้ม · ทุก ${ME.rules?.vrcoinEvery||10} แมตช์ได้ ${ME.rules?.vrcoinBatch||10} Vrcoin (อีก ${ME.matchesToVrcoin} แมตช์) · ซื้อได้ไม่เกิน ${sh.maxCopies} ใบต่อการ์ด</p>
+ <div class="chips"><button class="chip on">⚡ การ์ดอีโว</button>${SOON.map((x,k)=>`<button class="chip soon" data-soon="${k}">${x[0]}</button>`).join('')}</div>
+ <p style="text-align:center;font-size:11px;color:#bba;margin:4px 0">เล่น PvP จบ 1 แมตช์ได้ ${ME.rules?.matchPoints||200} แต้ม · ทุก ${ME.rules?.vrcoinEvery||10} แมตช์ได้ ${ME.rules?.vrcoinBatch||10} Vrcoin (อีก ${ME.matchesToVrcoin} แมตช์) · ซื้อได้ไม่เกิน ${cap} ใบต่อการ์ด</p>
  <div class="acts" style="margin:4px 0">${[40,70].map(l=>`<button data-l="${l}" style="${l===lv?'outline:2px solid #ffd54a':''}">Lv.${l}</button>`).join('')}</div>
  <p style="text-align:center;color:#ffd54a">${msg}</p>
- ${items.map(i=>{const d=BY[i.id]||{},full=i.owned>=sh.maxCopies,poor=i.price&&(i.price.currency==='points'?ME.points:ME.vrcoin)<i.price.amount;
-  return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #2a1244"><img src="${d.img||''}" data-pv="${i.id}" style="width:54px;border-radius:5px"><span style="flex:1;font-size:12px"><b>${i.name}</b><br><small style="color:#bba">${d.chainName||''} · ♥${d.hp??'-'} ⚔${d.atk??'-'} ◈${d.def??0}</small><br><small>มีแล้ว ${i.owned}/${sh.maxCopies}</small></span>
-  ${i.price?`<button data-b="${i.id}" class="${poor||full?'':'g'}" style="padding:6px 10px;font-size:12px" ${full?'disabled':''}>${full?'ครบแล้ว':`${i.price.amount} ${i.price.currency==='points'?'💰':'🪙'}`}</button>`:'<small style="color:#bba">ยังไม่เปิดขาย</small>'}</div>`}).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีการ์ดเลเวลนี้ในร้าน</p>'}
- <div class="acts"><button class="r" id="shx">ปิด</button></div></div>`;
- document.querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>shop(+el.dataset.l));
+ ${items.map(i=>{const d=BY[i.id]||{},full=i.owned>=cap,have=i.price?(i.price.currency==='points'?ME.points:ME.vrcoin):0,lack=i.price?Math.max(0,i.price.amount-have):0,why=!i.price?'ยังไม่เปิดขาย':full?`มีครบ ${cap} ใบแล้ว`:lack?`${i.price.currency==='points'?'แต้ม':'Vrcoin'}ไม่พอ ขาดอีก ${lack}`:'';
+  return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #2a1244"><img src="${d.img||''}" data-pv="${i.id}" style="width:54px;border-radius:5px"><span style="flex:1;font-size:12px"><b>${i.name}</b><br><small style="color:#bba">${d.chainName||''} · ♥${d.hp??'-'} ⚔${d.atk??'-'} ◈${d.def??0}</small><br><small>มีแล้ว ${i.owned}/${cap}</small>${why?`<br><small style="color:#f99">${why}</small>`:''}</span>
+  ${i.price?`<button data-b="${i.id}" class="${why?'':'g'}" style="padding:6px 10px;font-size:12px" ${why?'disabled':''}>${i.price.amount} ${i.price.currency==='points'?'💰':'🪙'}</button>`:''}</div>`}).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีการ์ดเลเวลนี้ในร้าน</p>'}
+ ${NAV('shop')}</div>`;
+ wireNav();document.querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>shop(+el.dataset.l));
+ document.querySelectorAll('[data-soon]').forEach(el=>el.onclick=()=>toast(SOON[+el.dataset.soon][1]));
  document.querySelectorAll('[data-pv]').forEach(el=>el.onclick=()=>detail(BY[el.dataset.pv],'shop',0));
- document.querySelectorAll('[data-b]').forEach(el=>el.onclick=async()=>{const i=items.find(x=>x.id===el.dataset.b);try{await API('/shop/buy',{method:'POST',body:JSON.stringify({cardId:i.id})});const r=addToEvoDecks(i.id,i.owned+1);shop(lv,'ซื้อ '+i.name+' แล้ว ✅ '+(r.n?`ใส่ในเด็คอีโวที่จัดเองให้ ${r.n} เด็คแล้ว`:'เด็คอีโวแบบอัตโนมัติจะใช้ใบนี้เอง')+(r.full?` · เด็คอีโว ${r.full} เด็คเต็ม ${DK.evoMax} ใบ จึงไม่ได้ใส่`:''))}catch(e){shop(lv,'⚠ '+e.message)}});
- $('#shx').onclick=()=>lobby()}
+ document.querySelectorAll('[data-b]').forEach(el=>el.onclick=()=>shopConfirm(items.find(x=>x.id===el.dataset.b),lv,cap))}
+function shopConfirm(i,lv,cap){const cu=i.price.currency,u=cu==='points'?'แต้ม 💰':'Vrcoin 🪙',have=cu==='points'?ME.points:ME.vrcoin;
+ $('#md').innerHTML=`<div class="box" style="text-align:center"><h3 style="margin:2px 0">ยืนยันการซื้อ</h3><p><b>${i.name}</b> Lv.${i.level}</p><p>ราคา ${i.price.amount} ${u}<br>ยอดคงเหลือ ${have} → <b>${have-i.price.amount}</b> ${u}</p><p style="color:#bba">จะมี ${i.name} ${i.owned+1}/${cap} ใบ · ซื้อแล้วคืนเงินไม่ได้</p><div class="acts"><button class="r" id="scn">ยกเลิก</button><button class="g" id="sok">ยืนยันซื้อ</button></div></div>`;
+ $('#scn').onclick=()=>shop(lv);
+ $('#sok').onclick=async()=>{$('#sok').disabled=true;try{await API('/shop/buy',{method:'POST',body:JSON.stringify({cardId:i.id})});await refreshMe();const r=addToEvoDecks(i.id,i.owned+1);
+  $('#md').innerHTML=`<div class="box" style="text-align:center"><h3 style="margin:2px 0">✅ ซื้อสำเร็จ</h3><p>${i.name} เข้าคลังการ์ดของคุณแล้ว (มี ${i.owned+1}/${cap} ใบ)</p><p style="font-size:12px;color:#bba">${r.n?`ใส่ในเด็คอีโวที่จัดเองให้ ${r.n} เด็คแล้ว`:'เด็คอีโวแบบอัตโนมัติจะใช้ใบนี้เอง'}${r.full?` · เด็คอีโว ${r.full} เด็คเต็ม ${DK.evoMax} ใบ จึงไม่ได้ใส่`:''}</p><p>คงเหลือ 💰 ${ME.points} · 🪙 ${ME.vrcoin}</p><div class="acts"><button id="rcl">📚 ดูในคลังการ์ด</button><button id="rdk">🃏 ไปจัดเด็คอีโว</button><button class="g" id="rsh">🛒 ซื้อต่อ</button></div></div>`;
+  $('#rcl').onclick=()=>collection('evo',true);$('#rdk').onclick=()=>deckList();$('#rsh').onclick=()=>shop(lv)}
+  catch(e){$('#md').innerHTML=`<div class="box" style="text-align:center"><h3 style="margin:2px 0">❌ ซื้อไม่สำเร็จ</h3><p>${e.message}</p><p style="font-size:12px;color:#bba">ยังไม่มีการตัดเงินหรือเพิ่มการ์ด ตรวจยอดคงเหลือแล้วลองใหม่ได้</p><div class="acts"><button id="rsh">กลับร้านค้า</button></div></div>`;$('#rsh').onclick=()=>shop(lv)}}}
 function extraView(){const me=G.players[0],L=me.extra.map((c,i)=>({c,i})).sort((a,b)=>(a.c.chain||'').localeCompare(b.c.chain||'')||(a.c.level||0)-(b.c.level||0));$('#md').className='on';
  $('#md').innerHTML=`<div class="box" style="max-width:480px;text-align:center"><h3 style="margin:2px 0">🧬 เด็คอีโวของคุณ (${me.extra.length} ใบ)</h3><p style="font-size:12px;margin:2px 0">ใช้การ์ดวิวัฒนาการแล้วเลือกร่างจากที่นี่ได้เลย ไม่ต้องรอจั่ว · แตะการ์ดเพื่อดูรายละเอียด</p>${me.extra.length?graveGrid(L,'data-ei'):'<p style="color:#bba">ยังไม่มีการ์ดในเด็คอีโว (ซื้อที่ร้านค้า)</p>'}<div class="acts"><button class="r" id="exc">ปิด</button></div></div>`;
  $('#exc').onclick=closeM;document.querySelectorAll('[data-ei]').forEach(el=>el.onclick=()=>detail(me.extra[+el.dataset.ei],'e',+el.dataset.ei))}

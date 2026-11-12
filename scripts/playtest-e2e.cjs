@@ -72,6 +72,7 @@ async function playBot(page, tag, maxMs = 240000) {
   const srv = spawn('npx', ['tsx', 'scripts/playtest-server.ts'], { env: { ...process.env, PORT }, stdio: ['ignore', 'pipe', 'inherit'] });
   await new Promise((res, rej) => { srv.stdout.on('data', d => /READY/.test(String(d)) && res()); srv.on('exit', c => rej(new Error('server exited ' + c))); setTimeout(() => rej(new Error('server start timeout')), 90000); });
   const browser = await chromium.launch();
+  { const nc = browser.newContext.bind(browser); browser.newContext = async o => { const c = await nc(o); await c.addInitScript(() => { try { localStorage.setItem('vcz_guide', '1'); } catch (e) {} }); return c; }; }   // first-time tutorial would cover the lobby buttons
   try {
     // ---- 0. new in-game views: graveyard of both sides, Evolution pile with card detail ----
     { const ctx = await browser.newContext(), p = await ctx.newPage(); watch(p, 'views'); await p.goto(BASE + '/play'); await p.waitForSelector('#lb'); await p.click('#lb'); await p.waitForSelector('#nx');
