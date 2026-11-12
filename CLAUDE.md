@@ -20,7 +20,7 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - `src/server/` — api.ts (routes), rooms.ts (online rooms, polling 1.5s, timers processed lazily on poll/act), economy.ts (players/wallet/shop), admin services.
 - `src/edge/index.ts` — Supabase edge entry (Deno). `src/universe/` — Universe module contract + adapter (unused).
 - `public/play.html`, `public/admin.html` — vanilla JS pages. `public/engine.js` is a **generated** browser bundle.
-- `db/migrations/NNN_*.up.sql|down.sql` — 001..014 are on `main`; 014 (`pvp_match_history`) and the level-frames migration (file `015_level_frames`, applied to production under the name `014_level_frames`) are applied to production. New migrations start at 016.
+- `db/migrations/NNN_*.up.sql|down.sql` — 001..014 are on `main`; 014 (`pvp_match_history`) and the level-frames migration (file `015_level_frames`, applied to production under the name `014_level_frames`) are applied to production. 016 (`card_effect_texts`: clear WHEN/WHO/WHAT texts for traps and spells) is applied to production. New migrations start at 017.
 - `vercel.json` — rewrites: `/` → admin, `/play` → play.html, `/api/*` → Supabase function, `/media/*` → Supabase storage.
 - `tests/` — vitest + PGlite (in-memory Postgres).
 
@@ -40,6 +40,12 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Economy: guest profile (secret key in the browser, hashed in DB), starter 500 points; PvP match (≥ 6 turns) = 200 points; every 10th match = +10 Vrcoin; shop: Lv.40 = 500 points, Lv.70 = 100 Vrcoin (Lv.99 price not set); max 3 copies per card. Prices editable in Admin.
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
+
+## Status (2026-11-12)
+Deployed 2026-11-12 (main = 34af1cf, edge function `api` v9 via stub -> `edge-bundle.js` on temporary branch `tmp-edge-bundle-g1`, do not delete: rollback reference; previous Vercel production deployment `dpl_4R3yC476BBXQG8byAxKDTyHLRxvJ`):
+- Gameplay fixes: buffs last until the unit leaves the field, swap spell works across both sides, graveyard viewer (both sides) + choose the card to revive, green/red ATK/DEF, Evolution pile viewer, purchases auto-added to hand-built Evolution decks.
+- Character abilities round F1 (31 of 56 Admin abilities run): `src/engine/effects.ts` parses the exact Admin wordings; everything else stays marked "not active". Remaining: F2 (target selection, 18) and F3 (special cases). See the Gameplay Review doc.
+- Known/open: "attack the player and my own unit dies" (item 12) not reproduced yet; Admin Rule Builder still free text.
 
 ## Status (2026-11-11)
 Live: bot play, online rooms, custom multi-deck manager, evolution deck, shop, rewards, timers/resign, Admin economy panel.
