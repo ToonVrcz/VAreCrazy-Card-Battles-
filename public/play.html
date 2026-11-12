@@ -181,10 +181,35 @@ const GSTEPS=[['ยินดีต้อนรับ 👋','เกมการ�
 function guide(i){const g=GSTEPS[i],last=i===GSTEPS.length-1;$('#md').className='on';
  $('#md').innerHTML=`<div class="box" style="text-align:center"><small style="color:#bba">คู่มือ ${i+1}/${GSTEPS.length}</small><h3 style="margin:4px 0">${g[0]}</h3><p style="font-size:13px;text-align:left">${g[1]}</p><div class="acts"><button class="r" id="gsk">${last?'ปิด':'ข้าม'}</button>${i?'<button id="gpv">ก่อนหน้า</button>':''}${last?'':'<button class="g" id="gnx">ถัดไป</button>'}</div></div>`;
  $('#gsk').onclick=()=>{guideDone();lobby(guide.msg||'')};if($('#gpv'))$('#gpv').onclick=()=>guide(i-1);if($('#gnx'))$('#gnx').onclick=()=>guide(i+1);if(last)guideDone()}
+const fdt=t=>{try{return new Date(t).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',dateStyle:'short',timeStyle:'short'})}catch(e){return''}};
 function more(){$('#md').className='on';
- const L=[['🏆','อันดับ (Ranking)','ยังไม่เปิดใช้งาน — ต้องมีระบบป้องกันการปั๊มแต้มก่อน'],['👤','โปรไฟล์','ยังไม่เปิดใช้งาน — ตอนนี้ชื่อเป็น "ผู้เล่น" และบัญชีแขกผูกกับเบราว์เซอร์นี้ ถ้าล้างข้อมูลเบราว์เซอร์จะเสียแต้มและการ์ด'],['📜','ประวัติแมตช์','ยังไม่เปิดใช้งาน'],['🔔','การแจ้งเตือน','ยังไม่เปิดใช้งาน — ในแมตช์มีการแจ้งเตือนอยู่แล้ว'],['🎯','ภารกิจ','ยังไม่เปิดใช้งาน'],['🎉','กิจกรรม','ยังไม่เปิดใช้งาน']];
- $('#md').innerHTML=`<div class="box"><h3 style="margin:2px 0;text-align:center">เพิ่มเติม</h3>${L.map(x=>`<div class="tile" style="margin:5px 0;opacity:.85"><b>${x[0]} ${x[1]}</b><br><small style="color:#bba">${x[2]}</small></div>`).join('')}<div class="acts"><button id="gh2">❓ คู่มือ</button></div>${NAV('more')}</div>`;
- wireNav();$('#gh2').onclick=()=>guide(0)}
+ const LIVE=[['👤','โปรไฟล์','ชื่อ สถิติ และสถานะบัญชี',profile],['📜','ประวัติแมตช์','ผล PvP และรางวัลที่ได้',history],['🧾','ประวัติการซื้อและยอดเงิน','รายการซื้อ รางวัล และการปรับยอด',purchases]];
+ const SOON=[['🏆','อันดับ (Ranking)','ยังไม่เปิดใช้งาน — ต้องมีระบบป้องกันการปั๊มแต้มก่อน'],['🔔','การแจ้งเตือน','ยังไม่เปิดใช้งาน — ในแมตช์มีการแจ้งเตือนอยู่แล้ว'],['🎯','ภารกิจ','ยังไม่เปิดใช้งาน'],['🎉','กิจกรรม','ยังไม่เปิดใช้งาน']];
+ $('#md').innerHTML=`<div class="box"><h3 style="margin:2px 0;text-align:center">เพิ่มเติม</h3>${LIVE.map((x,k)=>`<button data-lv="${k}" style="display:block;width:100%;text-align:left;margin:5px 0;background:#2a1244">${x[0]} <b>${x[1]}</b><br><small style="font-weight:400;color:#bba">${x[2]}</small></button>`).join('')}${SOON.map(x=>`<div class="tile" style="margin:5px 0;opacity:.85"><b>${x[0]} ${x[1]}</b><br><small style="color:#bba">${x[2]}</small></div>`).join('')}<div class="acts"><button id="gh2">❓ คู่มือ</button></div>${NAV('more')}</div>`;
+ wireNav();document.querySelectorAll('[data-lv]').forEach(el=>el.onclick=()=>LIVE[+el.dataset.lv][3]());$('#gh2').onclick=()=>guide(0)}
+function subHead(t){return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><button id="sbk" style="padding:6px 10px">‹ กลับ</button><h3 style="margin:0">${t}</h3></div>`}
+async function profile(msg=''){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลด…</div>';
+ let mt=null;try{await refreshMe();if(ME.ok)mt=await API('/matches?limit=1')}catch(e){}
+ if(!ME.ok){$('#md').innerHTML=`<div class="box">${subHead('👤 โปรไฟล์')}<p style="color:#f99">เชื่อมต่อโปรไฟล์ไม่ได้ในตอนนี้ ลองใหม่อีกครั้ง (เล่นกับบอทได้ตามปกติ)</p>${NAV('more')}</div>`;wireNav();$('#sbk').onclick=more;return}
+ $('#md').innerHTML=`<div class="box">${subHead('👤 โปรไฟล์')}<p style="color:#ffd54a;margin:2px 0">${msg}</p>
+ <div class="tile"><small style="color:#bba">ชื่อผู้เล่น</small><div style="display:flex;gap:6px;margin-top:4px"><input id="pnm" maxlength="24" value="${(ME.name||'').replace(/"/g,'&quot;')}" style="flex:1;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="psv" class="g">บันทึก</button></div></div>
+ <div class="tile" style="margin-top:6px">💰 ${ME.points} แต้ม · 🪙 ${ME.vrcoin} Vrcoin<br>แมตช์ PvP: ${mt?`${mt.total} (ชนะ ${mt.wins} · แพ้ ${mt.losses})`:ME.matches}<br>การ์ดอีโวที่มี: ${ownedForms()} ชนิด</div>
+ <div class="tile" style="margin-top:6px"><b>สถานะบัญชี: แขก (Guest)</b><br><small style="color:#f99">บัญชีนี้ผูกกับเบราว์เซอร์เครื่องนี้ ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง แต้ม การ์ด และเด็คอาจหายและกู้คืนไม่ได้ (สำรองเด็คได้ด้วยปุ่ม "ส่งออก" ในหน้าเด็ค)</small><br><small style="color:#bba">การผูกบัญชี VAreCrazy Universe — เร็ว ๆ นี้ (ยังไม่เปิดใช้งาน)</small></div>
+ <div class="acts"><button id="ph">📜 ประวัติแมตช์</button><button id="pp">🧾 ประวัติการซื้อ</button></div>${NAV('more')}</div>`;
+ wireNav();$('#sbk').onclick=more;$('#ph').onclick=history;$('#pp').onclick=purchases;
+ $('#psv').onclick=async()=>{const v=$('#pnm').value.trim();if(!v){toast('ชื่อห้ามว่าง');return}try{await API('/profile',{method:'PUT',body:JSON.stringify({name:v})});await refreshMe();profile('บันทึกชื่อแล้ว ✅')}catch(e){profile('⚠ '+e.message)}}}
+async function history(){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลด…</div>';
+ let r;try{await refreshMe();r=await API('/matches?limit=30')}catch(e){$('#md').innerHTML=`<div class="box">${subHead('📜 ประวัติแมตช์')}<p style="color:#f99">โหลดไม่ได้: ${e.message}</p>${NAV('more')}</div>`;wireNav();$('#sbk').onclick=more;return}
+ const RS={normal:'จบปกติ',surrender:'ยอมแพ้',timeout:'หมดเวลา',disconnect:'หลุดการเชื่อมต่อ'};
+ $('#md').innerHTML=`<div class="box">${subHead('📜 ประวัติแมตช์')}<p style="text-align:center;margin:2px 0">ทั้งหมด ${r.total} · ชนะ ${r.wins} · แพ้ ${r.losses}</p>
+ ${r.items.map(i=>`<div class="tile" style="margin:5px 0;border-left:4px solid ${i.win?'#7dffa0':'#f99'}"><b>${i.win?'🏆 ชนะ':'💥 แพ้'}</b> · ${RS[i.reason]||i.reason}${i.youForfeited===true?' (คุณเป็นฝ่ายออก)':i.youForfeited===false?' (คู่ต่อสู้ออก)':''}<br><small style="color:#bba">${fdt(i.at)} · ${i.turns} เทิร์น · ${i.points||i.vrcoin?`รางวัล +${i.points} แต้ม${i.vrcoin?` +${i.vrcoin} Vrcoin`:''}`:'ไม่ได้รับรางวัล (จบก่อนเกณฑ์ขั้นต่ำ)'}</small></div>`).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีแมตช์ PvP ที่จบ — สร้างห้องเล่นกับเพื่อนเพื่อเริ่มบันทึก (แมตช์กับบอทไม่ถูกบันทึก)</p>'}${NAV('more')}</div>`;
+ wireNav();$('#sbk').onclick=more}
+async function purchases(){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลด…</div>';
+ let r;try{await refreshMe();r=await API('/ledger?limit=50')}catch(e){$('#md').innerHTML=`<div class="box">${subHead('🧾 ประวัติการซื้อและยอดเงิน')}<p style="color:#f99">โหลดไม่ได้: ${e.message}</p>${NAV('more')}</div>`;wireNav();$('#sbk').onclick=more;return}
+ const KD={starter:'🎁 ของขวัญเริ่มต้น',buy:'🛒 ซื้อ',match:'⚔ รางวัลแมตช์ PvP',admin:'🛠 ปรับยอดโดยผู้ดูแล'},sg=n=>n>0?'+'+n:String(n);
+ $('#md').innerHTML=`<div class="box">${subHead('🧾 ประวัติการซื้อและยอดเงิน')}<p style="text-align:center;margin:2px 0">คงเหลือ 💰 ${ME.points} · 🪙 ${ME.vrcoin}</p>
+ ${r.items.map(i=>`<div class="tile" style="margin:5px 0;display:flex;justify-content:space-between;gap:8px"><span><b>${KD[i.kind]||i.kind}${i.kind==='buy'?' '+(i.card||''):''}</b><br><small style="color:#bba">${fdt(i.at)}</small></span><span style="text-align:right;white-space:nowrap">${i.points?`<b style="color:${i.points>0?'#7dffa0':'#f99'}">${sg(i.points)} 💰</b>`:''}${i.points&&i.vrcoin?'<br>':''}${i.vrcoin?`<b style="color:${i.vrcoin>0?'#7dffa0':'#f99'}">${sg(i.vrcoin)} 🪙</b>`:''}</span></div>`).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีรายการ</p>'}${NAV('more')}</div>`;
+ wireNav();$('#sbk').onclick=more}
 function collection(cat='evo',only=false){$('#md').className='on';
  const CATS=[['evo','อีโว Lv.40+'],['c15','ตัวละคร Lv.15'],['spell','เวท'],['trap','กับดัก']],isEvo=cat==='evo';
  let L=DEFS.filter(c=>cat==='evo'?isForm(c):cat==='c15'?c.type==='character'&&c.level===15:c.type===cat).sort((a,b)=>(a.chain||'').localeCompare(b.chain||'')||(a.level||0)-(b.level||0)||a.id.localeCompare(b.id));
@@ -293,8 +318,8 @@ async function shop(lv=40,msg=''){$('#md').className='on';$('#md').innerHTML='<d
  ${items.map(i=>{const d=BY[i.id]||{},full=i.owned>=cap,have=i.price?(i.price.currency==='points'?ME.points:ME.vrcoin):0,lack=i.price?Math.max(0,i.price.amount-have):0,why=!i.price?'ยังไม่เปิดขาย':full?`มีครบ ${cap} ใบแล้ว`:lack?`${i.price.currency==='points'?'แต้ม':'Vrcoin'}ไม่พอ ขาดอีก ${lack}`:'';
   return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #2a1244"><img src="${d.img||''}" data-pv="${i.id}" style="width:54px;border-radius:5px"><span style="flex:1;font-size:12px"><b>${i.name}</b><br><small style="color:#bba">${d.chainName||''} · ♥${d.hp??'-'} ⚔${d.atk??'-'} ◈${d.def??0}</small><br><small>มีแล้ว ${i.owned}/${cap}</small>${why?`<br><small style="color:#f99">${why}</small>`:''}</span>
   ${i.price?`<button data-b="${i.id}" class="${why?'':'g'}" style="padding:6px 10px;font-size:12px" ${why?'disabled':''}>${i.price.amount} ${i.price.currency==='points'?'💰':'🪙'}</button>`:''}</div>`}).join('')||'<p style="text-align:center;color:#bba">ยังไม่มีการ์ดเลเวลนี้ในร้าน</p>'}
- ${NAV('shop')}</div>`;
- wireNav();document.querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>shop(+el.dataset.l));
+ <div class="acts"><button id="shph" style="background:#2a1244">🧾 ประวัติการซื้อ</button></div>${NAV('shop')}</div>`;
+ wireNav();$('#shph').onclick=purchases;document.querySelectorAll('[data-l]').forEach(el=>el.onclick=()=>shop(+el.dataset.l));
  document.querySelectorAll('[data-soon]').forEach(el=>el.onclick=()=>toast(SOON[+el.dataset.soon][1]));
  document.querySelectorAll('[data-pv]').forEach(el=>el.onclick=()=>detail(BY[el.dataset.pv],'shop',0));
  document.querySelectorAll('[data-b]').forEach(el=>el.onclick=()=>shopConfirm(items.find(x=>x.id===el.dataset.b),lv,cap))}

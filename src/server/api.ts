@@ -21,6 +21,9 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       // Guest profile, wallet and shop (Lv.40/70 cards)
       if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
       if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
+      if (path === '/api/play/profile' && m === 'PUT') return send(res, 200, await new Economy(svc).rename(pkey, JSON.parse((await body(req)).toString() || '{}').name));
+      if (path === '/api/play/ledger' && m === 'GET') return send(res, 200, await new Economy(svc).ledger(pkey, Number(url.searchParams.get('limit') ?? 50)));
+      if (path === '/api/play/matches' && m === 'GET') return send(res, 200, await new Economy(svc).matches(pkey, Number(url.searchParams.get('limit') ?? 30)));
       if (path === '/api/play/frames' && m === 'GET') return send(res, 200, await svc.publicFrames());
       if (path === '/api/play/shop' && m === 'GET') return send(res, 200, await new Economy(svc).shop(pkey));
       if (path === '/api/play/shop/buy' && m === 'POST') return send(res, 200, await new Economy(svc).buy(pkey, JSON.parse((await body(req)).toString() || '{}').cardId));

@@ -94,6 +94,33 @@ export class Economy {
     return out;
   }
 
+  // ---- player data (read-only history + rename; Phase 2) ----
+  /** Renames the caller's profile. Name only: never touches wallet, cards or ledger. */
+  async rename(key: string | undefined, name: unknown) {
+    const id = await this.need(key), nm = String(name ?? '').trim().replace(/\s+/g, ' ').slice(0, 24);
+    if (!nm) throw new AppError(400, 'ชื่อห้ามว่าง');
+    await this.db.query(`UPDATE players SET name=$2 WHERE id=$1`, [id, nm]);
+    return { ok: true, name: nm };
+  }
+
+  /** The caller's own ledger (newest first). kind 'buy' rows carry the card name; nothing here can change a balance. */
+  async ledger(key: string | undefined, limit = 50) {
+    const id = await this.need(key), n = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 50));
+    const rows = (await this.db.query(`SELECT l.id, l.kind, l.points, l.vrcoin, l.ref, l.created_at, c.name card FROM economy_ledger l
+      LEFT JOIN cards c ON l.kind='buy' AND c.character_id=l.ref WHERE l.player_id=$1 ORDER BY l.id DESC LIMIT $2`, [id, n])).rows;
+    return { items: rows.map((r: any) => ({ id: Number(r.id), kind: r.kind, points: r.points, vrcoin: r.vrcoin, card: r.card ?? null, at: r.created_at })) };
+  }
+
+  /** The caller's finished PvP matches (newest first) + totals. Reads pvp_matches / pvp_match_players only. */
+  async matches(key: string | undefined, limit = 30) {
+    const id = await this.need(key), n = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 30));
+    const rows = (await this.db.query(`SELECT m.ended_at, m.turns, m.end_reason, m.forfeit_seat, p.seat, p.is_winner, p.reward_points, p.reward_vrcoin
+      FROM pvp_match_players p JOIN pvp_matches m ON m.id=p.match_id WHERE p.player_id=$1 ORDER BY m.ended_at DESC LIMIT $2`, [id, n])).rows;
+    const t = (await this.db.query(`SELECT count(*)::int total, count(*) FILTER (WHERE is_winner)::int wins FROM pvp_match_players WHERE player_id=$1`, [id])).rows[0];
+    return { total: t.total, wins: t.wins, losses: t.total - t.wins,
+      items: rows.map((r: any) => ({ at: r.ended_at, turns: r.turns, win: !!r.is_winner, reason: r.end_reason, youForfeited: r.forfeit_seat === null || r.forfeit_seat === undefined ? null : r.forfeit_seat === r.seat, points: r.reward_points, vrcoin: r.reward_vrcoin })) };
+  }
+
   // ---- admin ----
   async adminPlayers() { return (await this.db.query(`SELECT id, name, points, vrcoin, pvp_matches, created_at, (SELECT coalesce(sum(qty),0)::int FROM player_cards c WHERE c.player_id=p.id) cards FROM players p ORDER BY created_at DESC LIMIT 200`)).rows; }
   async adminGrant(playerId: string, points: number, vrcoin: number, note: string) {
