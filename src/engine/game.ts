@@ -220,7 +220,33 @@ function endTurn(g: Game) {
   g.active = opp; g.turn++; startTurn(g);
 }
 
+/** Every index in a client-sent action must be a plain integer: keys like '__proto__' or 'length' would otherwise reach Array.prototype (F-07). */
+function validateAction(a: Action) {
+  const x = a as unknown as Record<string, unknown>;
+  if (!x || typeof x !== 'object') fail('คำสั่งไม่ถูกต้อง');
+  const int = (v: unknown) => Number.isInteger(v) && (v as number) >= 0 && (v as number) < 1000;
+  const need = (...ks: string[]) => { for (const k of ks) if (!int(x[k])) fail('คำสั่งไม่ถูกต้อง'); };
+  switch (a.t) {
+    case 'summon': need('hand', 'slot'); break;
+    case 'evolve': need('slot', 'evo', 'form'); if (!Array.isArray(x.sacrifice) || x.sacrifice.length > 10 || !x.sacrifice.every(int)) fail('คำสั่งไม่ถูกต้อง'); break;
+    case 'fuse': need('fusion', 'top', 'bottom', 'slot'); break;
+    case 'set': need('hand'); break;
+    case 'attack': need('from'); if (x.to !== 'player' && !int(x.to)) fail('คำสั่งไม่ถูกต้อง'); break;
+    case 'respond': need('back'); break;
+    case 'cast': {
+      need('hand'); const t = x.target;
+      if (t !== undefined && t !== null) {
+        if (typeof t !== 'object') fail('คำสั่งไม่ถูกต้อง');
+        for (const k of ['slot', 'slot2', 'grave']) { const v = (t as Record<string, unknown>)[k]; if (v !== undefined && !int(v)) fail('คำสั่งไม่ถูกต้อง'); }
+      }
+      break;
+    }
+    case 'pass': case 'next': break;
+    default: fail('คำสั่งไม่ถูกต้อง');
+  }
+}
 export function act(g0: Game, a: Action): Game {
+  validateAction(a);
   if (g0.winner !== null) fail('เกมจบแล้ว');
   if (g0.pending) {
     if (a.t !== 'respond' && a.t !== 'pass') fail('รอการตอบโต้ก่อน');
