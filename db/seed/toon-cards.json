@@ -10,7 +10,7 @@
     "atk": 20,
     "atk_icon": "potion_mortar",
     "image_path": "assets/cards/1GOKU-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -41,7 +41,7 @@
     "atk": 55,
     "atk_icon": "potion_mortar",
     "image_path": "assets/cards/1GOKU-040.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -56,8 +56,8 @@
       },
       {
         "trigger": "on_destroyed",
-        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
-        "action_text": "HP −20",
+        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+        "action_text": "HP −10",
         "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -82,12 +82,12 @@
     "atk": 10,
     "atk_icon": "sun",
     "image_path": "assets/cards/BABY-015.jpg",
-    "def": 0,
+    "def": 5,
     "effects": [
       {
         "trigger": "on_summon",
-        "description": "เมื่อถูกเรียก ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
-        "action_text": "ฟื้น HP 20",
+        "description": "เมื่อถูกเรียก ฟื้น HP 30 ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 30",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -112,7 +112,7 @@
     "atk": 24,
     "atk_icon": "water",
     "image_path": "assets/cards/BACKJI-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -142,7 +142,7 @@
     "atk": 15,
     "atk_icon": "drop_green",
     "image_path": "assets/cards/BADGUY-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -173,12 +173,12 @@
     "atk": 60,
     "atk_icon": "drop_green",
     "image_path": "assets/cards/BADGUY-040.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +25 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +25",
+        "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +20",
         "target_text": "ตัวเอง",
         "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
         "cost_text": null,
@@ -188,8 +188,8 @@
       },
       {
         "trigger": "on_destroyed",
-        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
-        "action_text": "HP −20",
+        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 15",
+        "action_text": "HP −15",
         "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -338,8 +338,8 @@
     "effects": [
       {
         "trigger": "on_summon",
-        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
-        "action_text": "HP −10",
+        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 5",
+        "action_text": "HP −5",
         "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -368,8 +368,8 @@
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +10",
+        "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +5",
         "target_text": "ตัวเอง",
         "condition_text": null,
         "cost_text": null,
@@ -394,7 +394,7 @@
     "atk": 20,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/FOLLOW-YOU-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -425,25 +425,14 @@
     "atk": 50,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/FOLLOW-YOU-040.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +10",
+        "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +20",
         "target_text": "ตัวเอง",
         "condition_text": null,
-        "cost_text": null,
-        "duration": "until_end_of_turn",
-        "duration_turns": null,
-        "use_limit": "once_per_turn"
-      },
-      {
-        "trigger": "combo",
-        "description": "พลังแฝง: เมื่อใช้ร่วมกับการ์ดที่มี Combo ใบอื่น ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +10",
-        "target_text": "ตัวเอง",
-        "condition_text": "มีการ์ด Combo ใบอื่นบนสนาม",
         "cost_text": null,
         "duration": "until_end_of_turn",
         "duration_turns": null,
@@ -453,7 +442,7 @@
     "flavor_text": "เปลวไฟสีม่วงตอบรับเสียงเรียกของเขา",
     "class": "Master Summoner",
     "element": "dark",
-    "has_combo": true
+    "has_combo": false
   },
   {
     "character_id": "FOLLOW-YOU-070",
@@ -467,7 +456,7 @@
     "atk": 100,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/FOLLOW-YOU-070.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_evolve",
@@ -598,7 +587,7 @@
     "atk": 20,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/LALAPING-015.jpg",
-    "def": 0,
+    "def": 4,
     "effects": [
       {
         "trigger": "turn_end",
@@ -629,7 +618,7 @@
     "atk": 40,
     "atk_icon": "fire",
     "image_path": "assets/cards/LALAPING-040.jpg",
-    "def": 0,
+    "def": 6,
     "effects": [
       {
         "trigger": "turn_end",
@@ -660,7 +649,7 @@
     "atk": 80,
     "atk_icon": "fire",
     "image_path": "assets/cards/LALAPING-070.jpg",
-    "def": 0,
+    "def": 6,
     "effects": [
       {
         "trigger": "on_evolve",
@@ -701,7 +690,7 @@
     "atk": 25,
     "atk_icon": "skull",
     "image_path": "assets/cards/LEON-S-KENNEDY-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "to_graveyard",
@@ -735,8 +724,8 @@
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +10",
+        "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +5",
         "target_text": "ตัวเอง",
         "condition_text": null,
         "cost_text": null,
@@ -761,7 +750,7 @@
     "atk": 25,
     "atk_icon": "smoke",
     "image_path": "assets/cards/LORDNAM-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -791,7 +780,7 @@
     "atk": 24,
     "atk_icon": "water",
     "image_path": "assets/cards/LUCKY-015.jpg",
-    "def": 0,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_summon",
@@ -825,8 +814,8 @@
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
-        "action_text": "ATK +10",
+        "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +5",
         "target_text": "ตัวเอง",
         "condition_text": null,
         "cost_text": null,
@@ -885,11 +874,11 @@
     "effects": [
       {
         "trigger": "on_summon",
-        "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+        "description": "เมื่อถูกเรียก ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ",
         "action_text": "จั่ว 1 ใบ",
         "target_text": "ตัวเอง",
         "condition_text": null,
-        "cost_text": null,
+        "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
         "duration": "instant",
         "duration_turns": null,
         "use_limit": "once_per_game"
@@ -941,7 +930,7 @@
     "atk": 18,
     "atk_icon": "swords",
     "image_path": "assets/cards/NORMAN-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -972,7 +961,7 @@
     "atk": 50,
     "atk_icon": "swords",
     "image_path": "assets/cards/NORMAN-040.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -1013,7 +1002,7 @@
     "atk": 20,
     "atk_icon": "moon",
     "image_path": "assets/cards/OUFILLING-015.jpg",
-    "def": 0,
+    "def": 4,
     "effects": [
       {
         "trigger": "to_graveyard",
@@ -1047,8 +1036,8 @@
     "effects": [
       {
         "trigger": "on_summon",
-        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
-        "action_text": "HP −10",
+        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 5",
+        "action_text": "HP −5",
         "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1133,12 +1122,12 @@
     "atk": 20,
     "atk_icon": "cross",
     "image_path": "assets/cards/SATOSHI-015.jpg",
-    "def": 0,
+    "def": 5,
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 10",
+        "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 15",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1164,12 +1153,12 @@
     "atk": 70,
     "atk_icon": "halo",
     "image_path": "assets/cards/SATOSHI-040.jpg",
-    "def": 0,
+    "def": 5,
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 20",
+        "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 15",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1179,8 +1168,8 @@
       },
       {
         "trigger": "on_destroyed",
-        "description": "เมื่อถูกทำลาย ฟื้น HP 30 ให้ตัวละครฝ่ายเรา 1 ใบ",
-        "action_text": "ฟื้น HP 30",
+        "description": "เมื่อถูกทำลาย ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 20",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1239,8 +1228,8 @@
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 10",
+        "description": "จบเทิร์น ฟื้น HP 5 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 5",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1295,7 +1284,7 @@
     "atk": 20,
     "atk_icon": "water",
     "image_path": "assets/cards/TAN-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_summon",
@@ -1325,12 +1314,12 @@
     "atk": 18,
     "atk_icon": "potion_mortar",
     "image_path": "assets/cards/TEE-015.jpg",
-    "def": 0,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_summon",
-        "description": "เมื่อถูกเรียก ATK +10 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
-        "action_text": "ATK +10",
+        "description": "เมื่อถูกเรียก ATK +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ATK +15",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1356,7 +1345,7 @@
     "atk": 40,
     "atk_icon": "potion_mortar",
     "image_path": "assets/cards/TEE-040.jpg",
-    "def": 0,
+    "def": 6,
     "effects": [
       {
         "trigger": "on_evolve",
@@ -1427,7 +1416,7 @@
     "atk": 18,
     "atk_icon": "demon",
     "image_path": "assets/cards/THAI32-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_destroyed",
@@ -1487,15 +1476,15 @@
     "atk": 10,
     "atk_icon": "potion_purple",
     "image_path": "assets/cards/WENDYWENDIE-015.jpg",
-    "def": 0,
+    "def": 5,
     "effects": [
       {
         "trigger": "on_attack",
-        "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+        "description": "เมื่อโจมตี ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
         "action_text": "จั่ว 1 ใบ",
         "target_text": "ตัวเอง",
-        "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
-        "cost_text": null,
+        "condition_text": null,
+        "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
         "duration": "instant",
         "duration_turns": null,
         "use_limit": "once_per_turn"
@@ -1517,7 +1506,7 @@
     "atk": 23,
     "atk_icon": "lightning",
     "image_path": "assets/cards/ZEESKY-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_summon",

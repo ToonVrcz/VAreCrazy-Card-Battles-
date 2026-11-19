@@ -8,7 +8,7 @@
       "icon": "fire",
       "strong": [
         "nature",
-        "alchemy"
+        "poison"
       ]
     },
     "water": {
@@ -36,14 +36,15 @@
       "th": "ธรรมชาติ",
       "icon": "leaf",
       "strong": [
-        "earth"
+        "earth",
+        "water"
       ]
     },
     "poison": {
       "th": "พิษ",
       "icon": "drop_green",
       "strong": [
-        "nature"
+        "lightning"
       ]
     },
     "alchemy": {

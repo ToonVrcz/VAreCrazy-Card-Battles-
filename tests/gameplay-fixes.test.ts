@@ -9,20 +9,29 @@ const filler = () => Array.from({ length: 30 }, (_, i) => ch(`FILL${i}-15`, 15))
 const run = (g: Game, ...as: Action[]) => as.reduce(act, g);
 const start = () => createGame([filler(), filler()], 7, 0, { interactive: false });
 
-describe('buffs stay until the unit leaves the field', () => {
-  it('keeps +ATK/+DEF across turn ends', () => {
+describe('SPL-003 / SPL-004 buffs last until the end of the turn (balance D-3)', () => {
+  it('apply now and are gone after the turn ends', () => {
     const g0 = start(); g0.players[0].hand = [ch('A-15', 15), sp('SPL-004'), sp('SPL-003')];
     let g = run(g0, { t: 'summon', hand: 0, slot: 0 }, { t: 'cast', hand: 0, target: { slot: 0 } }, { t: 'cast', hand: 0, target: { slot: 0 } });
     expect([g.players[0].field[0]!.bonusAtk, g.players[0].field[0]!.bonusDef]).toEqual([15, 15]);
-    g = run(g, { t: 'next' }, { t: 'next' }, { t: 'next' }, { t: 'next' });   // both players end a full turn twice
+    g = run(g, { t: 'next' }, { t: 'next' });                                  // end my turn
+    expect([g.players[0].field[0]!.bonusAtk, g.players[0].field[0]!.bonusDef]).toEqual([0, 0]);
+  });
+  it('allow only one cast of each spell per unit per turn (no +45 stacking)', () => {
+    const g0 = start(); g0.players[0].hand = [ch('A-15', 15), sp('SPL-004'), sp('SPL-004'), sp('SPL-003'), sp('SPL-003')];
+    const g = run(g0, { t: 'summon', hand: 0, slot: 0 }, { t: 'cast', hand: 0, target: { slot: 0 } }, { t: 'cast', hand: 1, target: { slot: 0 } });   // SPL-004, then SPL-003
+    expect(() => act(g, { t: 'cast', hand: 0, target: { slot: 0 } })).toThrow();   // second SPL-004
+    expect(() => act(g, { t: 'cast', hand: 1, target: { slot: 0 } })).toThrow();   // second SPL-003
     expect([g.players[0].field[0]!.bonusAtk, g.players[0].field[0]!.bonusDef]).toEqual([15, 15]);
   });
-  it('is carried to the evolved form', () => {
-    const g0 = start(); g0.players[0].hand = [ch('A-15', 15), sp('SPL-004')];
-    let g = run(g0, { t: 'summon', hand: 0, slot: 0 }, { t: 'cast', hand: 0, target: { slot: 0 } }, { t: 'next' }, { t: 'next' }, { t: 'next' }, { t: 'next' });
+  it('a spell buff is not carried to the evolved form', () => {
+    const g0 = start(); g0.players[0].hand = [ch('A-15', 15), sp('SPL-004'), ch('B-15', 15), evo(), ch('A-40', 40)];
+    let g = run(g0, { t: 'summon', hand: 0, slot: 0 }, { t: 'cast', hand: 0, target: { slot: 0 } });
+    g.players[0].hand = [ch('B-15', 15), evo(), ch('A-40', 40)];
+    g = run(g, { t: 'next' }, { t: 'next' }, { t: 'next' }, { t: 'next' });
     g.players[0].hand = [ch('B-15', 15), evo(), ch('A-40', 40)];
     g = run(g, { t: 'summon', hand: 0, slot: 1 }, { t: 'evolve', slot: 0, evo: 0, form: 1, sacrifice: [1] });
-    expect(g.players[0].field[0]!.card.id).toBe('A-40'); expect(g.players[0].field[0]!.bonusAtk).toBe(15);
+    expect(g.players[0].field[0]!.card.id).toBe('A-40'); expect(g.players[0].field[0]!.bonusAtk).toBe(0);
   });
 });
 
@@ -36,6 +45,13 @@ describe('swap spell works across both sides', () => {
     const g = setup(); const h = g.players[0].hand.findIndex(c => c.id === 'SPL-007');
     const r = act(g, { t: 'cast', hand: h, target: { slot: 0, slot2: 2 } });
     expect(r.players[0].field[0]!.card.id).toBe('B-15'); expect(r.players[1].field[2]!.card.id).toBe('A-15');
+  });
+  it('a swapped unit cannot attack in the turn it arrives (balance D-2)', () => {
+    const g = setup(); const h = g.players[0].hand.findIndex(c => c.id === 'SPL-007');
+    let r = act(g, { t: 'cast', hand: h, target: { slot: 0, slot2: 2 } });
+    r = act(r, { t: 'next' });                                                     // battle phase
+    expect(() => act(r, { t: 'attack', from: 0, to: 'player' })).toThrow();
+    expect(() => act(r, { t: 'attack', from: 0, to: 2 })).toThrow();
   });
   it('needs a unit on both sides and lists only valid pairs', () => {
     const g = setup(); const h = g.players[0].hand.findIndex(c => c.id === 'SPL-007');
@@ -78,11 +94,11 @@ describe('effect parser reads only exact Admin wordings', () => {
     expect(parseEffect(row({ target_text: 'ตัวละครฝ่ายตรงข้าม 1 ใบ', action_text: 'ATK −10', trigger: 'on_summon' }))).toMatchObject({ kind: 'atk', amount: -10 });
     expect(parseEffect(row({ trigger: 'passive', target_text: 'ตัวละครฝ่ายเรา 1 ใบ', action_text: 'HP +10', duration: 'permanent' }))).toBeNull();   // a passive cannot ask for a target
   });
-  it('the 56 seed abilities: 55 run (only the Combo one waits for a decision), the rest stay marked as not active', () => {
+  it('the 55 seed abilities all run (the unsupported Combo row was removed, balance D-7)', () => {
     const rows = seedCards().flatMap(() => []); void rows;
     const all = (require('node:fs').readFileSync(new URL('../db/seed/toon-cards.json', import.meta.url), 'utf8') as string);
     const fx = (JSON.parse(all) as any[]).flatMap(c => c.effects ?? []);
-    expect(fx.length).toBe(56); expect(fx.filter(r => parseEffect(r)).length).toBe(55);
+    expect(fx.length).toBe(55); expect(fx.filter(r => parseEffect(r)).length).toBe(55);
   });
 });
 

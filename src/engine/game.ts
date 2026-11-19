@@ -13,7 +13,7 @@ export const RULES = { lp: 100, handMax: 5, startHand: 5, fieldSlots: 7, backSlo
 export class EngineError extends Error {}
 
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
-export interface Unit { untargetableTurn?: number; tempAtk?: number; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface Unit { untargetableTurn?: number; tempAtk?: number; tempDef?: number; splTurn?: Record<string, number>; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
@@ -215,7 +215,7 @@ function endTurn(g: Game) {
   const pi = g.active, opp = other(pi);
   if (fire(g, opp, 'turn_end')) { let best = -1; g.players[pi].field.forEach((u, i) => { if (u && (best < 0 || effAtk(u) > effAtk(g.players[pi].field[best]!))) best = i; }); if (best >= 0) damageUnit(g, pi, best, 15, opp, true, 'กับดัก'); }
   g.players[pi].field.forEach(u => { if (u) runEffects(g, pi, u, 'turn_end'); });
-  g.players.forEach(p => p.field.forEach(u => { if (u?.tempAtk) { u.bonusAtk -= u.tempAtk; u.tempAtk = 0; } }));   // "until the end of the turn" bonuses
+  g.players.forEach(p => p.field.forEach(u => { { if (u?.tempAtk) { u.bonusAtk -= u.tempAtk; u.tempAtk = 0; } if (u?.tempDef) { u.bonusDef -= u.tempDef; u.tempDef = 0; } } }));   // "until the end of the turn" bonuses
   if (g.winner !== null) return;
   g.active = opp; g.turn++; startTurn(g);
 }
@@ -298,7 +298,7 @@ function step(g: Game, a: Action): Game {
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); emit(g, { t: 'evolve_cancelled', p: pi, card: u.card.name }); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
-      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef; me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`); emit(g, { t: 'evolve', p: pi, card: u.card.name, to: form.name });
+      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef - (u.tempDef ?? 0); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`); emit(g, { t: 'evolve', p: pi, card: u.card.name, to: form.name });
       runEffects(g, pi, nu, 'on_evolve');
       return g;
     }
@@ -327,8 +327,8 @@ function step(g: Game, a: Action): Game {
       switch (c.id) {
         case 'SPL-001': { const x = need(t.slot); if (!targetable(g, theirs(x))) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); emit(g, { t: 'cast', p: pi, card: c.name }); damageUnit(g, opp, x, 20, pi, false, c.name); break; }
         case 'SPL-002': { const u = mine(need(t.slot)), b = u.hp; u.hp = Math.min(u.maxHp, u.hp + 30); emit(g, { t: 'cast', p: pi, card: c.name }); if (u.hp > b) emit(g, { t: 'heal', p: pi, card: u.card.name, v: u.hp - b, src: c.name }); break; }
-        case 'SPL-003': { const u = mine(need(t.slot)); u.bonusDef += 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'def', v: 15, src: c.name }); break; }
-        case 'SPL-004': { const u = mine(need(t.slot)); u.bonusAtk += 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'atk', v: 15, src: c.name }); break; }
+        case 'SPL-003': { const u = mine(need(t.slot)); if (u.splTurn?.['SPL-003'] === g.turn) fail('ตัวละครนี้ได้รับบัฟนี้ในเทิร์นนี้แล้ว'); (u.splTurn ??= {})['SPL-003'] = g.turn; u.bonusDef += 15; u.tempDef = (u.tempDef ?? 0) + 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'def', v: 15, src: c.name }); break; }
+        case 'SPL-004': { const u = mine(need(t.slot)); if (u.splTurn?.['SPL-004'] === g.turn) fail('ตัวละครนี้ได้รับบัฟนี้ในเทิร์นนี้แล้ว'); (u.splTurn ??= {})['SPL-004'] = g.turn; u.bonusAtk += 15; u.tempAtk = (u.tempAtk ?? 0) + 15; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'buff', p: pi, card: u.card.name, stat: 'atk', v: 15, src: c.name }); break; }
         case 'SPL-005': { emit(g, { t: 'cast', p: pi, card: c.name }); const n = (draw(g, pi) ? 1 : 0) + (draw(g, pi) ? 1 : 0); if (n) emit(g, { t: 'draw', p: pi, v: n, src: c.name }); break; }
         case 'SPL-006': {
           if (me.hand.length - 1 >= RULES.handMax) fail('มือเต็ม');
@@ -336,7 +336,7 @@ function step(g: Game, a: Action): Game {
           const gc = me.grave[gi]; if (!gc || gc.type !== 'character' || gc.level !== 15) fail('ไม่มีตัวละคร Lv.15 ในสุสาน');
           me.grave.splice(gi, 1); me.hand.splice(a.hand, 1); me.hand.push(gc); sendTo(c); active(g, pi, 'cast'); log(g, `ใช้ ${c.name}`); emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'revive', p: pi, card: gc.name }); return g;
         }
-        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); if (!targetable(g, eu)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); [me.field[x], en.field[y]] = [eu, mu]; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'swap', p: pi, card: mu.card.name, to: eu.card.name }); log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
+        case 'SPL-007': { const x = need(t.slot), y = need(t.slot2); const mu = mine(x), eu = theirs(y); if (!targetable(g, eu)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); [me.field[x], en.field[y]] = [eu, mu]; eu.summonedTurn = g.turn; mu.summonedTurn = g.turn;  /* a swapped unit cannot attack this turn (balance D-2) */ emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'swap', p: pi, card: mu.card.name, to: eu.card.name }); log(g, `สลับ ${mu.card.name} ของผู้เล่น ${pi + 1} กับ ${eu.card.name} ของฝ่ายตรงข้าม`); break; }
         case 'SPL-008': en.noAttackUntil = g.turn + 2; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'noattack', p: opp }); break;
         case 'SPL-009': { const x = theirs(need(t.slot)); if (!targetable(g, x)) fail('ตัวละครนี้ถูกป้องกันการเลือกเป็นเป้าหมาย'); x.poison = RULES.poison.turns; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'poison', p: opp, card: x.card.name }); break; }
         case 'SPL-010': { const b = en.back[need(t.slot)] ?? fail('ไม่มีกับดักในช่องนั้น'); en.grave.push(b.card); en.back[t.slot!] = null; emit(g, { t: 'cast', p: pi, card: c.name }); emit(g, { t: 'trap_destroyed', p: opp, card: b.card.name }); break; }
@@ -378,7 +378,7 @@ export function legalActions(g: Game): Action[] {
       if (c.type === 'fusion' && !me.summoned && slot >= 0) { let best: Action | null = null, bs = -1; me.hand.forEach((x, i) => me.hand.forEach((y, j) => { if (i === j || i === h || j === h || !fusionBonus(g, x, y)) return; const sc = (x.atk ?? 0) * 2 + (x.hp ?? 0) + (y.atk ?? 0) + (y.hp ?? 0) / 2; if (sc > bs) { bs = sc; best = { t: 'fuse', fusion: h, top: i, bottom: j, slot }; } })); if (best) out.push(best); }
       if (c.type === 'spell') {
         const ms = me.field.map((u, i) => u ? i : -1).filter(i => i >= 0), es = en.field.map((u, i) => u ? i : -1).filter(i => i >= 0);
-        if (['SPL-002', 'SPL-003', 'SPL-004'].includes(c.id)) ms.forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
+        if (['SPL-002', 'SPL-003', 'SPL-004'].includes(c.id)) ms.filter(s => !(['SPL-003', 'SPL-004'].includes(c.id) && me.field[s]?.splTurn?.[c.id] === g.turn)).forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
         else if (['SPL-001', 'SPL-009'].includes(c.id)) es.filter(s => targetable(g, en.field[s])).forEach(s => out.push({ t: 'cast', hand: h, target: { slot: s } }));
         else if (c.id === 'SPL-010') en.back.forEach((b, i) => b && out.push({ t: 'cast', hand: h, target: { slot: i } }));
         else if (c.id === 'SPL-007') ms.forEach(x => es.filter(y => targetable(g, en.field[y])).forEach(y => out.push({ t: 'cast', hand: h, target: { slot: x, slot2: y } })));
