@@ -59,7 +59,7 @@ describe('migration order and compatibility (018, 019)', () => {
     await db.exec(`DROP TABLE admin_login_failures; ALTER TABLE card_effects DROP COLUMN config; DELETE FROM schema_migrations WHERE name IN ('018_login_attempts.up.sql','019_effect_config.up.sql')`);
     const svc = new CardService(db, '/tmp/vcz-test-storage'); await svc.createUser('boss@x.com', 'password123', 'super_admin');
     await migrateUp(db);
-    expect((await db.query<any>(`SELECT name FROM schema_migrations WHERE name >= '018' ORDER BY name`)).rows.map(r => r.name)).toEqual(['018_login_attempts.up.sql', '019_effect_config.up.sql']);
+    expect((await db.query<any>(`SELECT name FROM schema_migrations WHERE name >= '018' AND name < '020' ORDER BY name`)).rows.map(r => r.name)).toEqual(['018_login_attempts.up.sql', '019_effect_config.up.sql']);
     expect((await svc.login('boss@x.com', 'password123')).user.email).toBe('boss@x.com');
   });
   it('018 and 019 are individually reversible', async () => {

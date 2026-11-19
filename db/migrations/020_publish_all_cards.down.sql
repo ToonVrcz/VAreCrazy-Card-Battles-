@@ -1,0 +1,22 @@
+-- Reverts 020: put the 59 cards back to their previous status (NONG-TAENGMO-015 was In Review, the rest Draft) and drop the snapshots 020 created (version 1).
+DELETE FROM card_versions WHERE version_no = 1 AND card_id IN (SELECT id FROM cards WHERE character_id IN (
+    'DNMAN-015', 'FOLLOW-YOU-015', 'FOLLOW-YOU-040', 'FOLLOW-YOU-070', 'GOD-WA-015', 'I-M-GRAPE-015', 'JAOJAY-015',
+    'LALAPING-015', 'LALAPING-040', 'LALAPING-070', 'LEON-S-KENNEDY-015', 'LINLADA-015', 'LORDNAM-015', 'LUCKY-015',
+    'MELON-015', 'MIKI-015', 'MON-015', 'NONG-TAENGMO-015', 'NORMAN-015', 'NORMAN-040', 'OUFILLING-015',
+    'PIKACHU-015', 'PK-015', 'PKXCY-015', 'SATOSHI-015', 'SATOSHI-040', 'SKYMOON-015', 'SMILE-015', 'SOMYES-015',
+    'TAN-015', 'TEE-015', 'TEE-040', 'THAI26-015', 'THAI32-015', 'THOMAS-015', 'WENDYWENDIE-015', 'ZEESKY-015',
+    'EVO-001', 'FUS-001', 'SPL-001', 'SPL-002', 'SPL-003', 'SPL-004', 'SPL-005', 'SPL-006', 'SPL-007', 'SPL-008',
+    'SPL-009', 'SPL-010', 'TRP-001', 'TRP-002', 'TRP-003', 'TRP-004', 'TRP-005', 'TRP-006', 'TRP-007', 'TRP-008',
+    'TRP-009', 'TRP-010'
+));
+UPDATE cards SET status = 'draft', version_no = 0
+ WHERE status = 'published' AND version_no = 1 AND character_id IN (
+    'DNMAN-015', 'FOLLOW-YOU-015', 'FOLLOW-YOU-040', 'FOLLOW-YOU-070', 'GOD-WA-015', 'I-M-GRAPE-015', 'JAOJAY-015',
+    'LALAPING-015', 'LALAPING-040', 'LALAPING-070', 'LEON-S-KENNEDY-015', 'LINLADA-015', 'LORDNAM-015', 'LUCKY-015',
+    'MELON-015', 'MIKI-015', 'MON-015', 'NORMAN-015', 'NORMAN-040', 'OUFILLING-015', 'PIKACHU-015', 'PK-015',
+    'PKXCY-015', 'SATOSHI-015', 'SATOSHI-040', 'SKYMOON-015', 'SMILE-015', 'SOMYES-015', 'TAN-015', 'TEE-015',
+    'TEE-040', 'THAI26-015', 'THAI32-015', 'THOMAS-015', 'WENDYWENDIE-015', 'ZEESKY-015', 'EVO-001', 'FUS-001',
+    'SPL-001', 'SPL-002', 'SPL-003', 'SPL-004', 'SPL-005', 'SPL-006', 'SPL-007', 'SPL-008', 'SPL-009', 'SPL-010',
+    'TRP-001', 'TRP-002', 'TRP-003', 'TRP-004', 'TRP-005', 'TRP-006', 'TRP-007', 'TRP-008', 'TRP-009', 'TRP-010'
+   );
+UPDATE cards SET status = 'in_review', version_no = 0 WHERE character_id = 'NONG-TAENGMO-015' AND status = 'published' AND version_no = 1;
