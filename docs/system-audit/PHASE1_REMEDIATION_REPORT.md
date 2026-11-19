@@ -48,3 +48,49 @@ Apply 018 → 021 → 022 → 023 (019/020 per earlier decisions) → rebuild an
 
 ## UNVERIFIED
 - Live site behaviour (sandbox cannot reach it); the `SUPABASE_DB_URL` role; what headers the edge function receives behind the Vercel rewrite; CSP on real devices/extensions.
+
+---
+
+# Closure addendum (XSS lint hardening, final status)
+
+## What changed after the first remediation commit (`c8dcb62`)
+- `fdc350c` hardened the XSS lint against bypass patterns (nested templates, string-method arguments, helper pass-through, reassignment / `+=` / destructuring / for-of, extra sinks such as `outerHTML`, `document.write`, `srcdoc`, `eval`).
+- This closing commit removes the remaining trust-by-name shortcuts the second review found:
+  1. `esc()` is trusted only if its binding resolves to a function that behaves like an HTML escaper (the lint runs it in a `vm` sandbox); a missing, shadowed, partial or reassigned `esc` is unsafe.
+  2. No property is trusted by name (the old `NUM_PROPS` list is gone). Numbers must be coerced (`+x`, `Number()`) or escaped; `.length` is trusted only on provable strings/arrays.
+  3. `Number`, `parseInt`, `parseFloat`, `Boolean`, `String`, `Math`, `Object.keys`, `VCZ.svg` are trusted only when they are the real globals (not shadowed by a local or a parameter).
+- Pages: only `esc()` / `+n` wrappers added (`play.html`, `admin.html`, `card-renderer.js`). Visible difference: `null`/`undefined` now render as empty instead of the word "undefined".
+- New regression test: the pages must still render their own markup (no `&lt;br`, no `NaN`/`undefined` text) — verified to fail when a markup fragment is over-escaped.
+
+## Final test results (this branch)
+`npm test` → 32 files, 484 tests, all pass (includes bundle drift, RLS, lint with 59+36 negative fixtures, DOM and CSP browser tests).
+
+## Branch status / deployment readiness
+- Branch `fix/phase1-remediation`, based on `fix/phase1-security-integrity` (code `37f10d9`); not merged, not deployed.
+- **Ready for review, not for deploy** until the blockers below are cleared by the Owner.
+
+## Deployment checklist (only after the Owner says "Deploy")
+1. Owner approves merge of `fix/phase1-remediation` (includes Phase 1 code + migrations 021, 022, 023 files).
+2. Confirm Production schema state (read-only): migrations applied up to 017; decide 018/019/020 per the earlier D1–D7 decisions (FOLLOW-YOU-040 stays excluded from 020).
+3. Apply migrations in order: 018 → 021 → 022 → 023 (019/020 only if approved). Each is additive; 022/023 enable RLS and revoke anon/authenticated.
+4. Rebuild the edge bundle from the merge commit (`src/server/api.ts` changed) and deploy the `api` function (stub → pinned bundle, keep the previous stub/bundle branch as the rollback reference).
+5. Merge to `main` (Vercel auto-deploys the web: pages + `vercel.json` CSP Report-Only header).
+6. Run the production verification below.
+7. Rollback: Vercel dashboard rollback (web); redeploy the previous edge bundle; migration down scripts exist (`022`/`023` down only disable RLS).
+
+## Production verification (read-only or with throwaway data)
+- Game `/play` loads, no console errors; lobby, shop, collection, deck editor open; a bot game starts.
+- Admin `/` login works; card list and editor open; image upload accepts a real PNG/JPG and rejects a renamed non-image.
+- New guest profile gets exactly 500 points; creating profiles from one browser repeatedly does not return 429 under the per-IP limit (per-IP is intentionally inactive); the global ceiling is not hit.
+- `anon` key against the PostgREST endpoints `profile_create_log` and `admin_login_failures` returns 401/403/empty (RLS); the edge function can still write them (failed admin login creates a row; profile creation creates a row only when an IP is supplied, i.e. never today).
+- Response headers on `/play` and `/` include `Content-Security-Policy-Report-Only`; browser console shows no violations during the flows above.
+- Hostile-name smoke test with a throwaway room name `<img src=x onerror=alert(1)>`: shown as text, no dialog.
+- Card numeric range: editor refuses HP/ATK/DEF outside 0..99999 and prices outside 0..1,000,000.
+
+## Residual risks (recorded, not blocking Phase 1 scope)
+- CSP still needs `'unsafe-inline'`; it reports but does not block, and has no report endpoint.
+- Per-IP profile limit is off until trusted IP headers behind the Vercel rewrite are measured; only the global ceiling protects against profile floods.
+- The lint is an accident guard, not an adversarial proof (callback parameter binding is by name; the DOM tests are the backstop).
+- `SUPABASE_DB_URL` role not verified (expected `postgres`, BYPASSRLS).
+- Live site, mobile browsers and extensions not tested from this environment.
+- Older tables rely on "RLS enabled, no policy"; repo migrations do not revoke their anon grants.

@@ -97,6 +97,25 @@ describe.skipIf(!can)('play.html DOM', () => {
   });
 });
 
+describe.skipIf(!can)('play.html still renders its own markup (escaping must not over-reach)', () => {
+  it('benign data: screens contain real elements and no visible escaped markup', async () => {
+    const ctx = await browser.newContext(); const page = await ctx.newPage();
+    const me = { ok: true, name: 'Toon', points: 500, vrcoin: 3, matches: 4, inventory: {}, matchesToVrcoin: 6, rules: {} };
+    await page.route('**/api/play/me', (r: any) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(me) }));
+    await page.route('**/api/play/profile', (r: any) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ key: 'k'.repeat(20) }) }));
+    await page.goto(base + '/play'); await page.waitForFunction(() => typeof (window as any).lobby === 'function' && (0, eval)('typeof DEFS') !== 'undefined');
+    for (const fn of ['lobby()', "collection('e40')", 'deckList()', 'profile()', 'more()']) {
+      await page.evaluate(fn); await page.waitForTimeout(500);
+      const r = await page.evaluate(() => ({ html: document.querySelector('#md')!.innerHTML, imgs: document.querySelectorAll('#md img').length, text: document.querySelector('#md')!.textContent || '' }));
+      expect(r.html, fn).not.toMatch(/&lt;(br|b|span|small|div|p|img|button)\b/);   // markup written by the page itself must stay markup
+      expect(r.text, fn).not.toMatch(/<(br|b|span|small|div|p|img|button)\b|NaN|undefined/);
+    }
+    await page.evaluate("collection('e40')"); await page.waitForTimeout(400);
+    expect(await page.evaluate(() => document.querySelectorAll('#md .cgrid > div').length)).toBeGreaterThan(0);
+    await ctx.close();
+  });
+});
+
 describe.skipIf(!can)('admin.html DOM', () => {
   it('card list / editor render hostile card data inertly', async () => {
     const ctx = await browser.newContext(); const page = await ctx.newPage(); page.on('dialog', (d: any) => d.dismiss());

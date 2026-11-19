@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { lintSource, type Allow } from './helpers/html-lint';
 
+// The canonical escaper (same behaviour as the one in the pages). The lint verifies an escaper by RUNNING it, so fixtures that use esc must define it.
+const ESC = `const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));\n`;
 const read = (f: string) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 
 // Allowlist: exactly these findings, each tied to its kind and code. Every entry is an assignment of a form/number value into a plain data
@@ -104,12 +106,45 @@ describe('XSS allowlist lint (replaces the old deny-list regexes)', () => {
       ['await result', 'async function f(){ el.innerHTML = `<b>${await load()}</b>`; }'],
       ['tagged template', 'el.innerHTML = tag`<b>${x.name}</b>`;'],
       ['comma expression', 'el.innerHTML = `<b>${(0, x.name)}</b>`;'],
+      // 7. the escaper is trusted by BEHAVIOUR and BINDING, never by name
+      ['esc that is not defined at all', 'el.innerHTML = `<b>${esc(x.name)}</b>`;'],
+      ['local esc that returns its input', 'const esc = s => s; el.innerHTML = `<b>${esc(x.name)}</b>`;'],
+      ['function declaration esc that returns its input', 'function esc(v) { return v; } el.innerHTML = `<b>${esc(x.name)}</b>`;'],
+      ['esc that only escapes <', "const esc = s => String(s).replace(/</g, '&lt;'); el.innerHTML = `<b>${esc(x.name)}</b>`;"],
+      ['esc that forgets quotes (attribute breakout)', "const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); el.innerHTML = `<i title=\"${esc(x.name)}\">`;"],
+      ['esc that does nothing for null', "const esc = s => String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c])); el.innerHTML = `<b>${esc(x.name)}</b>`;"],
+      ['esc as a parameter', 'const f = (esc) => `<b>${esc(x.name)}</b>`; el.innerHTML = f(v => v);'],
+      ['esc shadowed inside a function', ESC.replace(/\n$/, '') + ' function f(esc) { return `<b>${esc(x.name)}</b>`; } el.innerHTML = f(s => s);'],
+      ['esc reassigned to a pass-through', ESC.replace('const', 'let') + 'esc = s => s; el.innerHTML = `<b>${esc(x.name)}</b>`;'],
+      ['esc that is not a function', 'const esc = x.name; el.innerHTML = `<b>${esc(1)}</b>`;'],
+      ['x.map(esc) with a fake esc', 'const esc = s => s; el.innerHTML = list.map(esc).join("");'],
+      ['x.map(esc) with esc undefined', 'el.innerHTML = list.map(esc).join("");'],
+      // 8. numeric properties are not trusted by name
+      ['user.hp may hold HTML', 'el.innerHTML = `<b>${user.hp}</b>`;'],
+      ['atk / def / level / price / points / amount / code', 'el.innerHTML = `<b>${u.atk}${u.def}${u.level}${i.price}${p.points}${x.amount}${r.code}</b>`;'],
+      ['numeric-looking property in an attribute', 'el.innerHTML = `<i data-n="${x.uid}" data-s="${x.seat}">`;'],
+      ['length of an unknown object', 'el.innerHTML = `<b>${x.length}</b>`;'],
+      ['length of a parameter-derived value', 'const f = (a) => `<b>${a.length}</b>`; el.innerHTML = f(x);'],
+      ['length of a variable holding user data', 'const d = getData(); el.innerHTML = `<b>${d.length}</b>`;'],
+      ['numeric property in a conditional', 'el.innerHTML = `<b>${a ? u.hp : 0}</b>`;'],
+      ['numeric property through ||', 'el.innerHTML = `<b>${u.hp || 0}</b>`;'],
+      // 9. built-ins are trusted only when they really are the globals
+      ['local Number', 'const Number = s => s; el.innerHTML = `<b>${Number(x.name)}</b>`;'],
+      ['local parseInt', 'function parseInt(v) { return v; } el.innerHTML = `<b>${parseInt(x.name)}</b>`;'],
+      ['local parseFloat', 'const parseFloat = v => v; el.innerHTML = `<b>${parseFloat(x.name)}</b>`;'],
+      ['local Boolean', 'const Boolean = v => v; el.innerHTML = `<b>${Boolean(x.name)}</b>`;'],
+      ['local String', 'const String = v => v; el.innerHTML = `<b>${String(x.name)}</b>`;'],
+      ['Number as a parameter', 'const f = (Number) => `<b>${Number(x.name)}</b>`; el.innerHTML = f(v => v);'],
+      ['Math as a parameter', 'const f = (Math) => `<b>${Math.max(x.name)}</b>`; el.innerHTML = f({ max: v => v });'],
+      ['local Math object', 'const Math = { max: v => v }; el.innerHTML = `<b>${Math.max(x.name)}</b>`;'],
+      ['local VCZ', 'const VCZ = { svg: s => s }; el.innerHTML = `<b>${VCZ.svg(x.name)}</b>`;'],
+      ['local Object.keys', 'const Object = { keys: () => [] }; el.innerHTML = Object.keys({ a: 1 }).map(k => `<b>${k}</b>`).join("");'],
+      ['String() of unsafe input', 'el.innerHTML = `<b>${String(x.name)}</b>`;'],
     ];
     it.each(UNSAFE)('flags %s', (_n, code) => { expect(bad(code), code).toBeGreaterThan(0); });
 
     const SAFE: [string, string][] = [
       ['esc wrapped', 'el.innerHTML = `<b>${esc(d.flavor)}</b>`;'],
-      ['numeric property', 'el.innerHTML = `<b>${u.hp}</b>`;'],
       ['arithmetic', 'el.innerHTML = `<b>${a*2-b}</b>`;'],
       ['esc in concat', "el.innerHTML = '<b>' + esc(n) + '</b>';"],
       ['nested template with escaped value', 'el.innerHTML = `<b>${a ? `${esc(x.name)}` : ""}</b>`;'],
@@ -119,9 +154,22 @@ describe('XSS allowlist lint (replaces the old deny-list regexes)', () => {
       ['lookup in a constant table', "const T = {a: 'x', b: 'y'}; el.innerHTML = `<b>${T[k]}</b>`;"],
       ['map over a constant array', "el.innerHTML = ['a', 'b'].map(t => `<b>${t}</b>`).join('');"],
       ['index parameter of a map callback', 'el.innerHTML = list.map((a, i) => `<b>${esc(a)}${i}</b>`).join("");'],
+      ['unary plus on a numeric property', 'el.innerHTML = `<b>${+u.hp}</b>`;'],
+      ['Number() on a property', 'el.innerHTML = `<b>${Number(u.hp)}</b>`;'],
+      ['parseInt / parseFloat / Boolean', 'el.innerHTML = `<b>${parseInt(u.hp, 10)}${parseFloat(u.atk)}${Boolean(u.def)}</b>`;'],
+      ['esc() on a numeric property', 'el.innerHTML = `<b>${esc(u.hp)}</b>`;'],
+      ['arithmetic on properties', 'el.innerHTML = `<b>${u.hp - 1}${u.atk * 2}</b>`;'],
+      ['Math on properties', 'el.innerHTML = `<b>${Math.max(u.hp, 0)}${Math.min(1, 2)}</b>`;'],
+      ['String() of a safe value', 'el.innerHTML = `<b>${String(esc(x.name))}</b>`;'],
+      ['length of an array literal / string literal', "el.innerHTML = `<b>${[1, 2].length}${'abc'.length}</b>`;"],
+      ['length of a filtered / mapped array', 'el.innerHTML = `<b>${list.filter(a => a).length}${list.map(a => a).length}</b>`;'],
+      ['length of Object.keys()', 'el.innerHTML = `<b>${Object.keys(o).length}</b>`;'],
+      ['length of a variable that only holds arrays', 'const rows = list.filter(a => a); el.innerHTML = `<b>${rows.length}</b>`;'],
+      ['x.map(esc).join', 'el.innerHTML = list.map(esc).join(",");'],
+      ['escaper under another name', "el.innerHTML = `<b>${sanitize(x.name)}</b>`;"],
       ['textContent is not a sink', 'el.textContent = x.name;'],
       ['replace() with constants', "el.innerHTML = `<b>${'a-b'.replace('-', '+')}</b>`;"],
     ];
-    it.each(SAFE)('accepts %s', (_n, code) => { expect(lintSource('x.js', code), code).toEqual([]); });
+    it.each(SAFE)('accepts %s', (_n, code) => { expect(lintSource('x.js', (code.includes('sanitize') ? ESC.replace('esc', 'sanitize') : ESC) + code), code).toEqual([]); });
   });
 });

@@ -1,22 +1,19 @@
 // XSS allowlist lint. Parses the inline scripts of an HTML page (or a .js file) and reports every value that is interpolated into
 // an HTML string without being provably safe. "Provably safe" means one of:
 //   - wrapped in esc(...)                                   - number / boolean arithmetic, comparisons, literals
-//   - a property that only holds numbers or validated codes  - a lookup in a constant table of literals
+//   - (no property is trusted by NAME: numbers must be coerced with +x / Number() or escaped)  - a lookup in a constant table of literals
 //   - a local helper whose every return value is itself safe  - a .map(...).join() whose callback returns safe values
 //   - a parameter bound to an element of a constant literal array
 // Anything else must be escaped in the page or be listed (with a reason) in the allowlist of the test that calls this.
 // Principle: what cannot be PROVEN safe is unsafe. Nested templates, helper arguments, string-method arguments, reassigned variables,
 // destructuring, for-of targets, shadowing parameters and every known HTML/script sink are all analysed; unknown shapes are reported.
 import { parseSync } from 'rolldown/utils';
+import { runInNewContext } from 'node:vm';
 
-/** Properties that only ever hold numbers, booleans or server-validated codes (room code = 5 chars [A-Z0-9]). */
-export const NUM_PROPS = new Set(['hp', 'maxHp', 'atk', 'def', 'level', 'length', 'price', 'amount', 'qty', 'owned', 'min_members', 'min', 'max', 'points', 'vrcoin', 'matches',
-  'pvp_matches', 'turn', 'lp', 'size', 'count', 'version', 'version_no', 'seat', 'uid', 'bonusAtk', 'bonusDef', 'auraAtk', 'auraDef', 'turnSec', 'spectators', 'spectatorMax',
-  'total', 'wins', 'losses', 'turns', 'evoMax', 'slots', 'matchesToVrcoin', 'max_stacks', 'min_materials', 'len', 'code', 'slot', 'matchPoints', 'vrcoinEvery', 'vrcoinBatch', 'i']);
 /** Array methods whose callback receives (element, index): the 2nd parameter is always a number. */
 const IDX_METHODS = new Set(['map', 'forEach', 'filter', 'some', 'every', 'find', 'findIndex', 'flatMap']);
 
-export interface Finding { file: string; line: number; code: string }
+export interface Finding { file: string; line: number; code: string; /** absolute offsets of the reported expression in the file text */ start?: number; end?: number }
 export interface Allow { file: string; code: string; why: string }
 
 function scripts(file: string, text: string) {
@@ -106,7 +103,7 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
     };
     const litRef = (n: any): boolean => {
       if (n.type === 'Identifier') { const rs = resolve(n.name, scopeOf.get(n)); return !!rs && !rs.param && rs.list.every((i: any) => lit(i)); }
-      if (n.type === 'CallExpression' && n.callee.type === 'MemberExpression' && n.callee.object.name === 'Object' && n.callee.property.name === 'keys') return litRef(n.arguments[0]);
+      if (n.type === 'CallExpression' && n.callee.type === 'MemberExpression' && n.callee.object.name === 'Object' && isGlobal(n.callee.object) && n.callee.property.name === 'keys') return litRef(n.arguments[0]);
       return lit(n);
     };
 
@@ -137,6 +134,36 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
     };
     const STR_METHODS = ['replace', 'replaceAll', 'slice', 'substring', 'substr', 'toUpperCase', 'toLowerCase', 'trim', 'trimStart', 'trimEnd', 'repeat', 'padStart', 'padEnd', 'concat', 'normalize'];
 
+    /** True when the identifier is not declared anywhere in its scope chain, i.e. it really is the global (Number, Math, Object, VCZ ...), not a shadowing local. */
+    const isGlobal = (id: any) => id?.type === 'Identifier' && !resolve(id.name, scopeOf.get(id));
+    /** An escape function is trusted only if its binding resolves to function definitions that BEHAVE like an HTML escaper (checked by running them), never by name alone. */
+    const escCache = new WeakMap<object, boolean>();
+    const behavesLikeEsc = (fn: any) => {
+      if (escCache.has(fn)) return escCache.get(fn)!;
+      let ok = false;
+      try {
+        const f = runInNewContext('(' + sc.src.slice(fn.start, fn.end) + ')', Object.create(null), { timeout: 200 });
+        ok = typeof f === 'function' && f('&<>"\'') === '&amp;&lt;&gt;&quot;&#39;' && f(null) === '' && f(undefined) === '' && f(5) === '5' && f('a b') === 'a b' && f('<script>') === '&lt;script&gt;';
+      } catch { ok = false; }
+      escCache.set(fn, ok); return ok;
+    };
+    const isEsc = (id: any) => { const rs = id?.type === 'Identifier' ? resolve(id.name, scopeOf.get(id)) : null; return !!rs && !rs.param && rs.list.length > 0 && rs.list.every((f: any) => isFn(f) && behavesLikeEsc(f)); };
+    /** `.length` is a number only for strings and arrays: literals, array-returning methods, or a variable that only ever holds those. */
+    const ARR = ['map', 'filter', 'slice', 'concat', 'split', 'sort', 'reverse', 'flat', 'flatMap', 'entries', 'keys', 'values', 'trim', 'toString'];
+    const lengthOk = (o: any, d = 0): boolean => {
+      if (!o || d > 4) return false;
+      if (o.type === 'ArrayExpression' || (o.type === 'Literal' && typeof o.value === 'string') || o.type === 'TemplateLiteral') return true;
+      if (o.type === 'ParenthesizedExpression') return lengthOk(o.expression, d + 1);
+      if (o.type === 'CallExpression') {
+        const m = callMethod(o);
+        if (m && ARR.includes(m)) return true;
+        if (o.callee.type === 'MemberExpression' && o.callee.object.type === 'Identifier' && ['Object', 'Array'].includes(o.callee.object.name) && isGlobal(o.callee.object)) return true;
+        if (o.callee.type === 'Identifier' && o.callee.name === 'String' && isGlobal(o.callee)) return true;
+      }
+      if (o.type === 'Identifier') { const rs = resolve(o.name, scopeOf.get(o)); return !!rs && !rs.param && rs.list.length > 0 && rs.list.every((i: any) => lengthOk(i, d + 1)); }
+      return false;
+    };
+
     function safe(n: any): boolean {
       if (!n) return true;
       switch (n.type) {
@@ -149,7 +176,8 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
           busy.add(n); const ok = rs.list.every((i: any) => i && !isFn(i) && safe(i)); busy.delete(n); return ok;
         }
         case 'MemberExpression': {
-          const p = prop(n); if (p && NUM_PROPS.has(p)) return true;
+          const p = prop(n);
+          if (p === 'length' && lengthOk(n.object)) return true;                    // .length of something provably a string / array
           if (n.computed && (litRef(n.object) || (n.object.type === 'ParenthesizedExpression' && lit(n.object.expression)))) return true;   // lookup in a constant table
           if (n.computed && n.object.type === 'Identifier' && bound.has(n.object.name)) return true;
           if (n.object.type === 'Identifier' && (n.computed || p)) {   // lookup in a named object literal whose every value is itself safe (e.g. a table of SVG snippets)
@@ -173,8 +201,9 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
         case 'CallExpression': {
           const c = n.callee;
           if (c.type === 'Identifier') {
-            if (c.name === 'esc' || ['Number', 'parseInt', 'parseFloat', 'Boolean'].includes(c.name)) return true;
-            if (c.name === 'String') return n.arguments.every((a: any) => safe(a));
+            if (isEsc(c)) return true;                                               // the page's own escaper, verified by behaviour
+            if (['Number', 'parseInt', 'parseFloat', 'Boolean'].includes(c.name) && isGlobal(c)) return true;   // real globals only, not a shadowing local
+            if (c.name === 'String' && isGlobal(c)) return n.arguments.every((a: any) => safe(a));
             const f = fnsOf(c);
             if (f && !busy.has(c)) { busy.add(c); const ok = f.every(fnSafe); busy.delete(c); return ok; }   // every function this name may hold
             return false;
@@ -190,7 +219,7 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
               const o = c.object;
               if (callMethod(o) === 'map') {
                 const cb = o.arguments[0];
-                if (cb?.type === 'Identifier' && cb.name === 'esc') return true;          // x.map(esc).join(...)
+                if (isEsc(cb)) return true;          // x.map(esc).join(...)
                 const run = () => {
                   if (isFn(cb)) return fnSafe(cb);
                   if (cb?.type === 'Identifier') { const f = fnsOf(cb); return !!f && f.every(fnSafe); }
@@ -201,8 +230,8 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
               return false;
             }
             if (['toFixed', 'toLocaleString'].includes(p)) return true;
-            if (c.object.type === 'Identifier' && c.object.name === 'Math') return true;
-            if (c.object.type === 'Identifier' && c.object.name === 'VCZ' && p === 'svg') return true;   // card-renderer.js, linted separately
+            if (c.object.type === 'Identifier' && c.object.name === 'Math' && isGlobal(c.object)) return true;
+            if (c.object.type === 'Identifier' && c.object.name === 'VCZ' && p === 'svg' && isGlobal(c.object)) return true;   // card-renderer.js, linted separately
           }
           return false;
         }
@@ -210,7 +239,7 @@ export function lintSource(file: string, text: string, allow: Allow[] = []): Fin
       }
     }
 
-    const report = (e: any, why = '') => { const code = txt(e).slice(0, 110), full = why ? `${why}: ${code}` : code; if (!allowed.has(full)) findings.push({ file, line: line(e.start), code: full }); };   // allowlist entries match the full finding text (kind + code)
+    const report = (e: any, why = '') => { const code = txt(e).slice(0, 110), full = why ? `${why}: ${code}` : code; if (!allowed.has(full)) findings.push({ file, line: line(e.start), code: full, start: sc.off + e.start, end: sc.off + e.end }); };   // allowlist entries match the full finding text (kind + code)
     const isHtmlTpl = (n: any) => n.quasis.some((q: any) => q.value.raw.includes('<'));
     const flatten = (n: any): any[] => (n.type === 'BinaryExpression' && n.operator === '+' ? [...flatten(n.left), ...flatten(n.right)] : [n]);
     const SINKS = new Set(['innerHTML', 'outerHTML', 'srcdoc']);

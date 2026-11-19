@@ -36,7 +36,7 @@ const VCZ = (() => {
     const nfs = Math.max(40, Math.min(76, 76 - Math.max(0, nm.length - 9) * 3.5));
     const lv = String(card.level), lfs = lv.length > 2 ? 46 : 56;
     const pt = (x, y, sz, t, fill, stroke, sw, ls = 0) => `<text x="${+x}" y="${+y}" text-anchor="middle" ${F} font-size="${+sz}" fill="${esc(fill)}" stroke="${esc(stroke)}" stroke-width="${+sw}" paint-order="stroke" letter-spacing="${+ls}">${esc(t)}</text>`;
-    const def = card.def > 0 ? `<g transform="translate(715 1040)"><rect width="190" height="84" rx="42" fill="#2a1244" stroke="#e2b440" stroke-width="6"/>${glyph('def', 16, 12, 60)}<text x="128" y="60" text-anchor="middle" ${F} font-size="50" fill="${card.def === base.def || base.def == null ? '#fff1c9' : card.def > base.def ? '#7dffa0' : '#ff8a80'}" stroke="#12061f" stroke-width="5" paint-order="stroke">${card.def}</text></g>` : '';
+    const def = card.def > 0 ? `<g transform="translate(715 1040)"><rect width="190" height="84" rx="42" fill="#2a1244" stroke="#e2b440" stroke-width="6"/>${glyph('def', 16, 12, 60)}<text x="128" y="60" text-anchor="middle" ${F} font-size="50" fill="${card.def === base.def || base.def == null ? '#fff1c9' : card.def > base.def ? '#7dffa0' : '#ff8a80'}" stroke="#12061f" stroke-width="5" paint-order="stroke">${esc(card.def)}</text></g>` : '';
     return `<svg viewBox="0 0 1023 1538" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(nm)} ${esc(card.name)} Lv.${esc(lv)}">
       <rect x="20" y="20" width="983" height="1498" rx="30" fill="#120620"/>
       <image href="${esc(card.img)}" x="60" y="172" width="903" height="990" preserveAspectRatio="xMidYMid slice"/>
