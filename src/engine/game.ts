@@ -266,8 +266,8 @@ function step(g: Game, a: Action): Game {
       if (evo.type !== 'evolution') fail('ต้องใช้การ์ดวิวัฒนาการ');
       const next = ({ 15: 40, 40: 70, 70: 99 } as Record<number, number>)[u.card.level ?? 0];
       if (form.type !== 'character' || form.chain !== u.card.chain || form.level !== next) fail('ร่างใหม่ต้องเป็นขั้นถัดไปของสายเดียวกัน');
-      const need = RULES.sacrifice[next], sac = [...new Set(a.sacrifice)];
-      if (sac.length !== need || sac.some(s => s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
+      const need = RULES.sacrifice[next], sac = Array.isArray(a.sacrifice) ? [...new Set(a.sacrifice)] : [];
+      if (sac.length !== need || sac.some(s => !Number.isInteger(s) || s < 0 || s >= RULES.fieldSlots || s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
       if (ex) { me.hand.splice(a.evo, 1); ex.splice(a.form, 1); } else { const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1); }
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); emit(g, { t: 'evolve_cancelled', p: pi, card: u.card.name }); return g; }
