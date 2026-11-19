@@ -132,16 +132,16 @@ describe('online: owned forms, evo decks and match rewards', () => {
     const ex = (await w.db.query<any>(`SELECT state FROM play_rooms WHERE code=$1`, [a.code])).rows[0].state.players[0].extra.map((c: any) => c.id);
     expect(ex.every((id: string) => id === w.f40[0])).toBe(true); expect(ex.length).toBeLessThanOrEqual(1);
   });
-  it('a finished PvP match pays both profiles once (200 points) and shows the reward; 10th match adds 10 Vrcoin', async () => {
+  it('a finished PvP match pays both profiles once (200 points) and shows the reward; the pair limit (3/day) stops the 4th match (F-03)', async () => {
     const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
-    for (let m = 1; m <= ECONOMY.vrcoinEvery; m++) {
+    for (let m = 1; m <= ECONOMY.maxPairMatchesPerDay + 1; m++) {
       const a = await w.rooms.create(undefined, undefined, p1.key), b = await joinStart(w.rooms, a, undefined, undefined, p2.key);
       const v = await playOut(w, a, b, a.code);
-      expect(v.reward).toMatchObject({ points: 200, matches: m, vrcoin: m === 10 ? 10 : 0 });
+      if (m <= ECONOMY.maxPairMatchesPerDay) expect(v.reward).toMatchObject({ points: 200, matches: m, vrcoin: 0 }); else expect(v.reward).toBeNull();
       await w.rooms.view(a.code, a.token); await w.rooms.view(a.code, b.token);   // polling again must not pay twice
     }
     const me1: any = await w.eco.me(p1.key), me2: any = await w.eco.me(p2.key);
-    expect(me1.points).toBe(ECONOMY.starterPoints + 200 * 10); expect(me1.vrcoin).toBe(10); expect(me1.matches).toBe(10); expect(me2.points).toBe(me1.points);
+    expect(me1.points).toBe(ECONOMY.starterPoints + 200 * ECONOMY.maxPairMatchesPerDay); expect(me1.matches).toBe(ECONOMY.maxPairMatchesPerDay); expect(me2.points).toBe(me1.points);
   }, 120000);
   it('an instant resign earns nothing; guests earn nothing; you cannot join your own room', async () => {
     const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();

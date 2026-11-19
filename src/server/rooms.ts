@@ -201,8 +201,34 @@ export class Rooms {
   private async settle(tx: Tx, code: string, profiles: (string | null)[], g: Game, meta: RoomMeta) {
     if (g.winner === null || meta.rewarded) return;
     meta.rewarded = true;
-    if (g.turn >= ECONOMY.minTurnsForReward) meta.rewards = await this.eco.award(tx, profiles ?? [null, null], code);
+    if (g.turn >= ECONOMY.minTurnsForReward) meta.rewards = await this.eco.award(tx, await this.eligible(tx, profiles ?? [null, null], meta), code);
     await this.record(tx, code, profiles ?? [null, null], g, meta);   // history only: never changes rewards (anti-farming phase 1)
+  }
+
+  /** F-03 anti-farming (rules approved in docs/PVP-ANTI-FARMING.md §9): returns the profile ids that may be paid for this match, null for seats that may not.
+   *  Both seats need two different, existing profiles; the seat that surrendered / timed out / disconnected gets nothing; and an unordered pair earns at
+   *  most ECONOMY.maxPairMatchesPerDay rewarded matches per Asia/Bangkok day (neither player is paid from the next one on). */
+  private async eligible(tx: Tx, profiles: (string | null)[], meta: RoomMeta): Promise<(string | null)[]> {
+    const [a, b] = [profiles[0] ?? null, profiles[1] ?? null], none: (string | null)[] = [null, null];
+    if (!a || !b || a === b) return none;
+    const ok = (await tx.query<any>(`SELECT id FROM players WHERE id = $1::uuid OR id = $2::uuid`, [a, b])).rows.length === 2;
+    if (!ok) return none;
+    const [lo, hi] = a < b ? [a, b] : [b, a];
+    let used = 0;
+    try {   // isolated in a savepoint: if history is unreadable (migration 014 missing) the game must still finish, so the pair limit is skipped and logged
+      await tx.query(`SAVEPOINT pvp_pair`);
+      await tx.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, ['pvp-pair:' + lo + ':' + hi]);   // two rooms of one pair settling at once must not both pass the limit
+      used = (await tx.query<any>(`SELECT count(*)::int c FROM pvp_matches WHERE rewards_paid AND LEAST(player0_id::text, player1_id::text) = $1 AND GREATEST(player0_id::text, player1_id::text) = $2
+        AND (ended_at AT TIME ZONE 'Asia/Bangkok')::date = (now() AT TIME ZONE 'Asia/Bangkok')::date`, [lo, hi])).rows[0].c;
+      await tx.query(`RELEASE SAVEPOINT pvp_pair`);
+    } catch (e) {
+      console.error('pvp pair limit not evaluated', e);
+      try { await tx.query(`ROLLBACK TO SAVEPOINT pvp_pair`); await tx.query(`RELEASE SAVEPOINT pvp_pair`); } catch { /* transaction already unusable: let the caller see it */ }
+    }
+    if (used >= ECONOMY.maxPairMatchesPerDay) return none;
+    const out: (string | null)[] = [a, b], f = meta.endReason ? meta.forfeit : undefined;   // a normal win has no forfeit seat
+    if (f === 0 || f === 1) out[f] = null;
+    return out;
   }
 
   /** Writes the persistent match record (pvp_matches + pvp_match_players). Runs once per match, inside the settle transaction (guarded by meta.rewarded

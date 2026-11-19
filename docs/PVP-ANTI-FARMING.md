@@ -1,5 +1,11 @@
 # PvP Anti-Farming — Phase 1: data collection
 
+> **Update (branch `fix/audit-p0-p1`, audit finding F-03, NOT deployed):** the approved rules of §9 are now enforced in `Rooms.eligible` (`src/server/rooms.ts`):
+> both seats need two different existing profiles; the seat that surrendered / timed out / disconnected is never paid (the opponent is); an unordered pair earns from at
+> most `ECONOMY.maxPairMatchesPerDay` (3) rewarded matches per Asia/Bangkok day, neither player from the 4th; the 6-turn minimum stays. No migration, no new tables
+> (the count reads `pvp_matches`, migration 014). If `pvp_matches` is unreadable the pair limit is skipped (logged) so a game can still finish. Match Quality thresholds and
+> the Admin editor (Phases 2 and 4) are still not built. The text below describes Phase 1 as originally shipped.
+
 **Status: data collection only. Anti-farming is NOT active.** Rewards are paid exactly as before
 (`src/server/economy.ts` → `Economy.award`, 200 points per finished match of at least 6 turns to every seat that has a profile,
 +10 Vrcoin on every 10th rewarded match). Phase 1 only *records* what happened so later phases can be tuned with real data.

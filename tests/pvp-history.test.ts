@@ -1,5 +1,5 @@
 // Anti-farming phase 1: persistent match history recorded inside the settlement transaction (DATA COLLECTION ONLY).
-// Rewards must behave exactly as before; nothing here enforces a pair limit or a quality threshold.
+// (Rewards are now governed by the F-03 eligibility rules; see tests/reward-farming.test.ts. Still no Match Quality threshold.)
 import { describe, it, expect, vi } from 'vitest';
 import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
@@ -93,14 +93,14 @@ describe('match history: recording each way a match can end', () => {
     expect((await matches(w.db)).find(x => x.room_code === c2.code)).toMatchObject({ end_reason: 'surrender', forfeit_seat: 0, winner_seat: 1 });
   });
 
-  it('PHASE 1 DOES NOT CHANGE REWARDS: a surrender after the 6th turn is still paid to both profiles, and is recorded as a surrender', async () => {
+  it('F-03: a surrender after the 6th turn pays only the player who stayed (the surrendering seat gets nothing), and is recorded as a surrender', async () => {
     const w = await world(), p1 = await w.eco.createProfile(), p2 = await w.eco.createProfile();
     const { a, b, code } = await start(w, p1.key, p2.key); await idleTo(w, a, b, code, ECONOMY.minTurnsForReward);
     await w.rooms.leave(code, b.token);
     const [m] = await matches(w.db); expect(m).toMatchObject({ end_reason: 'surrender', forfeit_seat: 1, rewards_paid: true });
-    expect((await seatsOf(w.db, m.id)).map(s => s.reward_points)).toEqual([200, 200]);
-    expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200); expect((await pts(w, p2.key)).points).toBe(ECONOMY.starterPoints + 200);
-    expect((await pts(w, p2.key)).matches).toBe(1);
+    expect((await seatsOf(w.db, m.id)).map(s => s.reward_points)).toEqual([200, 0]);
+    expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200); expect((await pts(w, p2.key)).points).toBe(ECONOMY.starterPoints);
+    expect((await pts(w, p1.key)).matches).toBe(1); expect((await pts(w, p2.key)).matches).toBe(0);
   });
 
   it('timeout: recorded as timeout with the timed-out seat as forfeit_seat; concurrent polls record it once', async () => {
@@ -134,13 +134,13 @@ describe('match history: guest seats and compatibility', () => {
     expect((await seatsOf(w.db, m.id)).map(s => [s.has_profile, s.player_id, s.reward_points])).toEqual([[false, null, 0], [false, null, 0]]);
   }, 120000);
 
-  it('profile vs guest: the seat flags show which seat was a guest; the existing payout (profile holder paid) is unchanged in phase 1', async () => {
+  it('F-03: profile vs guest: the seat flags show which seat was a guest; nobody is paid (both seats need a profile)', async () => {
     const w = await world(), p1 = await w.eco.createProfile();
     const { a, b, code } = await start(w, p1.key, undefined); await playOut(w, a, b, code);
     const [m] = await matches(w.db);
-    expect(m).toMatchObject({ seat0_profile: true, seat1_profile: false, both_profiles: false, player0_id: p1.id, player1_id: null, rewards_paid: true });
-    expect((await seatsOf(w.db, m.id)).map(s => s.reward_points)).toEqual([200, 0]);
-    expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints + 200);
+    expect(m).toMatchObject({ seat0_profile: true, seat1_profile: false, both_profiles: false, player0_id: p1.id, player1_id: null, rewards_paid: false });
+    expect((await seatsOf(w.db, m.id)).map(s => s.reward_points)).toEqual([0, 0]);
+    expect((await pts(w, p1.key)).points).toBe(ECONOMY.starterPoints);
   }, 120000);
 
   it('a room that started before this update (no stats, no match id, no start time) still plays and settles; the record shows missing stats', async () => {

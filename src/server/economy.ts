@@ -9,6 +9,7 @@ export const ECONOMY = {
   vrcoinBatch: 10,         // ... earns this much Vrcoin
   maxCopies: 3,            // most copies of one card a player can own (= deck limit)
   starterPoints: 500,      // gift on profile creation, so the shop can be tried (one Lv.40 card)
+  maxPairMatchesPerDay: 3, // the same two players earn from at most 3 matches per Asia/Bangkok day (anti-farming, approved rule)
   minTurnsForReward: 6,    // a match that ends sooner (instant resign) earns nothing: anti-farming
 } as const;
 
