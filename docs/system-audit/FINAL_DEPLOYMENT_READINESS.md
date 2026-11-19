@@ -6,7 +6,31 @@
 
 ## 0. สรุปคำตัดสิน
 
-**สถานะ: NOT READY** — โค้ด/migration/แผนพร้อม แต่ยังมี BLOCKER ฝั่ง Owner/Process (หัวข้อ 8). เมื่อ BLOCKER ปิดครบและ Owner สั่ง "Deploy" จึงเริ่ม Phase B ได้.
+**สถานะ: NOT READY** — เหลือ 3 ข้อก่อนเริ่ม Phase B: (1) **Backup Password / สำเนานอก sandbox ของ Owner (Owner Gate OG-1)** (2) **Owner ยืนยันว่าเก็บไฟล์ Snapshot จริงและถอดรหัสได้** (3) **Owner สั่ง "Deploy"**. โค้ด/migration/แผน/ลำดับพร้อมแล้ว.
+
+### 0.1 บันทึกคำตัดสินของ Owner/บอล (rev 2, 2026-11-19)
+
+เอกสารนี้ (commit `7d5b060` + rev 2) เป็น **Runbook หลักของ Release นี้** และ *แทนที่* คำสั่ง/ลำดับ Deploy เก่าทุกฉบับที่ขัดกัน.
+
+| ข้อ | คำตัดสิน | ผลต่อเอกสาร |
+|---|---|---|
+| B-1 Review Runbook | ✅ ผ่านระดับเนื้อหา | ใช้เป็น Runbook หลัก |
+| B-2 Backup Password | ⏳ **ยังไม่ผ่าน = Owner Gate OG-1** | ดูหัวข้อ 7 และ 8 (B-2) |
+| B-3 Migration 020 | ✅ **EXCLUDED** — ไม่ใช้ใน Release นี้ ใช้ CMS Publish แทน | ดู 1.2 ข้อ 1 และ 3.0 (allow-list) |
+| B-4 ลำดับ Publish | ✅ **Deploy ก่อน → Publish การ์ดหลัง Deploy** | ดู 1.4 และ Phase G |
+| Restore Test | ⚠️ **ACCEPTED RISK** (ย้ายจาก HIGH) | ดู 8 (A-3) |
+| Storage 12 รูป | ⚠️ ACCEPTED RISK, ไม่ block | ดู 8 (A-2) |
+| F-03 Reward Test | ⏳ **Post-Deployment Test ที่ต้องมีผู้เล่น 2 คน** (Phase F15) | ดู Phase F |
+| D-9 | ✅ **Release แยกต่างหาก** | Phase H |
+| Deploy Approval | ⛔ ยังไม่มี | A1 |
+
+ลำดับ Release นี้ (ล็อกแล้ว):
+```
+Backup Verified (OG-1) → [Owner: "Deploy"]
+→ Migrations 018, 019, 021, 022, 023 → Edge v14 → Migration 024
+→ Merge ff + Push main → Vercel Deploy → Post-Deployment Tests (รวม F-03)
+→ Publish การ์ดผ่าน CMS ตามเวฟ → Verify การ์ด → D-9 (Release แยก)
+```
 
 | ชุดตรวจ | ผล |
 |---|---|
@@ -30,13 +54,13 @@
 | Balance Round 1 | Plan §3 (024) | ✅ |
 | Edge build/deploy | Plan §4, §8 | ⚠️ ขาดรายละเอียด `verify_jwt=false`, สคริปต์ stub, และการเช็ก bundle → Phase C |
 | Vercel deployment | Plan §8 | ✅ ขาดวิธีเช็กสถานะ deployment → Phase E |
-| Card publishing | Checklist §2 | ⚠️ **ลำดับขัดกับ Plan** (ดู 1.4 / R-H1) |
+| Card publishing | Checklist §2 | ⚠️ **ลำดับขัดกับ Plan** (ดู 1.4 — Owner ตัดสินแล้ว B-4) |
 | D-9 | Plan §9 | ✅ เป็น commit/deploy แยกทีหลัง |
 | Rollback | Plan §6 | ✅ เพิ่มตารางเรียงตามขั้น (หัวข้อ 6) |
 
 ### 1.2 สิ่งที่ Plan ไม่ได้ระบุ (พบจากการตรวจ)
 
-1. **Migration 020 / F-04 ไม่อยู่ใน release นี้ และห้าม apply.** ไฟล์ `020_publish_all_cards.up.sql` อยู่เฉพาะบน `fix/f04-publish-migration` (commit `3a3e920`, ไม่ใช่ ancestor ของ `0f53299`). มัน `UPDATE cards SET status='published'` 59 ใบด้วยรายการ ID (ข้าม publish gate ของ service) ซึ่ง **ขัดกับ D-9 แบบ Wave ผ่าน CMS** และจะเกิด snapshot `card_versions` ด้วยค่าเก่า (ก่อน 024) ถ้ารันก่อน 024. เลขที่หายไปจึงเป็นเจตนา. **ข้อกำหนด:** ผู้รัน migration ต้องใช้ *รายการไฟล์ที่ระบุชัด* (018, 019, 021, 022, 023, 024) ห้าม "apply ทุกไฟล์ในโฟลเดอร์" และห้าม cherry-pick 020. Owner ต้องยืนยันว่า F-04 ถูกแทนที่ด้วย CMS publish (BLOCKER B-3).
+1. **Migration 020 / F-04 ไม่อยู่ใน release นี้ และห้าม apply.** ไฟล์ `020_publish_all_cards.up.sql` อยู่เฉพาะบน `fix/f04-publish-migration` (commit `3a3e920`, ไม่ใช่ ancestor ของ `0f53299`). มัน `UPDATE cards SET status='published'` 59 ใบด้วยรายการ ID (ข้าม publish gate ของ service) ซึ่ง **ขัดกับ D-9 แบบ Wave ผ่าน CMS** และจะเกิด snapshot `card_versions` ด้วยค่าเก่า (ก่อน 024) ถ้ารันก่อน 024. เลขที่หายไปจึงเป็นเจตนา. **ข้อกำหนด:** ผู้รัน migration ต้องใช้ *รายการไฟล์ที่ระบุชัด* (018, 019, 021, 022, 023, 024) ห้าม "apply ทุกไฟล์ในโฟลเดอร์" และห้าม cherry-pick 020. **Owner ยืนยันแล้ว (B-3): 020 = EXCLUDED, ใช้ CMS publish แทน.**
 2. **022 ต้องหลัง 021, 023 ต้องหลัง 018** — ถ้ากลับลำดับ ไฟล์จะ *สำเร็จแต่ไม่ทำอะไร* (`to_regclass(...) IS NULL → RETURN`) ทำให้ตารางไม่ถูกล็อก RLS โดยไม่มี error. ต้องตรวจ `relrowsecurity` ทุกครั้ง (Phase B).
 3. **`apply_migration` ตั้งชื่อ/เวอร์ชันของ Supabase เอง** และ **ไม่อัปเดตตาราง `schema_migrations` ของแอป** (ตารางนั้นมีแค่ 001–008 และไม่ถูกใช้แล้ว). อย่าถือว่า "ตารางนั้นไม่เพิ่มแถว" เป็นความผิดพลาด. ใช้ `list_migrations` + ตรวจ schema จริงแทน. (ชื่อเดิมที่เคยไม่ตรงไฟล์: 015 ถูกบันทึกเป็น `014_level_frames`)
 4. **Edge function ต้อง deploy ด้วย `verify_jwt=false`** (ค่าดีฟอลต์ของเครื่องมือเป็น true จะทำให้ทุก request 401). ดู Phase C.
@@ -61,7 +85,7 @@
 
 ### 1.4 ลำดับ Publish: Plan กับ Checklist/คำสั่งบอลขัดกัน
 
-คำสั่งก่อนหน้า (Snapshot → Publish → Deploy) ให้ Publish ก่อน Deploy แต่ Plan §9 ระบุว่าต้อง apply 024 ก่อน publish. **ข้อเสนอ (ต้องให้ Owner ตัดสิน B-4): Deploy ทั้งชุด (Phase B–E) ก่อน แล้ว Publish ตามเวฟ (Phase G)** เหตุผล: (ก) การ publish ก่อน deploy ไม่ทำให้เกมเปลี่ยนเพราะ D-9 ยังไม่ active; (ข) publish ก่อนจะสร้าง `card_versions` ด้วยค่าเก่าของ 33 ใบ ที่ 024 จะเปลี่ยนโดยไม่ snapshot; (ค) FOLLOW-YOU-040 ติด gate จนกว่า 024; (ง) Admin ใหม่ (v14) มี publish gate/Effect Registry ที่ผ่านการเทสต์ ส่วน Admin เก่าไม่มี.
+คำสั่งก่อนหน้า (Snapshot → Publish → Deploy) ให้ Publish ก่อน Deploy แต่ Plan §9 ระบุว่าต้อง apply 024 ก่อน publish. **คำตัดสิน (B-4, Owner ตัดสินแล้ว): Deploy ทั้งชุด (Phase B–F) ก่อน แล้ว Publish ตามเวฟ (Phase G)** — Publish การ์ด = *หลัง Deploy และหลังผ่าน Post-Deployment Tests เท่านั้น* เหตุผล: (ก) การ publish ก่อน deploy ไม่ทำให้เกมเปลี่ยนเพราะ D-9 ยังไม่ active; (ข) publish ก่อนจะสร้าง `card_versions` ด้วยค่าเก่าของ 33 ใบ ที่ 024 จะเปลี่ยนโดยไม่ snapshot; (ค) FOLLOW-YOU-040 ติด gate จนกว่า 024; (ง) Admin ใหม่ (v14) มี publish gate/Effect Registry ที่ผ่านการเทสต์ ส่วน Admin เก่าไม่มี.
 
 ## 2. ลำดับและ Dependency ที่ยืนยันแล้ว (Task 2)
 
@@ -93,9 +117,30 @@ G Card publish ตามเวฟ (Toon ผ่าน CMS)  ──►  H D-9 (com
 คำย่อ: **Verify** = ต้องเห็นผลนี้จึงไปต่อ · **Fail** = เงื่อนไขหยุด · **RB** = ย้อนกลับ · 🛑 = หยุดรอ Owner.
 ทุก SQL ในส่วน Verify เป็น SELECT. `PID=jcjqooeckoapoikcwpet`.
 
+### 3.0 Migration Allow-list (ใช้ชื่อไฟล์เหล่านี้เท่านั้น)
+
+| ลำดับ | ไฟล์ที่อนุญาต (ระบุชื่อเต็มทุกครั้ง) |
+|---|---|
+| 1 | `db/migrations/018_login_attempts.up.sql` |
+| 2 | `db/migrations/019_effect_config.up.sql` |
+| 3 | `db/migrations/021_profile_create_log.up.sql` |
+| 4 | `db/migrations/022_profile_create_log_rls.up.sql` |
+| 5 | `db/migrations/023_admin_login_failures_rls.up.sql` |
+| — | *(Edge v14 ตรงนี้ — Phase C)* |
+| 6 | `db/migrations/024_balance_round1.up.sql` |
+
+- **ห้าม** apply 020 (`020_publish_all_cards`), ห้ามใช้ migration runner/คำสั่งที่ apply "ทุกไฟล์ที่ยังไม่ได้ apply" และห้ามรันไฟล์นอกตารางนี้. ก่อน `apply_migration` ทุกครั้งให้ตรวจว่าชื่อและ SQL ตรงกับไฟล์ในตารางนี้ (เทียบ `git show 0f53299:<path>`). ไม่มีไฟล์ 020 บน commit `0f53299`; ห้าม cherry-pick `3a3e920`.
+- Rollback ใช้ไฟล์ `.down.sql` ที่เลขตรงกันเท่านั้น (ห้าม `020…down.sql`).
+
 ### Phase A — Pre-flight (ไม่เขียนอะไร)
 
-**A1 🛑 Owner สั่ง "Deploy"** — และ Gate ในหัวข้อ 7 เป็น ✅ ครบ. ถ้ายังมีข้อใด ❌ → ไม่เริ่ม.
+**A0 🛑 Owner Gate OG-1: Backup ใช้งานได้จริง (ต้องผ่านก่อน A1)**
+- Owner ตั้งรหัสผ่าน Archive เอง (ไม่ส่งผ่าน GitHub/Repo) → Claude เข้ารหัส Archive ใหม่ด้วยรหัสนั้น (หรือใช้คีย์สาธารณะของ Owner แทนรหัส ซึ่งไม่ต้องส่งรหัสผ่านเลย) → Owner เก็บรหัสใน Password Manager → **Owner ถอดรหัสไฟล์บนเครื่องของตนเองสำเร็จ และเห็น `MANIFEST.json` / `players.json` 21 แถว**
+- Verify: Owner แจ้งว่าถอดรหัสสำเร็จ + SHA256 ของไฟล์บนเครื่อง Owner ตรงกับค่าในรายงาน
+- Fail: ถอดรหัสไม่ได้ / ไม่มีไฟล์ → **ห้ามเริ่ม Deploy**
+- Restore Test จริงยังไม่ได้ทำ — **Accepted Risk A-3** (ถอดรหัส + เปิดอ่านได้ คือขั้นต่ำที่ต้องผ่าน)
+
+**A1 🛑 Owner สั่ง "Deploy"** — และ Gate ในหัวข้อ 7 เป็น ✅ ครบ (รวม OG-1). ถ้ายังมีข้อใด ❌ → ไม่เริ่ม.
 
 **A2 ตรึงโค้ด**
 - Action: `git fetch origin && git ls-remote origin refs/heads/main` ; `git rev-parse feature/balance-round1` ; `git status --short`
@@ -128,7 +173,7 @@ G Card publish ตามเวฟ (Toon ผ่าน CMS)  ──►  H D-9 (com
 
 ### Phase B — DB additive (018, 019, 021, 022, 023)
 
-ทำทีละไฟล์ด้วย `apply_migration` ใช้ชื่อไฟล์ (ไม่มีนามสกุล) และ SQL จากไฟล์ `.up.sql` ตรงตัว. **ห้ามรัน 020.**
+ทำทีละไฟล์ด้วย `apply_migration` ตาม **3.0 Migration Allow-list** — ชื่อไฟล์เต็ม และ SQL จากไฟล์ `.up.sql` ตรงตัว. **ห้ามรัน 020 และห้ามใช้คำสั่งที่ apply ทุกไฟล์.**
 
 | ขั้น | Action | Expected / Verify (SELECT) | Fail | RB |
 |---|---|---|---|---|
@@ -213,13 +258,15 @@ G Card publish ตามเวฟ (Toon ผ่าน CMS)  ──►  H D-9 (com
 | F12 | Spell / Trap | ใช้สเปล SPL-003/004/007 และแทรปอย่างน้อย 1 ใบ | พฤติกรรมตามรายงาน Round 1 (SPL-007 สลับแล้วตีไม่ได้ทันที) |
 | F13 | PvP | Owner + ผู้ทดสอบ 2 คน ตาม `docs/PLAYTEST.md` "Production PvP verification" (≥6 เทิร์น แล้วยอมแพ้) | `pvp_matches` ใหม่ 1 แถว, `pvp_match_players` 2 แถว, ledger ตรงกฎ |
 | F14 | Reward system | SELECT `economy_ledger where kind='match'` หลัง F13 | คนละ 200 แต้ม/แมตช์ที่ ≥6 เทิร์น; แมตช์ที่สั้นกว่า 6 เทิร์นไม่ได้; ทุก 10 แมตช์ +10 Vrcoin (ยังไม่ถึงจึงไม่เห็น) |
-| F15 | **F-03 reward farming** | คู่เดียวกัน (A,B) เล่นต่อเนื่อง 4 แมตช์ในวัน Bangkok เดียวกัน แล้วให้ A เล่นกับ C 1 แมตช์ | แมตช์ที่ 1–3 ของคู่ A–B ได้รางวัล; **แมตช์ที่ 4 ไม่ได้ (`rewards_paid=false`/ledger ไม่เพิ่ม)**; A–C ได้ปกติ; ไม่มีรางวัลตกผิดคน (เทียบ `player_id` ใน ledger กับ `pvp_match_players`); ใช้บัญชีทดสอบเท่านั้น |
+| F15 | **F-03 reward farming — ต้องมีผู้เล่นจริง 2 คน (+ คนที่ 3 สำหรับคู่อื่น) เป็น Post-Deployment Test ของ Owner** | คู่เดียวกัน (A,B) เล่นต่อเนื่อง 4 แมตช์ในวัน Bangkok เดียวกัน แล้วให้ A เล่นกับ C 1 แมตช์ | แมตช์ที่ 1–3 ของคู่ A–B ได้รางวัล; **แมตช์ที่ 4 ไม่ได้ (`rewards_paid=false`/ledger ไม่เพิ่ม)**; A–C ได้ปกติ; ไม่มีรางวัลตกผิดคน (เทียบ `player_id` ใน ledger กับ `pvp_match_players`); ใช้บัญชีทดสอบเท่านั้น |
 | F16 | Points / Economy | `select id,points,vrcoin from players order by created_at;` เทียบ Snapshot | ทุกคนเดิมไม่เปลี่ยน ยกเว้นบัญชีทดสอบ F13–F15 และโปรไฟล์ใหม่จริง; ซื้อการ์ด Lv.40 ด้วย 500 แต้มได้ 1 ครั้งบนบัญชีทดสอบ |
 | F17 | Guest-profile guard | สร้างโปรไฟล์ใหม่ 1 ราย | สำเร็จ; ได้ 500 แต้ม; `profile_create_log` เพิ่ม 1 แถว (per-IP ยังปิดตามโค้ด) |
 
 หมายเหตุสำคัญ: F13–F15 **เขียนข้อมูลบน Production** (แมตช์/ledger จริง) — ให้ Owner/ผู้ทดสอบทำ ผมไม่สร้างแมตช์ทดสอบจากเครื่องมือเอง (ตาม `docs/PLAYTEST.md`). ควรจดบัญชีทดสอบไว้เพื่อแยกออกจากสถิติจริง.
 
-### Phase G — Card publishing (Toon ผ่าน CMS) — หลัง Deploy เท่านั้น
+### Phase G — Card publishing (Toon ผ่าน CMS) — หลัง Deploy และหลัง Phase F ผ่านเท่านั้น (B-4)
+
+เริ่มได้เมื่อ F1–F12 ผ่านและ Owner อนุมัติ (🛑). Publish ผ่าน **CMS Admin Publish Workflow ตามปกติเท่านั้น** (ไม่ใช้ SQL / migration 020).
 
 | เวฟ | ใบ | ก่อน/หลังเวฟ |
 |---|---|---|
@@ -227,11 +274,11 @@ G Card publish ตามเวฟ (Toon ผ่าน CMS)  ──►  H D-9 (com
 | 1 | ตัวละคร Lv15 39 ใบ (รวม NONG-TAENGMO-015 ที่ in_review; FOLLOW-YOU-040 ผ่าน gate หลัง 024) | หลังเวฟ: `select status,count(*) from cards group by 1;` |
 | 2 | Lv40 7 + Lv70 2 | หลังสายวิวัฒนาการผ่าน playtest ออนไลน์ |
 - ตรวจหลัง **ทุกเวฟ** (SELECT): ไม่มีการ์ดที่ถูกใช้ในเด็คของผู้เล่น/ห้องเปิดอยู่ถูกเปลี่ยนเป็นสถานะที่ทำให้ห้องล้ม; `card_versions` มีแถวใหม่เท่าจำนวนที่ publish และ snapshot มีค่าตาม Round 1; ไม่มีใบ published ที่ขาดรูป/ธาตุ.
-- EVO-002..010 / FUS-002..010 (18 ใบ): **ห้าม publish จนกว่าจะมีไฟล์รูปต้นฉบับ** (ดู R-N2).
+- EVO-002..010 / FUS-002..010 (18 ใบ): **ห้าม publish จนกว่าจะมีไฟล์รูปต้นฉบับ** (ดู N-2).
 - Fail: gate ไม่ผ่าน → ห้ามข้าม ให้บันทึกข้อความเตือนแล้วแก้ที่ข้อมูลการ์ด ไม่ใช่ใช้ SQL ตรง.
 - RB: สลับสถานะกลับ draft ผ่าน CMS ได้ (การ์ดที่ถูกใช้ในเด็คผู้เล่นให้ตรวจก่อน); ข้อมูล `card_versions` ที่เกิดแล้วไม่ถูกลบ.
 
-### Phase H — D-9 (แยกเป็น release ใหม่)
+### Phase H — D-9 (Release แยกต่างหาก — ไม่รวมกับ Release นี้)
 `rooms.ts` สองจุด `status<>'archived'` → `status='published'` เป็น commit เดียว ผ่านเทสต์ + deploy แยก + Owner อนุมัติ. เงื่อนไขก่อน: Wave 0–1 ครบ และ SELECT ยืนยันว่าไม่มีเด็คที่ผู้เล่นถืออ้างการ์ดที่ไม่ published. RB: revert commit นั้น (หรือ Vercel rollback; ถ้า edge ต้องย้อน stub).
 
 ## 4. จุดที่ต้องหยุดรอ Owner (รวม)
@@ -250,7 +297,7 @@ A1 (สั่ง Deploy) · หลัง B5 · C3 (ก่อน deploy edge) · 
 | Web พัง (E/F) | Web | Vercel rollback ไป deployment เดิม / revert commit | Edge v14 + DB ใหม่ ยังทำงานกับเว็บเก่าได้ (API เพิ่มเติม ไม่ทำลายของเดิม) — **ยกเว้น** ฟีเจอร์ที่เว็บเก่าไม่รู้จัก (ไม่พัง) |
 | F-03 ผิดพลาด (รางวัลผิด) | Edge | stub เดิม (กฎเก่า = ไม่จำกัดคู่) | **แถว ledger/แต้มที่จ่ายไปแล้วไม่ย้อนอัตโนมัติ** — ต้องแก้ด้วย SQL ที่ Owner อนุมัติจาก Snapshot/`economy_ledger` |
 | ต้องล้างทั้งชุด | Web → Edge → 024 → 023..018 | ตามลำดับนี้ | **019 down เฉพาะเมื่อไม่มี `config` ที่ Admin บันทึกไว้** (มิฉะนั้นข้อมูล config หาย); ปกติปล่อย 018–023 ไว้ได้ (additive) |
-| ข้อมูลเสียหายเกินย้อนด้วย down | กู้จาก Snapshot (GPG) | restore ตารางเฉพาะที่เสียหาย **ได้รับอนุมัติ Owner ทุกครั้ง** | **Snapshot ยังไม่ผ่าน Restore Test** (R-H2); ข้อมูลหลังเวลา Snapshot (เช่น ผู้เล่น/แมตช์ใหม่) หายถ้ากู้ทับ |
+| ข้อมูลเสียหายเกินย้อนด้วย down | กู้จาก Snapshot (GPG) | restore ตารางเฉพาะที่เสียหาย **ได้รับอนุมัติ Owner ทุกครั้ง** | **Snapshot ยังไม่ผ่าน Restore Test** (Accepted Risk A-3); ข้อมูลหลังเวลา Snapshot (เช่น ผู้เล่น/แมตช์ใหม่) หายถ้ากู้ทับ |
 
 หลักการ: ย้อนจากชั้นนอกเข้าใน (Web → Edge → ข้อมูล → โครงสร้าง); ไม่ย้อนโครงสร้างถ้าไม่จำเป็น; ห้ามลบ branch `tmp-edge-bundle*`; ห้าม force-push `main`.
 
@@ -262,28 +309,29 @@ A1 (สั่ง Deploy) · หลัง B5 · C3 (ก่อน deploy edge) · 
 | Card Publish Checklist บน GitHub | ✅ `docs/card-publish-checklist` (`8c71a1e`) |
 | Final Deployment Readiness (เอกสารนี้) | ✅ เมื่อ push |
 | Snapshot สำเร็จ + ตรวจแล้ว | ✅ (ตรวจจำนวนแถว/โครงสร้าง/อ่านหลังเข้ารหัสได้; **ยังไม่ Restore Test จริง**) |
-| สำเนานอก Supabase/นอก sandbox ที่ Owner ถือ | ⚠️ ส่งไฟล์ให้ Owner แล้ว แต่ **ยังไม่ได้ส่งรหัสผ่าน** (B-2) |
+| **OG-1 Backup Password + สำเนา Owner ถอดรหัสได้** | ⏳ รอ Owner (ตั้งรหัสเอง/ให้คีย์สาธารณะ → Claude เข้ารหัสใหม่ → Owner ถอดรหัสบนเครื่องตนเองสำเร็จ) |
 | Migration 018–024 ตรวจแล้ว | ✅ (ไม่รวม 020) ตรวจซ้ำใน A5 |
 | ลำดับ Deploy ยืนยัน | ✅ หัวข้อ 2 |
 | ไม่มีผู้เล่นกำลังแข่ง | ✅ ตอนนี้ (ตรวจซ้ำ A4) |
-| Owner ตัดสิน B-1..B-4 | ❌ รออยู่ |
+| Owner ตัดสิน B-1, B-3, B-4 | ✅ ตัดสินแล้ว (rev 2); B-2 = OG-1 ด้านบน |
+| ผู้ทดสอบ F-03 พร้อม (2–3 คน) หลัง Deploy | ⏳ Owner จัดหา (ไม่ block เริ่ม Deploy; block การปิดงาน Phase F) |
 | Owner อนุมัติ "Deploy" | ❌ ยังไม่สั่ง |
 
 ## 8. Risk Register (Task 5)
 
 ### BLOCKER (ต้องปิดก่อน A1)
-| ID | ความเสี่ยง | ทางปิด |
+| ID | ความเสี่ยง | สถานะ / ทางปิด |
 |---|---|---|
-| B-1 | ผู้สั่ง Deploy ยังไม่อนุมัติ + ยังไม่มีการรีวิวขั้นสุดท้ายของเอกสารนี้ | บอล/Owner รีวิว แล้ว Owner สั่ง "Deploy" |
-| B-2 | **รหัสผ่าน Archive ยังไม่ถึง Owner** — Owner ถือไฟล์ที่เปิดไม่ได้; ไฟล์รหัสอยู่ใน sandbox ที่อาจถูกล้าง | Owner เลือกช่องทางรับรหัส หรือกำหนดรหัสเอง แล้ว Claude เข้ารหัสใหม่ + ส่งใหม่; Owner ยืนยันว่าเก็บสำเนาไว้นอก sandbox และ **ลองถอดรหัสสำเร็จ** (จุดนี้เป็นการ Restore Test ขั้นต่ำ) |
-| B-3 | **Migration 020 / F-04** ค้างบน `fix/f04-publish-migration` (publish 59 ใบด้วย SQL ข้าม gate) ขัดกับ D-9 แบบ Wave | Owner ยืนยันเป็นลายลักษณ์อักษรว่า "ไม่ใช้ 020 ใน release นี้; ใช้ CMS publish แทน"; ผู้ deploy ใช้รายชื่อไฟล์ migration ที่ระบุชัด |
-| B-4 | ลำดับ Publish vs Deploy ขัดกัน (1.4) | Owner ตัดสิน: ข้อเสนอ = Deploy ก่อนแล้ว Publish (Phase G) |
+| B-2 / OG-1 | **รหัสผ่าน Archive ยังไม่อยู่ในมือ Owner** — Owner ถือไฟล์ที่เปิดไม่ได้; รหัสเดิมอยู่ใน sandbox ที่อาจถูกล้าง = ยังไม่ใช่ Backup ที่ใช้งานได้ | ⏳ **เปิดอยู่.** Owner ตั้งรหัสเอง (หรือให้คีย์สาธารณะ GPG/age) → Claude เข้ารหัสใหม่และส่งไฟล์ใหม่ + SHA256 ใหม่ → Owner เก็บรหัสใน Password Manager → Owner ถอดรหัสบนเครื่องตนเองสำเร็จ. ห้ามส่งรหัสผ่านทาง GitHub/Repo |
+| B-5 | Owner ยังไม่สั่ง "Deploy" (A1) | ⛔ รอ Owner หลัง OG-1 ผ่าน |
+
+ปิดแล้ว (rev 2): **B-1** รีวิว Runbook ✅ · **B-3** Migration 020 excluded ✅ · **B-4** Deploy ก่อน Publish ✅
 
 ### HIGH
 | ID | ความเสี่ยง | เหตุผล / การควบคุม |
 |---|---|---|
 | H-1 | **PvP Reward F-03 เปลี่ยน Economy และ ยังไม่เคยทดสอบกับข้อมูลจริง** (`pvp_matches`=0) | พฤติกรรมผ่านเทสต์ 492 ใบ + PGlite แต่ไม่มีแมตช์จริงเลย; ควบคุมด้วย F13–F15; ย้อนกลับด้วย Edge stub แต่ ledger ที่จ่ายแล้วย้อนอัตโนมัติไม่ได้ |
-| H-2 | **Snapshot ยังไม่ผ่าน Restore Test จริง** | ตรวจได้เพียงอ่านไฟล์/จำนวนแถว; ไม่เคยลองกู้ข้อมูลเข้า DB; ความเสี่ยงเกิดเมื่อต้องกู้จริง (FK/ลำดับตาราง/ชนิดข้อมูล jsonb) — แนะนำทดสอบ restore ใน PGlite/Postgres ภายในเครื่องก่อน (ไม่แตะ Production) ถ้าต้องการยกระดับ |
+| H-2 | *(ย้ายเป็น ACCEPTED RISK A-3 ตามคำตัดสิน rev 2)* | — |
 | H-3 | **Migration 024 แก้ข้อมูลการ์ด** (33 ใบ) และการ์ด published เปลี่ยนโดยไม่เกิด `card_versions` | guard ค่าเก่า + A5 + Phase D verify + `024.down.sql`; ประวัติเวอร์ชันของ 11 ใบ published อาจไม่สะท้อนค่าใหม่จนกว่าจะ republish |
 | H-4 | **Rollback DB ↔ App ต้องสัมพันธ์กัน**: 019 down ทิ้งข้อมูล config; ถ้า Web/Edge ย้อน แต่ 024 ค้าง การ์ดแสดงค่าใหม่กับเอนจินเก่า (ใช้ได้ แต่สมดุลไม่ตรงข้อความ SPL-003/004) | ใช้ตารางหัวข้อ 6; ตัดสินใจย้อน 024 เมื่อย้อน Edge ที่เกี่ยวกับเอนจิน |
 | H-5 | **ความสดของ Snapshot**: ผู้เล่นใหม่/ข้อมูลเปลี่ยนก่อน Deploy | A4 บังคับเทียบและถ่ายใหม่ถ้าต่าง |
@@ -293,6 +341,7 @@ A1 (สั่ง Deploy) · หลัง B5 · C3 (ก่อน deploy edge) · 
 | ID | ความเสี่ยง | หมายเหตุ |
 |---|---|---|
 | A-1 | **Supabase Free: ไม่มี PITR / backup อัตโนมัติ** | ใช้ Snapshot เองแทน; Owner ควรเปิด Dashboard → Backups ยืนยันอีกครั้ง (ผมตรวจหน้านั้นไม่ได้) |
+| A-3 | **Snapshot ยังไม่ผ่าน Restore Test จริง** (ตรวจแค่อ่านไฟล์/จำนวนแถว/ถอดรหัสได้) | Owner ยอมรับ; ความเสี่ยงเกิดเมื่อต้องกู้จริง (FK/ลำดับตาราง/jsonb) จึงต้องกู้ทีละตารางและได้รับอนุมัติ Owner ทุกครั้ง; ทางลดความเสี่ยงภายหลัง: ซ้อม restore ใน PGlite/Postgres ในเครื่อง (ไม่แตะ Production) |
 | A-2 | **รูปใน Storage 12 ไฟล์ (`media/*.png`, 24,052,537 bytes) ไม่มี backup** | Owner ยอมรับสำหรับรอบนี้; Deploy นี้ไม่ได้เขียน/ลบ Storage — ความเสี่ยงคือความเสียหายอื่นๆ ที่ไม่เกี่ยวกับการ Deploy; แนะนำ Owner ดาวน์โหลดจาก Dashboard เมื่อสะดวก |
 
 ### NON-BLOCKING
@@ -306,3 +355,7 @@ A1 (สั่ง Deploy) · หลัง B5 · C3 (ก่อน deploy edge) · 
 
 ## 9. ข้อมูลอ้างอิง
 Branch โค้ด `feature/balance-round1` (`0f53299`) · Plan `docs/deployment-plan` (`2b57197`) · Checklist `docs/card-publish-checklist` (`8c71a1e`) · Backup `BACKUP_MANIFEST.md` (นอก repo; ไฟล์ Snapshot ห้าม commit) · Project `jcjqooeckoapoikcwpet` · Vercel project `varecrazy-card-battles-` · Edge `api`.
+
+## 10. Revision log
+- rev 1 `7d5b060` — Runbook แรก (NOT READY; BLOCKER B-1..B-4).
+- rev 2 — บันทึกคำตัดสิน Owner/บอล: 020 EXCLUDED, Publish หลัง Deploy, D-9 แยก Release, Edge v14 ก่อน Web, เพิ่ม **3.0 Migration Allow-list** (ห้าม apply-all), เพิ่ม **OG-1** (Backup Password/ถอดรหัสโดย Owner), F-03 = Post-Deployment Test ที่ต้องมีผู้เล่น 2 คน, ย้าย Restore Test เป็น Accepted Risk A-3. ไม่มีการเปลี่ยนโค้ด/ข้อมูล/ผลตรวจ Production.
