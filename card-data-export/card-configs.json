@@ -1,0 +1,17 @@
+{
+  "note": "card_effects.config present",
+  "per_card_config": [],
+  "shop_prices": [
+    {
+      "level": 40,
+      "currency": "points",
+      "price": 500
+    },
+    {
+      "level": 70,
+      "currency": "vrcoin",
+      "price": 100
+    }
+  ],
+  "card_frames": []
+}

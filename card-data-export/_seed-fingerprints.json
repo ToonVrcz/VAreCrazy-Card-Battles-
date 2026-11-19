@@ -1,0 +1,632 @@
+[
+  {
+    "id": "1GOKU-015",
+    "level": 15,
+    "hp": 84,
+    "atk": 20,
+    "def": 0,
+    "name": "Fighter",
+    "txt": "a1e8a6d2ada21a70ec287af8b28cccb1"
+  },
+  {
+    "id": "1GOKU-040",
+    "level": 40,
+    "hp": 152,
+    "atk": 55,
+    "def": 0,
+    "name": "Warlord",
+    "txt": "f4ebcd53703f43fc21e4c6a5616d992f"
+  },
+  {
+    "id": "BABY-015",
+    "level": 15,
+    "hp": 70,
+    "atk": 10,
+    "def": 0,
+    "name": "Acolyte",
+    "txt": "fbda2adfbfbb3415392994ebc42d2d43"
+  },
+  {
+    "id": "BACKJI-015",
+    "level": 15,
+    "hp": 76,
+    "atk": 24,
+    "def": 0,
+    "name": "Assassin",
+    "txt": "8ee7a2f69b3723a12cbadb455a71ff5d"
+  },
+  {
+    "id": "BADGUY-015",
+    "level": 15,
+    "hp": 94,
+    "atk": 15,
+    "def": 0,
+    "name": "Assassin",
+    "txt": "fc0203a89c666dc6d4581a04a14db8a1"
+  },
+  {
+    "id": "BADGUY-040",
+    "level": 40,
+    "hp": 153,
+    "atk": 60,
+    "def": 0,
+    "name": "Assassin",
+    "txt": "eb8eddad017f459ee418698b58cdfde5"
+  },
+  {
+    "id": "BAM-015",
+    "level": 15,
+    "hp": 95,
+    "atk": 25,
+    "def": 0,
+    "name": "Swordswoman",
+    "txt": "8c3a16446bd3d2d3355b250ade20bc30"
+  },
+  {
+    "id": "BAMMIE-015",
+    "level": 15,
+    "hp": 95,
+    "atk": 25,
+    "def": 0,
+    "name": "Swordswoman",
+    "txt": "05fb98638fb2789d3419881eec988abf"
+  },
+  {
+    "id": "BOBO-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 30,
+    "def": 0,
+    "name": "Swordsman",
+    "txt": "ea824bf4c31a5355e15758a9d5922fec"
+  },
+  {
+    "id": "CHAEM-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 24,
+    "def": 0,
+    "name": "Merchant",
+    "txt": "dab6d885696c29f1b72f8616ebf75e64"
+  },
+  {
+    "id": "CUTIE-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 35,
+    "def": 0,
+    "name": "Mage",
+    "txt": "0da940e4ed810db514c97ac7c5628407"
+  },
+  {
+    "id": "DNMAN-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 40,
+    "def": 0,
+    "name": "Crusader",
+    "txt": "519a8a4bc7c55ec3593c2d9e27479e8f"
+  },
+  {
+    "id": "FOLLOW-YOU-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 20,
+    "def": 0,
+    "name": "Demon Summoner",
+    "txt": "fc6f468405e4aed4a9503697ba44bfd9"
+  },
+  {
+    "id": "FOLLOW-YOU-040",
+    "level": 40,
+    "hp": 150,
+    "atk": 50,
+    "def": 0,
+    "name": "Master Summoner",
+    "txt": "4197f62208c07a318160c1b8579cb5f2"
+  },
+  {
+    "id": "FOLLOW-YOU-070",
+    "level": 70,
+    "hp": 300,
+    "atk": 100,
+    "def": 0,
+    "name": "Grand Summoner",
+    "txt": "cc978885ccc60313ef93a596898f488f"
+  },
+  {
+    "id": "GOD-WA-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 30,
+    "def": 0,
+    "name": "Thief",
+    "txt": "94baf6a85546cb8f6ee91c63c2e68956"
+  },
+  {
+    "id": "I-M-GRAPE-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 21,
+    "def": 0,
+    "name": "Druid",
+    "txt": "9722197801314ae31c8bd22d5fb09ea0"
+  },
+  {
+    "id": "JAOJAY-015",
+    "level": 15,
+    "hp": 60,
+    "atk": 40,
+    "def": 0,
+    "name": "Thief",
+    "txt": "ba95eaa5366efbfc37955b42c0abdf81"
+  },
+  {
+    "id": "LALAPING-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 20,
+    "def": 0,
+    "name": "Priest",
+    "txt": "de924e943e3dffe4b9a6411fb74af317"
+  },
+  {
+    "id": "LALAPING-040",
+    "level": 40,
+    "hp": 160,
+    "atk": 40,
+    "def": 0,
+    "name": "Bishop",
+    "txt": "ebd93efa4a0680fc79f455d9868172b0"
+  },
+  {
+    "id": "LALAPING-070",
+    "level": 70,
+    "hp": 310,
+    "atk": 80,
+    "def": 0,
+    "name": "Saint Bishop",
+    "txt": "843bbb801b8ac5282f02fe74563b73b6"
+  },
+  {
+    "id": "LEON-S-KENNEDY-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 25,
+    "def": 0,
+    "name": "Necromancer",
+    "txt": "731089bd521348da0e60fb17355d5d57"
+  },
+  {
+    "id": "LINLADA-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 35,
+    "def": 0,
+    "name": "Spearwoman",
+    "txt": "001c59aa98432279f7d9cce25ae9f7c8"
+  },
+  {
+    "id": "LORDNAM-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 25,
+    "def": 0,
+    "name": "Ninja",
+    "txt": "b6a914e9e26b0cdd40dc2598d83963a3"
+  },
+  {
+    "id": "LUCKY-015",
+    "level": 15,
+    "hp": 76,
+    "atk": 24,
+    "def": 0,
+    "name": "Ninja",
+    "txt": "d4486ff15e874adea506df23e677c84b"
+  },
+  {
+    "id": "MELON-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 35,
+    "def": 0,
+    "name": "Warrior",
+    "txt": "37ccf2ca469a6b4a62ef8022bdafd495"
+  },
+  {
+    "id": "MIKI-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 24,
+    "def": 0,
+    "name": "Fighter",
+    "txt": "d82cd524e22d515114c4546b4b6df639"
+  },
+  {
+    "id": "MON-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 40,
+    "def": 0,
+    "name": "Merchant",
+    "txt": "23cedde80d25e2a4bc4139fa7ee5b7da"
+  },
+  {
+    "id": "NONG-TAENGMO-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 30,
+    "def": 0,
+    "name": "Thief",
+    "txt": "5df4552582d2d1f8de0470fc1cdc5ca0"
+  },
+  {
+    "id": "NORMAN-015",
+    "level": 15,
+    "hp": 94,
+    "atk": 18,
+    "def": 0,
+    "name": "Bear Warrior",
+    "txt": "5bd8298d0998de97f07881ceef9a171d"
+  },
+  {
+    "id": "NORMAN-040",
+    "level": 40,
+    "hp": 150,
+    "atk": 50,
+    "def": 0,
+    "name": "Master Bear Warrior",
+    "txt": "f7ae3764100eae0adcaf903746a94ce5"
+  },
+  {
+    "id": "OUFILLING-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 20,
+    "def": 0,
+    "name": "Necromancer",
+    "txt": "81fec5c0e8c66a6e7a13371779f00852"
+  },
+  {
+    "id": "PIKACHU-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 40,
+    "def": 0,
+    "name": "Mage",
+    "txt": "407fd9209e6c655a41a8ebac6e8c7b5f"
+  },
+  {
+    "id": "PK-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 25,
+    "def": 0,
+    "name": "Merchant",
+    "txt": "c7a62159e4c38f0b2cb6013dadc987f8"
+  },
+  {
+    "id": "PKXCY-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 24,
+    "def": 0,
+    "name": "Fighter",
+    "txt": "225cce97b77fc69663f74e9b6e381d43"
+  },
+  {
+    "id": "SATOSHI-015",
+    "level": 15,
+    "hp": 60,
+    "atk": 20,
+    "def": 0,
+    "name": "Healer",
+    "txt": "aab907c9cac0f8ade8d176f69f3fd5a3"
+  },
+  {
+    "id": "SATOSHI-040",
+    "level": 40,
+    "hp": 130,
+    "atk": 70,
+    "def": 0,
+    "name": "Grand Healer",
+    "txt": "db80a6db75b627c1e2006b741b1d6795"
+  },
+  {
+    "id": "SKYMOON-015",
+    "level": 15,
+    "hp": 100,
+    "atk": 18,
+    "def": 0,
+    "name": "Blacksmith",
+    "txt": "9a73089ac1fa9b266bbee930ac344e17"
+  },
+  {
+    "id": "SMILE-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 35,
+    "def": 0,
+    "name": "Cleric",
+    "txt": "8a4adb86be52b495462cefaae442d27c"
+  },
+  {
+    "id": "SOMYES-015",
+    "level": 15,
+    "hp": 95,
+    "atk": 25,
+    "def": 0,
+    "name": "Archer",
+    "txt": "2bdeae2355400059e840e3c58c2ceabd"
+  },
+  {
+    "id": "TAN-015",
+    "level": 15,
+    "hp": 90,
+    "atk": 20,
+    "def": 0,
+    "name": "Dev Sumoner",
+    "txt": "045ad35a39920aeee42ac9df9654466e"
+  },
+  {
+    "id": "TEE-015",
+    "level": 15,
+    "hp": 80,
+    "atk": 18,
+    "def": 0,
+    "name": "Alchemist",
+    "txt": "79eb86f127c8e31e9190819f321e9162"
+  },
+  {
+    "id": "TEE-040",
+    "level": 40,
+    "hp": 170,
+    "atk": 40,
+    "def": 0,
+    "name": "Alchemist",
+    "txt": "6b28e5838f874fcff78e95e3632eb7c9"
+  },
+  {
+    "id": "THAI26-015",
+    "level": 15,
+    "hp": 85,
+    "atk": 24,
+    "def": 0,
+    "name": "Fighter",
+    "txt": "eabf747e66b431e7c7a71b2bdb39a8bd"
+  },
+  {
+    "id": "THAI32-015",
+    "level": 15,
+    "hp": 100,
+    "atk": 18,
+    "def": 0,
+    "name": "Paladin",
+    "txt": "c1acd6c7ad2d736ff717def058dcf357"
+  },
+  {
+    "id": "THOMAS-015",
+    "level": 15,
+    "hp": 95,
+    "atk": 25,
+    "def": 0,
+    "name": "Rogue",
+    "txt": "4d6503abef31fa4cf5c96b775805dc74"
+  },
+  {
+    "id": "WENDYWENDIE-015",
+    "level": 15,
+    "hp": 95,
+    "atk": 10,
+    "def": 0,
+    "name": "Thief",
+    "txt": "75784b737cb14f0e0323b9f361cd78e8"
+  },
+  {
+    "id": "ZEESKY-015",
+    "level": 15,
+    "hp": 78,
+    "atk": 23,
+    "def": 0,
+    "name": "Storm Priest",
+    "txt": "a9f9813df9ad473bc537f915e3c879af"
+  },
+  {
+    "id": "EVO-001",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "การ์ดวิวัฒนาการ",
+    "txt": "811d34adaaff0cc668f8519549aa38c4"
+  },
+  {
+    "id": "FUS-001",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ฟิวชั่น",
+    "txt": "6c0e731f55f5a025acaf004da56d5e98"
+  },
+  {
+    "id": "SPL-001",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ลูกไฟเริ่มต้น",
+    "txt": "aef411bb6be50d1cab1e96e804dff4c5"
+  },
+  {
+    "id": "SPL-002",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "น้ำบำบัด",
+    "txt": "8d26051541a971f1eeea8d4fde85f2a9"
+  },
+  {
+    "id": "SPL-003",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "โล่มนตร์",
+    "txt": "02c15a74240151fae13e87427602e6eb"
+  },
+  {
+    "id": "SPL-004",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "พลังผนึก",
+    "txt": "7b51d03bb5cbbbdc517551d269c5f645"
+  },
+  {
+    "id": "SPL-005",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "จั่วปริศนา",
+    "txt": "9076909922a4d715e226bcfde54a0286"
+  },
+  {
+    "id": "SPL-006",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "เรียกคืนจากสุสาน",
+    "txt": "068978e38f5b73008155938ec11579f2"
+  },
+  {
+    "id": "SPL-007",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ลมพัดสลับ",
+    "txt": "556ad5f2097fa807cbf3cd19f195c144"
+  },
+  {
+    "id": "SPL-008",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "พายุหยุดนิ่ง",
+    "txt": "24f23e1c6ce05e72b0855d68049616d8"
+  },
+  {
+    "id": "SPL-009",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "พิษร้ายค่อยๆกัด",
+    "txt": "2405c160afe8380db73597d1935b634a"
+  },
+  {
+    "id": "SPL-010",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ปัดป้องมนตร์",
+    "txt": "b7222bf4c7c603a9af638bb12352497e"
+  },
+  {
+    "id": "TRP-001",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "หลุมพราง",
+    "txt": "3ba2dd56fd331af39ca7b29a3e3d30e0"
+  },
+  {
+    "id": "TRP-002",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "กระจกสะท้อน",
+    "txt": "6e2462a8f43f42f33735c5f958333cc5"
+  },
+  {
+    "id": "TRP-003",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ประตูลับหลังบ้าน",
+    "txt": "12d89311af9277ffb83463389a006b24"
+  },
+  {
+    "id": "TRP-004",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "โซ่พันธนาการ",
+    "txt": "c3a8c2096ab901639e9be4a9092fa82a"
+  },
+  {
+    "id": "TRP-005",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ขัดขวางการเติบโต",
+    "txt": "3ad34fcff9cfa53a012cd9cb5044229c"
+  },
+  {
+    "id": "TRP-006",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ระเบิดเวลา",
+    "txt": "f296e9720a9c55c229765a9a99f3ff38"
+  },
+  {
+    "id": "TRP-007",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ม่านหมอกพิษ",
+    "txt": "ac66c726773ac5781e83a22744e89e50"
+  },
+  {
+    "id": "TRP-008",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "ปลุกผู้พิทักษ์",
+    "txt": "efd47640c45a8b660f750ac02b50cbfe"
+  },
+  {
+    "id": "TRP-009",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "พัดกลับบ้าน",
+    "txt": "b1da9d4c5fc5795d84e82c40d606fa1f"
+  },
+  {
+    "id": "TRP-010",
+    "level": null,
+    "hp": null,
+    "atk": null,
+    "def": 0,
+    "name": "เสียงเพรียกจากสุสาน",
+    "txt": "87191efb069ad405c025ce7cb3f0ab7a"
+  }
+]

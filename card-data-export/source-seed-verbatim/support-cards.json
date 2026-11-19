@@ -1,0 +1,38 @@
+[
+ {
+  "character_id": "EVO-001",
+  "name": "การ์ดวิวัฒนาการ",
+  "card_type": "evolution",
+  "image_path": "assets/cards/EVO-001.jpg",
+  "rules_text": "ใช้วิวัฒนาการตัวละครได้ทุกใบ: ทิ้งการ์ดนี้จากมือ 1 ใบต่อ 1 ขั้น พร้อมสังเวยตัวละครหน้าเปิด 1/2/3 ใบ (Lv.15→40→70→99)",
+  "flavor_text": "ทุกตำนานเริ่มจากการเปลี่ยนแปลงครั้งแรก",
+  "effects": [
+   {
+    "trigger": "on_evolve",
+    "description": "ใช้เป็นเงื่อนไขวิวัฒนาการของตัวละครได้ทุกใบ ไม่มีโบนัสเพิ่ม",
+    "action_text": "ใช้วิวัฒนาการได้ทุกใบ",
+    "target_text": "ตัวละครที่วิวัฒนาการ",
+    "duration": "instant",
+    "use_limit": "none"
+   }
+  ]
+ },
+ {
+  "character_id": "FUS-001",
+  "name": "ฟิวชั่น",
+  "card_type": "fusion",
+  "image_path": "assets/cards/FUS-001.jpg",
+  "rules_text": "ใช้กับตัวละคร 2 ใบบนมือที่ติ๊กเป็นคู่ Fusion กัน: วางซ้อนกันในช่องเดียว (ใบบน 100% ใบล่าง 50% + โบนัสคู่)",
+  "flavor_text": "สองหัวใจ หนึ่งร่าง",
+  "effects": [
+   {
+    "trigger": "passive",
+    "description": "ใช้ได้กับตัวละครทุกคู่ที่ติ๊กเป็นคู่ Fusion กัน ไม่มีโบนัสเพิ่มจากการ์ดนี้",
+    "action_text": "ซ้อนกันในช่องเดียว",
+    "target_text": "ตัวละครคู่ Fusion",
+    "duration": "permanent",
+    "use_limit": "none"
+   }
+  ]
+ }
+]

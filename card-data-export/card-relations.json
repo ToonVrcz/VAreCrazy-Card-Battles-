@@ -1,0 +1,535 @@
+{
+  "evolution_chains": [
+    {
+      "id": "f4f412e4-af14-4fba-b528-d2365c97f1d6",
+      "key": "1goku",
+      "name": "1GOKU",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "0cbe7ac5-2eb2-4476-ad3f-9d7869036e84",
+      "key": "baby",
+      "name": "BABY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "98a777a3-5c90-4898-aff2-8dc6ae067add",
+      "key": "backji",
+      "name": "Backji",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "92efa78b-c435-4e93-b638-0c59a9e160b6",
+      "key": "badguy",
+      "name": "BADGUY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "3ad67ade-634c-48bb-8a2f-5e4bfae9af6c",
+      "key": "bam",
+      "name": "BAM",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "6a51a9d5-a838-4adc-8249-06514282ec7a",
+      "key": "bammie",
+      "name": "BAMMIE",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "c022e972-9361-4534-98ec-199987058e08",
+      "key": "bobo",
+      "name": "BOBO",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "ab5dc865-a08c-4156-8b45-4c52ae6c362e",
+      "key": "chaem",
+      "name": "CHAEM",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "20ea4b67-f702-4a07-82f3-7549c4b7e497",
+      "key": "cutie",
+      "name": "CUTIE",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "fc72b5ba-f269-4dc7-ace5-389503133a32",
+      "key": "dnman",
+      "name": "DNMAN",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "cd1f6cc4-937c-479b-a03e-3bb8f3b86f22",
+      "key": "follow-you",
+      "name": "FOLLOW YOU",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "01c3c8ba-d2e6-402c-b68d-68fffa0d0a8b",
+      "key": "god-wa",
+      "name": "GOD WA",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "c11ef73b-c779-46e1-a837-37370bb2e986",
+      "key": "i-m-grape",
+      "name": "I'm Grape",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "11842134-dad2-407b-9269-bec87c90e688",
+      "key": "jaojay",
+      "name": "JAOJAY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "ec9e07ab-65a7-4e10-8e13-339b82aff7c0",
+      "key": "lalaping",
+      "name": "LALAPING",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "a5d0cd78-4319-4faf-b803-9917d83155b0",
+      "key": "leon-s-kennedy",
+      "name": "LEON S KENNEDY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "3a698878-4597-49b8-a3f0-ce73ffa6b6e6",
+      "key": "linlada",
+      "name": "LINLADA",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "0aabf616-939c-4f0c-b7e8-fffa2e3ca5c8",
+      "key": "lordnam",
+      "name": "LORDNAM",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "d8794670-240d-4760-9348-b123bb378e7c",
+      "key": "lucky",
+      "name": "LUCKY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "ba3f71af-0592-4831-8031-9e1eb37b52f5",
+      "key": "melon",
+      "name": "MELON",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "10f0b372-0d99-459f-9684-f23ba99231b0",
+      "key": "miki",
+      "name": "MIKI",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "8c36a644-7ca1-4dcf-9149-8f935450052c",
+      "key": "mon",
+      "name": "MON",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "09d90677-b911-43f2-96a7-9b033c7f5cef",
+      "key": "nong-taengmo",
+      "name": "NONG TAENGMO",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "a23ef3f1-ec2c-4e7d-98a3-daa7ea57f06e",
+      "key": "norman",
+      "name": "NORMAN",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "8e6669a6-10cf-45fe-a0b8-22d082ab8432",
+      "key": "oufilling",
+      "name": "Oufilling",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "cae65f88-006e-455b-866c-28107cc3daf5",
+      "key": "pikachu",
+      "name": "PIKACHU",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "61b2c99e-0f0a-47a6-9877-fac3f9ad746e",
+      "key": "pk",
+      "name": "PK",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "1c81e328-950e-4282-b63e-d336209bcfc2",
+      "key": "pkxcy",
+      "name": "PKXCY",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "63d33b2c-a61e-4697-bd76-507e495ff3d7",
+      "key": "satoshi",
+      "name": "Satoshi",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "bbe6b503-9327-48eb-9f11-2599539a92c1",
+      "key": "skymoon",
+      "name": "SkyMoon",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "c170c7b8-3a10-4006-9a28-2ba522ea26d6",
+      "key": "smile",
+      "name": "SMILE",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "da1aad71-da86-4b79-97fe-ae020cad3b0b",
+      "key": "somyes",
+      "name": "SOMYES",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "a371ccc6-9be2-4a4e-bb71-ba9ad6f8b41c",
+      "key": "tan",
+      "name": "TAN",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "1ac29a68-6cb1-4a09-b5d3-f5e4ff42eb8d",
+      "key": "tee",
+      "name": "TEE",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "5b8e913d-61ce-4dad-b2ea-342ea6acbb42",
+      "key": "thai26",
+      "name": "ตดในลิฟ",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "8d6339e8-eb1f-49a4-b8a5-8513191827a2",
+      "key": "thai32",
+      "name": "ท้ายแมม อิตาลี่",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "46fb1281-5433-4152-97fe-7c5d376b9d1b",
+      "key": "thomas",
+      "name": "THOMAS",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "47b52fda-5f60-4d1e-89ec-da37bf890047",
+      "key": "wendywendie",
+      "name": "WENDYWENDIE",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    },
+    {
+      "id": "416dd0e2-34b9-4d95-84bf-2907ea2a0532",
+      "key": "zeesky",
+      "name": "ZeeSky",
+      "require_all_forms": false,
+      "required_levels": [
+        15,
+        40,
+        70,
+        99
+      ]
+    }
+  ],
+  "evolution_links": [
+    {
+      "from": "1GOKU-015",
+      "to": "1GOKU-040",
+      "level": 40
+    },
+    {
+      "from": "BADGUY-015",
+      "to": "BADGUY-040",
+      "level": 40
+    },
+    {
+      "from": "FOLLOW-YOU-015",
+      "to": "FOLLOW-YOU-040",
+      "level": 40
+    },
+    {
+      "from": "FOLLOW-YOU-040",
+      "to": "FOLLOW-YOU-070",
+      "level": 70
+    },
+    {
+      "from": "LALAPING-015",
+      "to": "LALAPING-040",
+      "level": 40
+    },
+    {
+      "from": "LALAPING-040",
+      "to": "LALAPING-070",
+      "level": 70
+    },
+    {
+      "from": "NORMAN-015",
+      "to": "NORMAN-040",
+      "level": 40
+    },
+    {
+      "from": "SATOSHI-015",
+      "to": "SATOSHI-040",
+      "level": 40
+    },
+    {
+      "from": "TEE-015",
+      "to": "TEE-040",
+      "level": 40
+    }
+  ],
+  "fusion_pairs_seed": [
+    {
+      "a": "backji",
+      "b": "nong-taengmo",
+      "hp": 20,
+      "atk": 10,
+      "def": 0
+    }
+  ],
+  "card_fusion_partners": [],
+  "fusion_recipes": [],
+  "card_story_links": [],
+  "stories": [],
+  "story_members": [],
+  "card_affiliations": [],
+  "card_attribute_values": []
+}

@@ -1,0 +1,46 @@
+{
+  "source": "Supabase project jcjqooeckoapoikcwpet, read-only SELECT, 2026-11-19. These rows exist in production (created through the Admin CMS) but NOT in the repo seed files. UUID foreign keys were resolved to character_id / chain key / affiliation key for readability.",
+  "row_counts_production": { "cards": 70, "card_effects": 78, "game_rules": 26, "evolution_chains": 39, "fusion_recipes": 0, "card_fusion_partners": 7, "card_story_links": 8, "card_affiliations": 21, "affiliation_synergies": 27, "stories": 0, "story_members": 0, "media_assets": 100, "card_frames": 3, "shop_prices": 2, "taxonomy_values": 57, "card_attribute_values": 0 },
+  "taxonomy_counts_by_key_production": { "affiliation": 9, "class": 33, "element": 12, "gender": 3 },
+  "taxonomy_element_keys_not_in_repo": ["alchemy", "wind"],
+  "game_rules_not_in_repo_migrations": [
+    { "key": "chain_rules", "label": "การตอบโต้ (chain)", "status": "proposed", "value": { "order": "last_in_first_out", "max_chain": 3, "responder_first": "opponent" }, "note": "ข้อเสนอ: ฝั่งตรงข้ามตอบก่อน ใบหลังสุดทำงานก่อน ต่อได้สูงสุด 3 ใบ", "updated_at": "2026-11-10T16:55:56.925856+00:00" },
+    { "key": "combat_formula", "label": "สูตรต่อสู้", "status": "proposed", "value": { "damage": "max(1, atk - def)", "target": "hp", "counter_attack": true, "destroyed_when_hp_0": true }, "note": "ข้อเสนอ: ความเสียหาย = ATK−DEF ขั้นต่ำ 1 ลด HP เป้าหมาย ตัวที่รอดสวนกลับด้วยสูตรเดียวกัน HP 0 ไปกองทิ้ง", "updated_at": "2026-11-10T16:55:56.925856+00:00" },
+    { "key": "first_turn_attack", "label": "เทิร์นแรกของผู้เริ่มก่อน", "status": "confirmed", "value": { "first_player_can_attack": false }, "note": "ผู้เล่นที่เริ่มก่อนโจมตีไม่ได้ในเทิร์นแรก", "updated_at": "2026-11-10T16:55:56.925856+00:00" },
+    { "key": "lp_start", "label": "LP เริ่มต้น / เงื่อนไขชนะ", "status": "proposed", "value": { "lp": 100, "win": ["opponent_lp_0", "opponent_cannot_draw"], "direct_attack_damage": "atk" }, "note": "ข้อเสนอ: LP 100 ต่อคน โจมตีตรง (สนามฝ่ายตรงข้ามไม่มีตัวละคร) ลด LP เท่ากับ ATK", "updated_at": "2026-11-10T16:55:56.925856+00:00" },
+    { "key": "spell_trap_timing", "label": "เวทมนตร์ / กับดัก", "status": "proposed", "value": { "trap": { "slots": 5, "triggers": ["opponent_attack", "opponent_summon", "opponent_cast"], "usable_from": "next_turn", "set_face_down": true }, "spell": { "phase": "main", "to_graveyard": true, "own_turn_only": true } }, "note": "ข้อเสนอ: เวทใช้ได้เฉพาะเฟสหลักของเทิร์นตัวเอง กับดักวางคว่ำช่องหลัง เปิดได้ตั้งแต่เทิร์นถัดไป", "updated_at": "2026-11-10T16:55:56.925856+00:00" },
+    { "key": "turn_phases", "label": "เฟสในเทิร์น", "status": "proposed", "value": { "draw": 1, "phases": ["draw", "main", "battle", "end"], "evolve_per_turn": 1, "summon_per_turn": 1, "attacks_per_character": 1, "summoned_this_turn_can_attack": false }, "note": "ข้อเสนอ: จั่ว → หลัก (เรียก 1, วิวัฒนาการ 1, เวท/กับดัก) → ต่อสู้ → จบเทิร์น ตัวที่เพิ่งถูกเรียกโจมตีไม่ได้", "updated_at": "2026-11-10T16:55:56.925856+00:00" }
+  ],
+  "card_frames": [
+    { "scope": "level:40", "media_id": "5a35cda8-1d06-4794-8e60-f613d481f423", "updated_at": "2026-11-11T08:55:02.089125+00:00" },
+    { "scope": "level:70", "media_id": "144839e6-fe4c-4d88-8865-e78749a7230f", "updated_at": "2026-11-11T08:55:08.772168+00:00" },
+    { "scope": "level:99", "media_id": "5bc1cb33-22b4-4452-9f75-0693910c4125", "updated_at": "2026-11-11T08:55:14.413555+00:00" }
+  ],
+  "card_fusion_partners": [
+    { "card": "1GOKU-015", "partner_chain": "lalaping", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "BABY-015", "partner_chain": "thai26", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "BACKJI-015", "partner_chain": "nong-taengmo", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "BADGUY-015", "partner_chain": "tee", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "BAM-015", "partner_chain": "thai32", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "CHAEM-015", "partner_chain": "oufilling", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null },
+    { "card": "NONG-TAENGMO-015", "partner_chain": "backji", "hp_bonus": 20, "atk_bonus": 10, "def_bonus": 0, "note": null }
+  ],
+  "card_story_links": [
+    { "card": "1GOKU-015", "partner_chain": "dnman", "name": "โดนกล่าวหา ว่าโกง ตอนเล่นเกม", "stat": "hp", "amount": -5, "description": "เมื่อการ์ดใบนี้อยู่บน กระดานเดียวกันกับการ์ด DNMAN พลังชีวิตจะลดลง 5 หน่วย" },
+    { "card": "BABY-015", "partner_chain": "bam", "name": "เพื่อนรัก", "stat": "atk", "amount": 5, "description": "การ์ด Bam ทำให้ลิงที่ Baby อุ้มอยู่ มีพลังเพิ่มขึ้น " },
+    { "card": "BACKJI-015", "partner_chain": "nong-taengmo", "name": "รันแกงซ์ FiveM", "stat": "def", "amount": 5, "description": "เมื่อ Nong taengmo ไปมีเรื่องกับคนอื่นใน FiveM backji ต้องเป็นคนตามล้างตามเช็ดให้ จน แข็งแกร่ง" },
+    { "card": "BADGUY-015", "partner_chain": "smile", "name": "ความขัดแย้งในตลาด", "stat": "atk", "amount": -5, "description": "เมื่อทั้งคู่ ไปตลาดแล้วสนใจปลาตัวเดียวกัน จึงทำให้เกิดการบาดหมาง" },
+    { "card": "BAM-015", "partner_chain": "satoshi", "name": "เจอหน้ากันไม่ได้ ", "stat": "def", "amount": -5, "description": "สองคนนี้ ชอบด่ากัน ทำให้คนอื่น เห็นช่องในการโจมตี" },
+    { "card": "BAMMIE-015", "partner_chain": "jaojay", "name": "คู่รัก", "stat": "hp", "amount": 10, "description": "สองคนนี้เป็น คู่รักกัน " },
+    { "card": "CHAEM-015", "partner_chain": "tee", "name": "มีปากเสียง", "stat": "def", "amount": -5, "description": "เคยมีปากเสียงกัน เพราะ หลอกขายของหมดอายุให้ Tee ทุกครั้งที่ทั้งสองใบอยู่บนกระดานด้วยกัน def จะ -5 " },
+    { "card": "NONG-TAENGMO-015", "partner_chain": "backji", "name": "รันแกงซ์ FiveM", "stat": "atk", "amount": 5, "description": "" }
+  ],
+  "card_affiliations": [
+    ["1GOKU-015", "among-us"], ["1GOKU-015", "board-game"], ["1GOKU-015", "goose-goose-duck"], ["1GOKU-015", "roblox"],
+    ["1GOKU-040", "among-us"], ["1GOKU-040", "board-game"], ["1GOKU-040", "goose-goose-duck"], ["1GOKU-040", "roblox"],
+    ["BABY-015", "goose-goose-duck"], ["BACKJI-015", "fivem"], ["BADGUY-015", "among-us"], ["BADGUY-015", "rov"],
+    ["BADGUY-040", "among-us"], ["BADGUY-040", "rov"], ["BAMMIE-015", "among-us"], ["BAMMIE-015", "goose-goose-duck"],
+    ["BOBO-015", "among-us"], ["BOBO-015", "roblox"], ["CUTIE-015", "among-us"], ["CUTIE-015", "goose-goose-duck"], ["CUTIE-015", "roblox"]
+  ],
+  "card_affiliations_format": "[character_id, affiliation_key]; all reason = null"
+}

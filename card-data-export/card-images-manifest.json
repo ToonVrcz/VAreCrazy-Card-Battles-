@@ -1,0 +1,361 @@
+{
+  "cards": [
+    {
+      "character_id": "1GOKU-015",
+      "image_path": "assets/cards/1GOKU-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "1GOKU-040",
+      "image_path": "assets/cards/1GOKU-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BABY-015",
+      "image_path": "assets/cards/BABY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BACKJI-015",
+      "image_path": "assets/cards/BACKJI-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BADGUY-015",
+      "image_path": "assets/cards/BADGUY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BADGUY-040",
+      "image_path": "assets/cards/BADGUY-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BAM-015",
+      "image_path": "assets/cards/BAM-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BAMMIE-015",
+      "image_path": "assets/cards/BAMMIE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "BOBO-015",
+      "image_path": "assets/cards/BOBO-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "CHAEM-015",
+      "image_path": "assets/cards/CHAEM-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "CUTIE-015",
+      "image_path": "assets/cards/CUTIE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "DNMAN-015",
+      "image_path": "assets/cards/DNMAN-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "FOLLOW-YOU-015",
+      "image_path": "assets/cards/FOLLOW-YOU-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "FOLLOW-YOU-040",
+      "image_path": "assets/cards/FOLLOW-YOU-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "FOLLOW-YOU-070",
+      "image_path": "assets/cards/FOLLOW-YOU-070.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "GOD-WA-015",
+      "image_path": "assets/cards/GOD-WA-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "I-M-GRAPE-015",
+      "image_path": "assets/cards/I-M-GRAPE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "JAOJAY-015",
+      "image_path": "assets/cards/JAOJAY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LALAPING-015",
+      "image_path": "assets/cards/LALAPING-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LALAPING-040",
+      "image_path": "assets/cards/LALAPING-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LALAPING-070",
+      "image_path": "assets/cards/LALAPING-070.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LEON-S-KENNEDY-015",
+      "image_path": "assets/cards/LEON-S-KENNEDY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LINLADA-015",
+      "image_path": "assets/cards/LINLADA-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LORDNAM-015",
+      "image_path": "assets/cards/LORDNAM-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "LUCKY-015",
+      "image_path": "assets/cards/LUCKY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "MELON-015",
+      "image_path": "assets/cards/MELON-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "MIKI-015",
+      "image_path": "assets/cards/MIKI-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "MON-015",
+      "image_path": "assets/cards/MON-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "NONG-TAENGMO-015",
+      "image_path": "assets/cards/NONG-TAENGMO-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "NORMAN-015",
+      "image_path": "assets/cards/NORMAN-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "NORMAN-040",
+      "image_path": "assets/cards/NORMAN-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "OUFILLING-015",
+      "image_path": "assets/cards/OUFILLING-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "PIKACHU-015",
+      "image_path": "assets/cards/PIKACHU-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "PK-015",
+      "image_path": "assets/cards/PK-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "PKXCY-015",
+      "image_path": "assets/cards/PKXCY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SATOSHI-015",
+      "image_path": "assets/cards/SATOSHI-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SATOSHI-040",
+      "image_path": "assets/cards/SATOSHI-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SKYMOON-015",
+      "image_path": "assets/cards/SKYMOON-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SMILE-015",
+      "image_path": "assets/cards/SMILE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SOMYES-015",
+      "image_path": "assets/cards/SOMYES-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TAN-015",
+      "image_path": "assets/cards/TAN-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TEE-015",
+      "image_path": "assets/cards/TEE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TEE-040",
+      "image_path": "assets/cards/TEE-040.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "THAI26-015",
+      "image_path": "assets/cards/THAI26-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "THAI32-015",
+      "image_path": "assets/cards/THAI32-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "THOMAS-015",
+      "image_path": "assets/cards/THOMAS-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "WENDYWENDIE-015",
+      "image_path": "assets/cards/WENDYWENDIE-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "ZEESKY-015",
+      "image_path": "assets/cards/ZEESKY-015.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "EVO-001",
+      "image_path": "assets/cards/EVO-001.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "FUS-001",
+      "image_path": "assets/cards/FUS-001.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-001",
+      "image_path": "assets/cards/SPL-001.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-002",
+      "image_path": "assets/cards/SPL-002.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-003",
+      "image_path": "assets/cards/SPL-003.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-004",
+      "image_path": "assets/cards/SPL-004.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-005",
+      "image_path": "assets/cards/SPL-005.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-006",
+      "image_path": "assets/cards/SPL-006.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-007",
+      "image_path": "assets/cards/SPL-007.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-008",
+      "image_path": "assets/cards/SPL-008.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-009",
+      "image_path": "assets/cards/SPL-009.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "SPL-010",
+      "image_path": "assets/cards/SPL-010.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-001",
+      "image_path": "assets/cards/TRP-001.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-002",
+      "image_path": "assets/cards/TRP-002.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-003",
+      "image_path": "assets/cards/TRP-003.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-004",
+      "image_path": "assets/cards/TRP-004.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-005",
+      "image_path": "assets/cards/TRP-005.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-006",
+      "image_path": "assets/cards/TRP-006.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-007",
+      "image_path": "assets/cards/TRP-007.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-008",
+      "image_path": "assets/cards/TRP-008.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-009",
+      "image_path": "assets/cards/TRP-009.jpg",
+      "exists_in_repo": true
+    },
+    {
+      "character_id": "TRP-010",
+      "image_path": "assets/cards/TRP-010.jpg",
+      "exists_in_repo": true
+    }
+  ],
+  "files_in_repo_not_referenced": [
+    "assets/cards/demon-summoner.jpg",
+    "assets/cards/grand-summoner.jpg",
+    "assets/cards/master-summoner.jpg"
+  ],
+  "repo_dir": "assets/cards",
+  "note": "Image binaries are NOT copied (kept in repo assets/cards/ and production Supabase storage)."
+}

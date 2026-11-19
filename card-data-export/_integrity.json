@@ -1,0 +1,62 @@
+{
+  "total": 70,
+  "by_type": {
+    "character": 48,
+    "evolution": 1,
+    "fusion": 1,
+    "spell": 10,
+    "trap": 10
+  },
+  "by_level": {
+    "15": 39,
+    "40": 7,
+    "70": 2,
+    "n/a": 22
+  },
+  "duplicate_ids": [],
+  "import_errors": {
+    "toon-cards.json": {
+      "ok": true,
+      "dryRun": false,
+      "created": 48,
+      "updated": 0,
+      "errors": []
+    },
+    "support-cards.json": {
+      "ok": true,
+      "dryRun": false,
+      "created": 2,
+      "updated": 0,
+      "errors": []
+    },
+    "spell-cards.json": {
+      "ok": true,
+      "dryRun": false,
+      "created": 10,
+      "updated": 0,
+      "errors": []
+    },
+    "trap-cards.json": {
+      "ok": true,
+      "dryRun": false,
+      "created": 10,
+      "updated": 0,
+      "errors": []
+    }
+  },
+  "seed_checksums_md5": {
+    "toon-cards.json": "658401987ea57cd9ccfdda53c4eca0b8",
+    "support-cards.json": "037e5dc7a513f8e7f7984197f461e027",
+    "spell-cards.json": "f7dde37eaacc7ef0c1e8c318e273e729",
+    "trap-cards.json": "b209f3b2ca757d6bb0d4935ae18734fc",
+    "fusion-pairs.json": "61df337b3c684df6972cc3917267410e",
+    "elements.json": "3e74d169a8bc8076d7ebaf9743292b2a"
+  },
+  "cards_without_effects": [],
+  "db_card_count": 70,
+  "db_effect_rows": 78,
+  "evolution_forms_without_parent": [],
+  "missing_image_path": [],
+  "image_file_missing": [],
+  "effects_without_trigger": []
+}

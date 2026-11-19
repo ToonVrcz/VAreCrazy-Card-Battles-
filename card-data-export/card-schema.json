@@ -1,0 +1,802 @@
+{
+  "tables": [
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "affiliation_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "min_members",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "2"
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "stat",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "amount",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "max_stacks",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "affiliation_synergies",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_affiliations",
+      "column_name": "card_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_affiliations",
+      "column_name": "value_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_affiliations",
+      "column_name": "reason",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_attribute_values",
+      "column_name": "card_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_attribute_values",
+      "column_name": "attribute_key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_attribute_values",
+      "column_name": "value",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "card_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "sort_order",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "trigger",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "condition_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "cost_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "target_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "action_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "duration",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'instant'::text"
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "duration_turns",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "use_limit",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'none'::text"
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_effects",
+      "column_name": "config",
+      "data_type": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_frames",
+      "column_name": "scope",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_frames",
+      "column_name": "media_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_frames",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "card_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "partner_chain_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "hp_bonus",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "atk_bonus",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "def_bonus",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "card_fusion_partners",
+      "column_name": "note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "card_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "partner_chain_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "stat",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "amount",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "card_story_links",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "character_id",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "card_type",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "level",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "chain_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "evolves_from",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "hp",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "atk",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "def",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "has_combo",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "summon_cost",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "rules_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "flavor_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "element_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "race_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "class_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "media_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'draft'::text"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "version_no",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "0"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "created_by",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "cards",
+      "column_name": "shop_price_points",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "shop_price_vrcoin",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "atk_icon",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "cards",
+      "column_name": "gender_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "evolution_chains",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "evolution_chains",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "evolution_chains",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "evolution_chains",
+      "column_name": "require_all_forms",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "table_name": "evolution_chains",
+      "column_name": "required_levels",
+      "data_type": "ARRAY",
+      "is_nullable": "NO",
+      "column_default": "'{15,40,70,99}'::integer[]"
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "result_card_id",
+      "data_type": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "min_materials",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "2"
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "must_match",
+      "data_type": "ARRAY",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "required_chain_keys",
+      "data_type": "ARRAY",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "fusion_recipes",
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "is_nullable": "NO",
+      "column_default": "true"
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "label",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "value",
+      "data_type": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'proposed'::text"
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "game_rules",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "storage_path",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "mime",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "width",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "height",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "render_mode",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'art_only'::text"
+    },
+    {
+      "table_name": "media_assets",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "shop_prices",
+      "column_name": "level",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "shop_prices",
+      "column_name": "currency",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "shop_prices",
+      "column_name": "price",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "stories",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "kind",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "stat",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "amount",
+      "data_type": "integer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "condition_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "stories",
+      "column_name": "target_text",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": "'ทุกตัวละครในเรื่องนี้'::text"
+    },
+    {
+      "table_name": "stories",
+      "column_name": "max_stacks",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "stories",
+      "column_name": "description",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "story_members",
+      "column_name": "story_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "story_members",
+      "column_name": "chain_id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "taxonomy_values",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "taxonomy_values",
+      "column_name": "taxonomy_key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "taxonomy_values",
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "taxonomy_values",
+      "column_name": "name",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    }
+  ]
+}

@@ -1,0 +1,1539 @@
+[
+  {
+    "character_id": "1GOKU-015",
+    "name": "Fighter",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "1goku",
+    "chain_name": "1GOKU",
+    "hp": 84,
+    "atk": 20,
+    "atk_icon": "potion_mortar",
+    "image_path": "assets/cards/1GOKU-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "กล้ามที่ฝึกมาทุกเช้า ไม่มีใครเรียกว่าโชคดี",
+    "class": "Fighter",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "1GOKU-040",
+    "name": "Warlord",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "1goku",
+    "chain_name": "1GOKU",
+    "evolves_from": "1GOKU-015",
+    "hp": 152,
+    "atk": 55,
+    "atk_icon": "potion_mortar",
+    "image_path": "assets/cards/1GOKU-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +20",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      },
+      {
+        "trigger": "on_destroyed",
+        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
+        "action_text": "HP −20",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "เกราะเพลิงสีแดง ยิ่งโมโหยิ่งร้อน",
+    "class": "Warlord",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "BABY-015",
+    "name": "Acolyte",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "baby",
+    "chain_name": "BABY",
+    "hp": 70,
+    "atk": 10,
+    "atk_icon": "sun",
+    "image_path": "assets/cards/BABY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 20",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ลิงน้อยบนแขนช่วยให้ทุกคนใจเย็นลง",
+    "class": "Acolyte",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "BACKJI-015",
+    "name": "Assassin",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "backji",
+    "chain_name": "Backji",
+    "hp": 76,
+    "atk": 24,
+    "atk_icon": "water",
+    "image_path": "assets/cards/BACKJI-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +15",
+        "target_text": "ตัวเอง",
+        "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ประกายม่วงที่ฝ่ามือคือสิ่งสุดท้ายที่ศัตรูเห็น",
+    "class": "Assassin",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "BADGUY-015",
+    "name": "Assassin",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "badguy",
+    "chain_name": "BADGUY",
+    "hp": 94,
+    "atk": 15,
+    "atk_icon": "drop_green",
+    "image_path": "assets/cards/BADGUY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +15",
+        "target_text": "ตัวเอง",
+        "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ใต้ผ้าคลุมมีแต่ความเงียบกับเปลวพิษสีเขียว",
+    "class": "Assassin",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "BADGUY-040",
+    "name": "Assassin",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "badguy",
+    "chain_name": "BADGUY",
+    "evolves_from": "BADGUY-015",
+    "hp": 153,
+    "atk": 60,
+    "atk_icon": "drop_green",
+    "image_path": "assets/cards/BADGUY-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +25 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +25",
+        "target_text": "ตัวเอง",
+        "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      },
+      {
+        "trigger": "on_destroyed",
+        "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
+        "action_text": "HP −20",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "สูตรยาพิษของเขากลายเป็นศิลปะ",
+    "class": "Assassin",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "BAM-015",
+    "name": "Swordswoman",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "bam",
+    "chain_name": "BAM",
+    "hp": 95,
+    "atk": 25,
+    "atk_icon": "fire",
+    "image_path": "assets/cards/BAM-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ชุดเกราะดำและดาบเพลิง เดินผ่านไฟโดยไม่หันกลับ",
+    "class": "Swordswoman",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "BAMMIE-015",
+    "name": "Swordswoman",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "bammie",
+    "chain_name": "BAMMIE",
+    "hp": 95,
+    "atk": 25,
+    "atk_icon": "water",
+    "image_path": "assets/cards/BAMMIE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "คลื่นน้ำหลีกทางให้ดาบของเธอ",
+    "class": "Swordswoman",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "BOBO-015",
+    "name": "Swordsman",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "bobo",
+    "chain_name": "BOBO",
+    "hp": 80,
+    "atk": 30,
+    "atk_icon": "water",
+    "image_path": "assets/cards/BOBO-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ตัวเล็กแต่ใจใหญ่ ยืนหน้าสุดเสมอ",
+    "class": "Swordsman",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "CHAEM-015",
+    "name": "Merchant",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "chaem",
+    "chain_name": "CHAEM",
+    "hp": 85,
+    "atk": 24,
+    "atk_icon": "coin",
+    "image_path": "assets/cards/CHAEM-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ป้าย \"Good Deals\" ไม่เคยโกหก ถ้าเธอพยักหน้า",
+    "class": "Merchant",
+    "element": "neutral",
+    "has_combo": false
+  },
+  {
+    "character_id": "CUTIE-015",
+    "name": "Mage",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "cutie",
+    "chain_name": "CUTIE",
+    "hp": 90,
+    "atk": 35,
+    "atk_icon": "mp_green",
+    "image_path": "assets/cards/CUTIE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+        "action_text": "HP −10",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "เถาวัลย์เขียวเลื้อยตามทุกจังหวะของเวทมนตร์",
+    "class": "Mage",
+    "element": "nature",
+    "has_combo": false
+  },
+  {
+    "character_id": "DNMAN-015",
+    "name": "Crusader",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "dnman",
+    "chain_name": "DNMAN",
+    "hp": 80,
+    "atk": 40,
+    "atk_icon": "lightning",
+    "image_path": "assets/cards/DNMAN-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "โล่กลมกับหมัดที่ตรงไปตรงมา",
+    "class": "Crusader",
+    "element": "lightning",
+    "has_combo": false
+  },
+  {
+    "character_id": "FOLLOW-YOU-015",
+    "name": "Demon Summoner",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "follow-you",
+    "chain_name": "FOLLOW YOU",
+    "hp": 90,
+    "atk": 20,
+    "atk_icon": "purple_flame",
+    "image_path": "assets/cards/FOLLOW-YOU-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "เขาไม่ได้เรียกปีศาจ... ปีศาจต่างหากที่ตามเขามา",
+    "class": "Demon Summoner",
+    "element": "dark",
+    "has_combo": false
+  },
+  {
+    "character_id": "FOLLOW-YOU-040",
+    "name": "Master Summoner",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "follow-you",
+    "chain_name": "FOLLOW YOU",
+    "evolves_from": "FOLLOW-YOU-015",
+    "hp": 150,
+    "atk": 50,
+    "atk_icon": "purple_flame",
+    "image_path": "assets/cards/FOLLOW-YOU-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      },
+      {
+        "trigger": "combo",
+        "description": "พลังแฝง: เมื่อใช้ร่วมกับการ์ดที่มี Combo ใบอื่น ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": "มีการ์ด Combo ใบอื่นบนสนาม",
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "เปลวไฟสีม่วงตอบรับเสียงเรียกของเขา",
+    "class": "Master Summoner",
+    "element": "dark",
+    "has_combo": true
+  },
+  {
+    "character_id": "FOLLOW-YOU-070",
+    "name": "Grand Summoner",
+    "card_type": "character",
+    "level": 70,
+    "chain_key": "follow-you",
+    "chain_name": "FOLLOW YOU",
+    "evolves_from": "FOLLOW-YOU-040",
+    "hp": 300,
+    "atk": 100,
+    "atk_icon": "purple_flame",
+    "image_path": "assets/cards/FOLLOW-YOU-070.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_evolve",
+        "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 30",
+        "action_text": "HP −30",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      },
+      {
+        "trigger": "passive",
+        "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ ATK +5",
+        "action_text": "ATK +5",
+        "target_text": "ตัวละครฝ่ายเราทุกใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "permanent",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "สายฟ้าแดงฉานกลายเป็นคำสั่งของเขา",
+    "class": "Grand Summoner",
+    "element": "dark",
+    "has_combo": true
+  },
+  {
+    "character_id": "GOD-WA-015",
+    "name": "Thief",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "god-wa",
+    "chain_name": "GOD WA",
+    "hp": 90,
+    "atk": 30,
+    "atk_icon": "drop_green",
+    "image_path": "assets/cards/GOD-WA-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ผ้าคลุมดำ ขวดเขียว และมีดเล็ก ๆ ที่พร้อมเสมอ",
+    "class": "Thief",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "I-M-GRAPE-015",
+    "name": "Druid",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "i-m-grape",
+    "chain_name": "I'm Grape",
+    "hp": 80,
+    "atk": 21,
+    "atk_icon": "fire",
+    "image_path": "assets/cards/I-M-GRAPE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_start",
+        "description": "เริ่มเทิร์น ATK +5 ถาวร (สูงสุด +15)",
+        "action_text": "ATK +5 ถาวร (สูงสุด +15)",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "permanent",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "เปลวไฟและตำราธรรมชาติในมือเดียว",
+    "class": "Druid",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "JAOJAY-015",
+    "name": "Thief",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "jaojay",
+    "chain_name": "JAOJAY",
+    "hp": 60,
+    "atk": 40,
+    "atk_icon": "water",
+    "image_path": "assets/cards/JAOJAY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "มีดคู่และสายน้ำ จบงานก่อนใครทันตั้งตัว",
+    "class": "Thief",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "LALAPING-015",
+    "name": "Priest",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "lalaping",
+    "chain_name": "LALAPING",
+    "hp": 80,
+    "atk": 20,
+    "atk_icon": "purple_flame",
+    "image_path": "assets/cards/LALAPING-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ผลึกชมพูในไม้เท้าส่องแสงทุกครั้งที่เธอยิ้ม",
+    "class": "Priest",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "LALAPING-040",
+    "name": "Bishop",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "lalaping",
+    "chain_name": "LALAPING",
+    "evolves_from": "LALAPING-015",
+    "hp": 160,
+    "atk": 40,
+    "atk_icon": "fire",
+    "image_path": "assets/cards/LALAPING-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเราทุกใบ",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวละครฝ่ายเราทุกใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "หมวกบิชอปคือคำสัญญาว่าจะไม่มีใครถูกทิ้งไว้ข้างหลัง",
+    "class": "Bishop",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "LALAPING-070",
+    "name": "Saint Bishop",
+    "card_type": "character",
+    "level": 70,
+    "chain_key": "lalaping",
+    "chain_name": "LALAPING",
+    "evolves_from": "LALAPING-040",
+    "hp": 310,
+    "atk": 80,
+    "atk_icon": "fire",
+    "image_path": "assets/cards/LALAPING-070.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_evolve",
+        "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ฟื้น HP เต็มให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP เต็ม",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      },
+      {
+        "trigger": "passive",
+        "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ HP +10",
+        "action_text": "HP +10",
+        "target_text": "ตัวละครฝ่ายเราทุกใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "permanent",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "แสงบริสุทธิ์ที่แม้ความมืดยังต้องหยุดฟัง",
+    "class": "Saint Bishop",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "LEON-S-KENNEDY-015",
+    "name": "Necromancer",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "leon-s-kennedy",
+    "chain_name": "LEON S KENNEDY",
+    "hp": 85,
+    "atk": 25,
+    "atk_icon": "skull",
+    "image_path": "assets/cards/LEON-S-KENNEDY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "to_graveyard",
+        "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +5",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ไม้เท้ากะโหลกเรียกซอมบี้ได้ แต่เขาเลือกที่จะนำทางพวกมัน",
+    "class": "Necromancer",
+    "element": "dark",
+    "has_combo": false
+  },
+  {
+    "character_id": "LINLADA-015",
+    "name": "Spearwoman",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "linlada",
+    "chain_name": "LINLADA",
+    "hp": 90,
+    "atk": 35,
+    "atk_icon": "fire_mp",
+    "image_path": "assets/cards/LINLADA-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "หอกเพลิงที่ลุกโชนตามก้าวเดินของเธอ",
+    "class": "Spearwoman",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "LORDNAM-015",
+    "name": "Ninja",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "lordnam",
+    "chain_name": "LORDNAM",
+    "hp": 85,
+    "atk": 25,
+    "atk_icon": "smoke",
+    "image_path": "assets/cards/LORDNAM-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+        "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "เงาควันและแมวตาแดงเป็นองครักษ์ส่วนตัว",
+    "class": "Ninja",
+    "element": "dark",
+    "has_combo": false
+  },
+  {
+    "character_id": "LUCKY-015",
+    "name": "Ninja",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "lucky",
+    "chain_name": "LUCKY",
+    "hp": 76,
+    "atk": 24,
+    "atk_icon": "water",
+    "image_path": "assets/cards/LUCKY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+        "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "หมวกดอกไม้ ดาบสั้น และสายน้ำที่พุ่งตามเธอ",
+    "class": "Ninja",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "MELON-015",
+    "name": "Warrior",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "melon",
+    "chain_name": "MELON",
+    "hp": 90,
+    "atk": 35,
+    "atk_icon": "rock_mp",
+    "image_path": "assets/cards/MELON-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ขวานหนักกับเกราะทองจากเหมืองลึก",
+    "class": "Warrior",
+    "element": "earth",
+    "has_combo": false
+  },
+  {
+    "character_id": "MIKI-015",
+    "name": "Fighter",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "miki",
+    "chain_name": "MIKI",
+    "hp": 85,
+    "atk": 24,
+    "atk_icon": "swords",
+    "image_path": "assets/cards/MIKI-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ยิ้มกว้างในเกราะแดง สู้ไปหัวเราะไป",
+    "class": "Fighter",
+    "element": "physical",
+    "has_combo": false
+  },
+  {
+    "character_id": "MON-015",
+    "name": "Merchant",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "mon",
+    "chain_name": "MON",
+    "hp": 85,
+    "atk": 40,
+    "atk_icon": "potion_purple",
+    "image_path": "assets/cards/MON-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ชาร้อนหนึ่งถ้วยแลกข่าวสารได้หนึ่งเรื่อง",
+    "class": "Merchant",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "NONG-TAENGMO-015",
+    "name": "Thief",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "nong-taengmo",
+    "chain_name": "NONG TAENGMO",
+    "hp": 80,
+    "atk": 30,
+    "atk_icon": "leaf",
+    "image_path": "assets/cards/NONG-TAENGMO-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "มีดคู่ใบไม้ กับหมวกหูแมวที่ฟังเสียงป่าทุกใบ",
+    "class": "Thief",
+    "element": "nature",
+    "has_combo": false
+  },
+  {
+    "character_id": "NORMAN-015",
+    "name": "Bear Warrior",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "norman",
+    "chain_name": "NORMAN",
+    "hp": 94,
+    "atk": 18,
+    "atk_icon": "swords",
+    "image_path": "assets/cards/NORMAN-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "หมีที่รบด้วยเกียรติ ไม่ใช่ด้วยความหิว",
+    "class": "Bear Warrior",
+    "element": "physical",
+    "has_combo": false
+  },
+  {
+    "character_id": "NORMAN-040",
+    "name": "Master Bear Warrior",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "norman",
+    "chain_name": "NORMAN",
+    "evolves_from": "NORMAN-015",
+    "hp": 150,
+    "atk": 50,
+    "atk_icon": "swords",
+    "image_path": "assets/cards/NORMAN-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +20",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      },
+      {
+        "trigger": "turn_start",
+        "description": "เริ่มเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "เกราะทองและดาบเพลิงแห่งป่าลึก",
+    "class": "Master Bear Warrior",
+    "element": "physical",
+    "has_combo": false
+  },
+  {
+    "character_id": "OUFILLING-015",
+    "name": "Necromancer",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "oufilling",
+    "chain_name": "Oufilling",
+    "hp": 90,
+    "atk": 20,
+    "atk_icon": "moon",
+    "image_path": "assets/cards/OUFILLING-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "to_graveyard",
+        "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +5",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ผีน้อยรอบกายไม่เคยทำให้เขาสะดุ้ง มีแต่เขาที่ทำให้พวกมันขำ",
+    "class": "Necromancer",
+    "element": "dark",
+    "has_combo": false
+  },
+  {
+    "character_id": "PIKACHU-015",
+    "name": "Mage",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "pikachu",
+    "chain_name": "PIKACHU",
+    "hp": 85,
+    "atk": 40,
+    "atk_icon": "lightning",
+    "image_path": "assets/cards/PIKACHU-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+        "action_text": "HP −10",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "เด็กหนุ่มผมทองผู้เรียกสายฟ้าได้ดั่งใจ",
+    "class": "Mage",
+    "element": "lightning",
+    "has_combo": false
+  },
+  {
+    "character_id": "PK-015",
+    "name": "Merchant",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "pk",
+    "chain_name": "PK",
+    "hp": 85,
+    "atk": 25,
+    "atk_icon": "coin",
+    "image_path": "assets/cards/PK-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "แมวพ่อค้าหน้าตึง ถุงทองหนักกว่าที่เห็น",
+    "class": "Merchant",
+    "element": "neutral",
+    "has_combo": false
+  },
+  {
+    "character_id": "PKXCY-015",
+    "name": "Fighter",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "pkxcy",
+    "chain_name": "PKXCY",
+    "hp": 85,
+    "atk": 24,
+    "atk_icon": "swords",
+    "image_path": "assets/cards/PKXCY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "แครอทยักษ์ในอ้อมแขน คือกำลังใจที่ดีที่สุด",
+    "class": "Fighter",
+    "element": "physical",
+    "has_combo": false
+  },
+  {
+    "character_id": "SATOSHI-015",
+    "name": "Healer",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "satoshi",
+    "chain_name": "Satoshi",
+    "hp": 60,
+    "atk": 20,
+    "atk_icon": "cross",
+    "image_path": "assets/cards/SATOSHI-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "คัมภีร์เล่มเล็กที่ให้แสงอุ่น ๆ แก่ทุกคน",
+    "class": "Healer",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "SATOSHI-040",
+    "name": "Grand Healer",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "satoshi",
+    "chain_name": "Satoshi",
+    "evolves_from": "SATOSHI-015",
+    "hp": 130,
+    "atk": 70,
+    "atk_icon": "halo",
+    "image_path": "assets/cards/SATOSHI-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 20",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      },
+      {
+        "trigger": "on_destroyed",
+        "description": "เมื่อถูกทำลาย ฟื้น HP 30 ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 30",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "แสงในคัมภีร์สว่างพอจะฟื้นแม้ผู้ที่ล้มลงแล้ว",
+    "class": "Grand Healer",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "SKYMOON-015",
+    "name": "Blacksmith",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "skymoon",
+    "chain_name": "SkyMoon",
+    "hp": 100,
+    "atk": 18,
+    "atk_icon": "leaf",
+    "image_path": "assets/cards/SKYMOON-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ATK +10 ถาวร ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ATK +10 ถาวร",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "permanent",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ทุกค้อนที่ตีลงทั่ง คือคำสาบานของช่างตีเหล็ก",
+    "class": "Blacksmith",
+    "element": "nature",
+    "has_combo": false
+  },
+  {
+    "character_id": "SMILE-015",
+    "name": "Cleric",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "smile",
+    "chain_name": "SMILE",
+    "hp": 90,
+    "atk": 35,
+    "atk_icon": "mp_blue",
+    "image_path": "assets/cards/SMILE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "รอยยิ้มของเธอทำให้ฟองน้ำกลายเป็นเกราะ",
+    "class": "Cleric",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "SOMYES-015",
+    "name": "Archer",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "somyes",
+    "chain_name": "SOMYES",
+    "hp": 95,
+    "atk": 25,
+    "atk_icon": "lightning",
+    "image_path": "assets/cards/SOMYES-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก เลือกตัวละครฝ่ายตรงข้าม 1 ใบ ATK −10 จนจบเทิร์น",
+        "action_text": "ATK −10",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ลูกธนูสายฟ้าไม่เคยพลาดเป้า",
+    "class": "Archer",
+    "element": "lightning",
+    "has_combo": false
+  },
+  {
+    "character_id": "TAN-015",
+    "name": "Dev Sumoner",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "tan",
+    "chain_name": "TAN",
+    "hp": 90,
+    "atk": 20,
+    "atk_icon": "water",
+    "image_path": "assets/cards/TAN-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ค้นการ์ด Evolution 1 ใบจาก Main Deck ขึ้นมือ",
+        "action_text": "ค้นการ์ด Evolution ขึ้นมือ",
+        "target_text": "Main Deck",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "แมวไซเบอร์ที่ซ่อนอยู่ในวงจร รอคำสั่งเรียก",
+    "class": "Dev Sumoner",
+    "element": "water",
+    "has_combo": false
+  },
+  {
+    "character_id": "TEE-015",
+    "name": "Alchemist",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "tee",
+    "chain_name": "TEE",
+    "hp": 80,
+    "atk": 18,
+    "atk_icon": "potion_mortar",
+    "image_path": "assets/cards/TEE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ATK +10 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ATK +10",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "สูตรลับในขวดเขียว ลองแล้วอย่าถามว่ามีอะไรผสม",
+    "class": "Alchemist",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "TEE-040",
+    "name": "Alchemist",
+    "card_type": "character",
+    "level": 40,
+    "chain_key": "tee",
+    "chain_name": "TEE",
+    "evolves_from": "TEE-015",
+    "hp": 170,
+    "atk": 40,
+    "atk_icon": "potion_mortar",
+    "image_path": "assets/cards/TEE-040.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_evolve",
+        "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ATK +20 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ATK +20",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "none"
+      },
+      {
+        "trigger": "turn_end",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+        "action_text": "ฟื้น HP 10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "เสียงหัวเราะดังกว่าระเบิดยาเสียอีก",
+    "class": "Alchemist",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "THAI26-015",
+    "name": "Fighter",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "thai26",
+    "chain_name": "ตดในลิฟ",
+    "hp": 85,
+    "atk": 24,
+    "atk_icon": "swords",
+    "image_path": "assets/cards/THAI26-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+        "action_text": "ATK +10",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "until_end_of_turn",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "ในลิฟต์ที่แคบที่สุด เขาก็ยังสู้ได้เต็มกำลัง",
+    "class": "Fighter",
+    "element": "physical",
+    "has_combo": false
+  },
+  {
+    "character_id": "THAI32-015",
+    "name": "Paladin",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "thai32",
+    "chain_name": "ท้ายแมม อิตาลี่",
+    "hp": 100,
+    "atk": 18,
+    "atk_icon": "demon",
+    "image_path": "assets/cards/THAI32-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_destroyed",
+        "description": "เมื่อถูกทำลาย ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 20",
+        "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "none"
+      }
+    ],
+    "flavor_text": "พาลาดินที่เชื่อว่าพลังมาจากมื้ออร่อยและอารมณ์ดี",
+    "class": "Paladin",
+    "element": "holy",
+    "has_combo": false
+  },
+  {
+    "character_id": "THOMAS-015",
+    "name": "Rogue",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "thomas",
+    "chain_name": "THOMAS",
+    "hp": 95,
+    "atk": 25,
+    "atk_icon": "fire",
+    "image_path": "assets/cards/THOMAS-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": null,
+        "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "ในกองเพลิง เงามืดคือที่ซ่อนที่ดีที่สุด",
+    "class": "Rogue",
+    "element": "fire",
+    "has_combo": false
+  },
+  {
+    "character_id": "WENDYWENDIE-015",
+    "name": "Thief",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "wendywendie",
+    "chain_name": "WENDYWENDIE",
+    "hp": 95,
+    "atk": 10,
+    "atk_icon": "potion_purple",
+    "image_path": "assets/cards/WENDYWENDIE-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_attack",
+        "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "จั่ว 1 ใบ",
+        "target_text": "ตัวเอง",
+        "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_turn"
+      }
+    ],
+    "flavor_text": "แว่นสีแดงกับรอยยิ้มที่ไม่ควรไว้ใจ",
+    "class": "Thief",
+    "element": "poison",
+    "has_combo": false
+  },
+  {
+    "character_id": "ZEESKY-015",
+    "name": "Storm Priest",
+    "card_type": "character",
+    "level": 15,
+    "chain_key": "zeesky",
+    "chain_name": "ZeeSky",
+    "hp": 78,
+    "atk": 23,
+    "atk_icon": "lightning",
+    "image_path": "assets/cards/ZEESKY-015.jpg",
+    "def": 0,
+    "effects": [
+      {
+        "trigger": "on_summon",
+        "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+        "action_text": "HP −10",
+        "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+        "condition_text": null,
+        "cost_text": null,
+        "duration": "instant",
+        "duration_turns": null,
+        "use_limit": "once_per_game"
+      }
+    ],
+    "flavor_text": "บล็อกสายฟ้าต่อเป็นเวทมนตร์ได้ในพริบตา",
+    "class": "Storm Priest",
+    "element": "lightning",
+    "has_combo": false
+  }
+]

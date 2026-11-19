@@ -1,0 +1,869 @@
+{
+  "game_rules": [
+    {
+      "key": "back_slots",
+      "label": "ช่องแถวหลัง",
+      "value": 5,
+      "status": "confirmed",
+      "note": null,
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "battlefield_slots",
+      "label": "ช่องตัวละครบนสนาม",
+      "value": 7,
+      "status": "confirmed",
+      "note": null,
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "deck_size",
+      "label": "จำนวนการ์ดในเด็คหลัก",
+      "value": 40,
+      "status": "proposed",
+      "note": "จาก GDD v0.3",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "element_multiplier",
+      "label": "ตัวคูณธาตุ (ได้เปรียบ/เสียเปรียบ)",
+      "value": {
+        "weak": 0.75,
+        "strong": 1.5
+      },
+      "status": "proposed",
+      "note": "ดู db/seed/elements.json",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_cards_per_step",
+      "label": "การ์ด Evolution ต่อขั้น (ใบ)",
+      "value": 1,
+      "status": "confirmed",
+      "note": "จากมือ ไม่ใช้แต้ม/Vrcoin",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_hp_mode",
+      "label": "HP หลังวิวัฒนาการ",
+      "value": "keep_damage",
+      "status": "proposed",
+      "note": "ร่างใหม่ใช้ HP สูงสุดใหม่ แต่คงความเสียหายที่ได้รับแล้ว (HP ใหม่ = HP สูงสุดใหม่ − ความเสียหายสะสม, อย่างน้อย 1) กันใช้วิวัฒนาการเป็นการฟื้นฟู",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_in_main_deck",
+      "label": "การ์ด Evolution อยู่ในเด็คหลัก",
+      "value": true,
+      "status": "confirmed",
+      "note": null,
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_keep_status",
+      "label": "สถานะผิดปกติคงอยู่หลังวิวัฒนาการ",
+      "value": true,
+      "status": "proposed",
+      "note": "พิษ/สตัน/คำสาปติดตามไป; บัฟชั่วคราวจนจบเทิร์นหายไป",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_quota",
+      "label": "โควตาวิวัฒนาการ/เทิร์น",
+      "value": 1,
+      "status": "confirmed",
+      "note": "แยกจากโควตาเรียก",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "evolution_sacrifice",
+      "label": "จำนวนสังเวยต่อขั้นวิวัฒนาการ",
+      "value": {
+        "15": 1,
+        "40": 2,
+        "70": 3
+      },
+      "status": "confirmed",
+      "note": "ระบุตามเลเวลต้นทาง; ตัวละครหงายหน้า",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "fusion_mode",
+      "label": "รูปแบบ Fusion",
+      "value": {
+        "needs": "fusion_spell",
+        "layout": "stack_in_one_slot",
+        "both_cards_in_hand": true
+      },
+      "status": "confirmed",
+      "note": "ใช้เวท Fusion เมื่อมีการ์ดทั้งสองใบบนมือ และติ๊กเป็นคู่กันที่การ์ด → วางซ้อนกันเป็นหนึ่งหน่วยในช่องเดียว",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "fusion_stack_stats",
+      "label": "สเตตัสหน่วยที่ฟิวชั่นแล้ว",
+      "value": {
+        "top_card_percent": 100,
+        "default_pair_bonus": {
+          "hp": 20,
+          "atk": 10,
+          "def": 0
+        },
+        "bottom_card_percent": 50
+      },
+      "status": "proposed",
+      "note": "ข้อเสนอ: การ์ดบนนับเต็ม + การ์ดล่าง 50% + โบนัสคู่ที่ติ๊กไว้ (ค่าเริ่มต้น HP+20 ATK+10) กินช่องสนามเพียง 1 ช่อง แต่ต้องใช้เวท 1 ใบกับการ์ด 2 ใบ จึงไม่แรงกว่าวางแยกสองช่องมากนัก",
+      "updated_at": "2026-11-19T07:19:54.808Z"
+    },
+    {
+      "key": "gender_pair_bonus",
+      "label": "โบนัสตัวละครเพศเดียวกันจับคู่กัน",
+      "value": {
+        "stat": "atk",
+        "amount": 5,
+        "max_stacks": 1
+      },
+      "status": "proposed",
+      "note": "ข้อเสนอ: ตัวละครเพศเดียวกันอยู่บนสนามพร้อมกัน ≥2 ตัว → ATK +5 ให้ตัวเหล่านั้น (ครั้งเดียวต่อใบ ไม่ซ้อน) เทียบ ATK Lv.15 ราว 10–24 จึงราว +20–50% ซึ่งแรงพอควร อาจลดเป็น +3 ถ้าสนามเต็ม 7 ใบ",
+      "updated_at": "2026-11-19T07:19:54.800Z"
+    },
+    {
+      "key": "hand_max",
+      "label": "จำนวนการ์ดบนมือสูงสุด",
+      "value": 5,
+      "status": "confirmed",
+      "note": null,
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "max_copies",
+      "label": "จำนวนการ์ดชื่อเดียวกันสูงสุดในเด็ค",
+      "value": 3,
+      "status": "proposed",
+      "note": "ตัวละครใน chain เดียวกันนับรวมกัน",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "player_damage_rule",
+      "label": "ความเสียหายต่อผู้เล่น (LP)",
+      "value": null,
+      "status": "proposed",
+      "note": "รอกติกา: โจมตีผู้เล่นตรง ๆ และผลต่อ LP",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "sacrifice_restriction",
+      "label": "ข้อจำกัดการสังเวย",
+      "value": {
+        "face_up_only": true,
+        "cannot_sacrifice_self": true,
+        "cannot_sacrifice_evolution_source": true
+      },
+      "status": "proposed",
+      "note": "กันสังเวยตัวที่กำลังวิวัฒนาการเอง",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "starting_lp",
+      "label": "Life Point เริ่มต้น",
+      "value": 8000,
+      "status": "proposed",
+      "note": "ค่าทดสอบจาก GDD v0.3; รอผู้ใช้ยืนยัน",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    },
+    {
+      "key": "story_defaults",
+      "label": "ค่าเริ่มต้น Story",
+      "value": {
+        "negative": {
+          "stat": "hp",
+          "amount": -10
+        },
+        "positive": {
+          "stat": "atk",
+          "amount": 5
+        },
+        "conditional": {
+          "stat": "atk",
+          "amount": 10
+        }
+      },
+      "status": "proposed",
+      "note": "ข้อเสนอ: Story ที่ไม่ซ้อน; บวก ATK+5, ลบ HP−10, เงื่อนไขพิเศษ ATK+10 (เมื่อเงื่อนไขครบ)",
+      "updated_at": "2026-11-19T07:19:54.808Z"
+    },
+    {
+      "key": "summon_quota",
+      "label": "โควตาเรียกตัวละคร/เทิร์น",
+      "value": 1,
+      "status": "confirmed",
+      "note": "Lv.15 เรียกฟรี",
+      "updated_at": "2026-11-19T07:19:54.779Z"
+    }
+  ],
+  "taxonomy_values": [
+    {
+      "id": "08ad97fe-3af6-48d0-a2f3-f77dd6ef2ab5",
+      "taxonomy_key": "affiliation",
+      "key": "among-us",
+      "name": "Among Us"
+    },
+    {
+      "id": "0ad53147-5e00-4d4a-b210-d27f7a6b5777",
+      "taxonomy_key": "class",
+      "key": "Archer",
+      "name": "Archer"
+    },
+    {
+      "id": "0c39cf53-f764-435e-88cc-ac679c6675b7",
+      "taxonomy_key": "class",
+      "key": "Alchemist",
+      "name": "Alchemist"
+    },
+    {
+      "id": "1e827896-205f-421b-9618-4204b8b0e9b3",
+      "taxonomy_key": "class",
+      "key": "Necromancer",
+      "name": "Necromancer"
+    },
+    {
+      "id": "1ecd5b23-1fb2-4c84-a2e5-9f45bbcbe8f2",
+      "taxonomy_key": "class",
+      "key": "Warrior",
+      "name": "Warrior"
+    },
+    {
+      "id": "269380d0-35c7-4a0a-8917-94b9f40c06a5",
+      "taxonomy_key": "class",
+      "key": "Paladin",
+      "name": "Paladin"
+    },
+    {
+      "id": "2e03af92-155b-4789-91e6-394e9eea504c",
+      "taxonomy_key": "class",
+      "key": "Mage",
+      "name": "Mage"
+    },
+    {
+      "id": "33b608aa-5e0c-4ad2-9e76-22a801a4ac4a",
+      "taxonomy_key": "gender",
+      "key": "male",
+      "name": "ชาย"
+    },
+    {
+      "id": "362ff06c-7609-4c12-b4dd-d65d22835b4b",
+      "taxonomy_key": "class",
+      "key": "Crusader",
+      "name": "Crusader"
+    },
+    {
+      "id": "3c4be3ca-5714-431b-b5ee-5d6207e3d606",
+      "taxonomy_key": "affiliation",
+      "key": "rov",
+      "name": "R.O.V"
+    },
+    {
+      "id": "3cf300fa-1bc2-47ff-8c12-6aabb71537e2",
+      "taxonomy_key": "affiliation",
+      "key": "goose-goose-duck",
+      "name": "Goose Goose Duck"
+    },
+    {
+      "id": "451bb105-4734-4c69-b43f-70a998d7ee4e",
+      "taxonomy_key": "class",
+      "key": "Grand Healer",
+      "name": "Grand Healer"
+    },
+    {
+      "id": "48bf65f1-12bb-4c1e-b966-55047080fd08",
+      "taxonomy_key": "class",
+      "key": "Swordswoman",
+      "name": "Swordswoman"
+    },
+    {
+      "id": "4e1507f3-3ce2-4b44-9cee-c34cf477f630",
+      "taxonomy_key": "element",
+      "key": "neutral",
+      "name": "neutral"
+    },
+    {
+      "id": "5197687c-6d06-4c0b-8588-18e623440af6",
+      "taxonomy_key": "class",
+      "key": "Swordsman",
+      "name": "Swordsman"
+    },
+    {
+      "id": "54e87cbf-7f80-451b-a076-1e7c04e4eb69",
+      "taxonomy_key": "affiliation",
+      "key": "fivem",
+      "name": "FiveM"
+    },
+    {
+      "id": "60784b61-dbd6-4d24-b6cd-b2f5765610dc",
+      "taxonomy_key": "class",
+      "key": "Merchant",
+      "name": "Merchant"
+    },
+    {
+      "id": "6449ce86-1b9f-421b-998f-0057539b36e6",
+      "taxonomy_key": "class",
+      "key": "Thief",
+      "name": "Thief"
+    },
+    {
+      "id": "673e4296-4e33-4cd2-ad98-a4aa2875e714",
+      "taxonomy_key": "class",
+      "key": "Cleric",
+      "name": "Cleric"
+    },
+    {
+      "id": "7004bccc-7344-4fa8-b9aa-25ff173d9e85",
+      "taxonomy_key": "class",
+      "key": "Acolyte",
+      "name": "Acolyte"
+    },
+    {
+      "id": "70626c76-a16f-4d73-abc1-06ed3406e419",
+      "taxonomy_key": "class",
+      "key": "Demon Summoner",
+      "name": "Demon Summoner"
+    },
+    {
+      "id": "7733abad-316b-4d95-9353-477ecdca92fc",
+      "taxonomy_key": "class",
+      "key": "Dev Sumoner",
+      "name": "Dev Sumoner"
+    },
+    {
+      "id": "7b1b623c-8d05-46dd-98ad-d5d9c54e7629",
+      "taxonomy_key": "element",
+      "key": "poison",
+      "name": "poison"
+    },
+    {
+      "id": "8a698f7f-b690-4f4a-8872-2b3c521368e9",
+      "taxonomy_key": "class",
+      "key": "Master Bear Warrior",
+      "name": "Master Bear Warrior"
+    },
+    {
+      "id": "8ab3a7ed-95f8-4bdc-916d-c5367af89dd8",
+      "taxonomy_key": "class",
+      "key": "Spearwoman",
+      "name": "Spearwoman"
+    },
+    {
+      "id": "8ebfad50-8aa2-466d-8d05-38418d5f657a",
+      "taxonomy_key": "element",
+      "key": "holy",
+      "name": "holy"
+    },
+    {
+      "id": "91629ed9-9990-4b0c-8883-92f56b5bb568",
+      "taxonomy_key": "element",
+      "key": "earth",
+      "name": "earth"
+    },
+    {
+      "id": "916701a3-56c8-40ad-b4f5-be77013f9608",
+      "taxonomy_key": "element",
+      "key": "lightning",
+      "name": "lightning"
+    },
+    {
+      "id": "92bdd860-d48a-47bf-b72d-f00a490c205a",
+      "taxonomy_key": "element",
+      "key": "dark",
+      "name": "dark"
+    },
+    {
+      "id": "971073ed-6135-406a-84d0-58c9ae3b83c7",
+      "taxonomy_key": "class",
+      "key": "Warlord",
+      "name": "Warlord"
+    },
+    {
+      "id": "9cf4feac-8dcf-4641-b951-791905ca373e",
+      "taxonomy_key": "class",
+      "key": "Bear Warrior",
+      "name": "Bear Warrior"
+    },
+    {
+      "id": "a8721ff3-62ab-43eb-a94b-fc3333a51918",
+      "taxonomy_key": "class",
+      "key": "Healer",
+      "name": "Healer"
+    },
+    {
+      "id": "aeec5cd5-8ade-40ae-8912-95e37eba28c0",
+      "taxonomy_key": "class",
+      "key": "Saint Bishop",
+      "name": "Saint Bishop"
+    },
+    {
+      "id": "b06b2084-f190-4185-ac11-e53d40b9b431",
+      "taxonomy_key": "element",
+      "key": "nature",
+      "name": "nature"
+    },
+    {
+      "id": "bd1817fb-a8c8-40a6-af19-fa31d9f3e1cd",
+      "taxonomy_key": "gender",
+      "key": "other",
+      "name": "อื่น ๆ / ไม่ระบุ"
+    },
+    {
+      "id": "bf5005b4-de95-41ad-b062-69a822dea258",
+      "taxonomy_key": "affiliation",
+      "key": "ghost-story",
+      "name": "เล่าเรื่องผี"
+    },
+    {
+      "id": "c0bd0b12-213a-41c7-9e8f-85c3c984cced",
+      "taxonomy_key": "class",
+      "key": "Fighter",
+      "name": "Fighter"
+    },
+    {
+      "id": "c32af07b-82eb-4378-bd7e-d7013f03365b",
+      "taxonomy_key": "gender",
+      "key": "female",
+      "name": "หญิง"
+    },
+    {
+      "id": "c4da53d1-d82e-4f6a-abb5-08db728f3de4",
+      "taxonomy_key": "affiliation",
+      "key": "board-game",
+      "name": "บอร์ดเกม"
+    },
+    {
+      "id": "c87527e5-5b79-4e23-a18c-775d2080fd19",
+      "taxonomy_key": "element",
+      "key": "fire",
+      "name": "fire"
+    },
+    {
+      "id": "c9a66918-0ce5-4be1-8633-73d70b7dee56",
+      "taxonomy_key": "element",
+      "key": "physical",
+      "name": "physical"
+    },
+    {
+      "id": "ce4aaf2b-a80e-43e1-b8ad-c62c27390bdf",
+      "taxonomy_key": "affiliation",
+      "key": "roblox",
+      "name": "Roblox"
+    },
+    {
+      "id": "cf5a04e1-1848-4847-9d5d-3c6ca469b960",
+      "taxonomy_key": "class",
+      "key": "Blacksmith",
+      "name": "Blacksmith"
+    },
+    {
+      "id": "cfc67771-bbdb-488e-b26d-8df2d896ebe3",
+      "taxonomy_key": "class",
+      "key": "Assassin",
+      "name": "Assassin"
+    },
+    {
+      "id": "d0625230-395f-4e7f-abfb-0c168a3d98bd",
+      "taxonomy_key": "class",
+      "key": "Master Summoner",
+      "name": "Master Summoner"
+    },
+    {
+      "id": "d0718f2f-ddb6-420f-b627-da0262ea310f",
+      "taxonomy_key": "class",
+      "key": "Druid",
+      "name": "Druid"
+    },
+    {
+      "id": "d0e41eb3-0da5-4eac-aa02-83992e805f47",
+      "taxonomy_key": "class",
+      "key": "Grand Summoner",
+      "name": "Grand Summoner"
+    },
+    {
+      "id": "da034adb-7278-43c6-967a-4203231ae1ea",
+      "taxonomy_key": "class",
+      "key": "Rogue",
+      "name": "Rogue"
+    },
+    {
+      "id": "e84eb63c-960d-4bde-b2c8-758ccfd6eae4",
+      "taxonomy_key": "element",
+      "key": "water",
+      "name": "water"
+    },
+    {
+      "id": "ea35b40e-1daf-4bb9-8dfd-2e6be51b212d",
+      "taxonomy_key": "affiliation",
+      "key": "ragnarok",
+      "name": "Ragnarok"
+    },
+    {
+      "id": "ec10422b-3441-479b-bfbf-49ac5b11af27",
+      "taxonomy_key": "affiliation",
+      "key": "warz",
+      "name": "WarZ"
+    },
+    {
+      "id": "f3a82d8b-534c-40bf-94a8-9ffd3ec1ab8b",
+      "taxonomy_key": "class",
+      "key": "Storm Priest",
+      "name": "Storm Priest"
+    },
+    {
+      "id": "f6e28c57-0cb0-4e7b-9ce2-da78a8fd8a73",
+      "taxonomy_key": "class",
+      "key": "Bishop",
+      "name": "Bishop"
+    },
+    {
+      "id": "fed315f2-6fbe-4f8b-ac4e-cdc4b47e9179",
+      "taxonomy_key": "class",
+      "key": "Ninja",
+      "name": "Ninja"
+    },
+    {
+      "id": "fffd952f-1b1e-4650-ad92-79a3028d2430",
+      "taxonomy_key": "class",
+      "key": "Priest",
+      "name": "Priest"
+    }
+  ],
+  "affiliation_synergies": [
+    {
+      "id": "0ec8cb1c-6c00-4a1d-924d-56935eb3230d",
+      "affiliation_id": "3c4be3ca-5714-431b-b5ee-5d6207e3d606",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "1f30c19e-ff93-45d4-a89b-c0351a389d2a",
+      "affiliation_id": "ce4aaf2b-a80e-43e1-b8ad-c62c27390bdf",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "204daf94-8d3a-46c6-87af-d512e970718a",
+      "affiliation_id": "ec10422b-3441-479b-bfbf-49ac5b11af27",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "2b8b6d14-000a-4f5e-911c-8c15aaf90918",
+      "affiliation_id": "ec10422b-3441-479b-bfbf-49ac5b11af27",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "3170bdd5-1a45-461a-8d9e-ee6778023596",
+      "affiliation_id": "3cf300fa-1bc2-47ff-8c12-6aabb71537e2",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "370e18c6-ab6e-40b5-bc2a-5f4695d3497e",
+      "affiliation_id": "ce4aaf2b-a80e-43e1-b8ad-c62c27390bdf",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "3fbf171c-cd8e-4330-913e-508d2879d97b",
+      "affiliation_id": "bf5005b4-de95-41ad-b062-69a822dea258",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "45341520-b362-4046-b09c-ba9d8bfac5d0",
+      "affiliation_id": "54e87cbf-7f80-451b-a076-1e7c04e4eb69",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "474a468c-feb0-4cb9-8f16-dd0adfaa2015",
+      "affiliation_id": "3c4be3ca-5714-431b-b5ee-5d6207e3d606",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "4b93c771-08b7-4b12-b393-3f49831cbd56",
+      "affiliation_id": "bf5005b4-de95-41ad-b062-69a822dea258",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "4e6481ab-c8b1-45b8-bcfb-134e0807d5a5",
+      "affiliation_id": "ea35b40e-1daf-4bb9-8dfd-2e6be51b212d",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "50fe3192-0099-4c5e-a79b-d76596767747",
+      "affiliation_id": "3c4be3ca-5714-431b-b5ee-5d6207e3d606",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "5cce2219-8a95-4cbd-8788-8eb81ab33cba",
+      "affiliation_id": "54e87cbf-7f80-451b-a076-1e7c04e4eb69",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "7fe1e070-1721-45ab-8bfe-a15dfe85b924",
+      "affiliation_id": "ea35b40e-1daf-4bb9-8dfd-2e6be51b212d",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "8439c32b-dcdc-46e6-8d47-6b5bd0607ec0",
+      "affiliation_id": "c4da53d1-d82e-4f6a-abb5-08db728f3de4",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "8be996e2-37f8-406e-8a46-c1bcf090e104",
+      "affiliation_id": "54e87cbf-7f80-451b-a076-1e7c04e4eb69",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "9424a485-ef46-4119-baf0-fd6fff41a29a",
+      "affiliation_id": "c4da53d1-d82e-4f6a-abb5-08db728f3de4",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "9afca891-7c86-4cf7-baa6-d9f058445948",
+      "affiliation_id": "08ad97fe-3af6-48d0-a2f3-f77dd6ef2ab5",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "c4352aa6-3b39-4c92-995e-1c45892e2661",
+      "affiliation_id": "3cf300fa-1bc2-47ff-8c12-6aabb71537e2",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "c622f5af-3a76-43a8-9a89-ec9e6017b49d",
+      "affiliation_id": "08ad97fe-3af6-48d0-a2f3-f77dd6ef2ab5",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "cd47c26b-316f-4046-96ba-8199b7fe3a39",
+      "affiliation_id": "c4da53d1-d82e-4f6a-abb5-08db728f3de4",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "d113c1b9-c7f3-459b-be9a-296864c81a71",
+      "affiliation_id": "bf5005b4-de95-41ad-b062-69a822dea258",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "d84c8fbc-68f9-4938-8e5d-74471ecf293b",
+      "affiliation_id": "ce4aaf2b-a80e-43e1-b8ad-c62c27390bdf",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "e861c3e3-5962-40cf-9186-c374ee0dc55a",
+      "affiliation_id": "ec10422b-3441-479b-bfbf-49ac5b11af27",
+      "min_members": 3,
+      "stat": "atk",
+      "amount": 10,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +10 (ข้อเสนอ)"
+    },
+    {
+      "id": "f16682b9-c892-4604-9ce4-4c7252640513",
+      "affiliation_id": "ea35b40e-1daf-4bb9-8dfd-2e6be51b212d",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    },
+    {
+      "id": "f802f2fa-98cf-446f-af4f-0c7d9fe2d66b",
+      "affiliation_id": "08ad97fe-3af6-48d0-a2f3-f77dd6ef2ab5",
+      "min_members": 4,
+      "stat": "atk",
+      "amount": 15,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +15 (ข้อเสนอ)"
+    },
+    {
+      "id": "f8d33fa4-c8c8-400f-9453-751b504cbf3f",
+      "affiliation_id": "3cf300fa-1bc2-47ff-8c12-6aabb71537e2",
+      "min_members": 2,
+      "stat": "atk",
+      "amount": 5,
+      "max_stacks": 1,
+      "description": "ตัวละครที่เคยเล่นเกมนี้ด้วยกัน อยู่บนสนามพร้อมกัน ATK +5 (ข้อเสนอ)"
+    }
+  ],
+  "elements_seed": {
+    "_note": "ข้อเสนอของ Claude ยังไม่ใช่กติกาจริง — แก้ได้ที่ไฟล์นี้ที่เดียว",
+    "multiplier_strong": 1.5,
+    "multiplier_weak": 0.75,
+    "elements": {
+      "fire": {
+        "th": "ไฟ",
+        "icon": "fire",
+        "strong": [
+          "nature",
+          "alchemy"
+        ]
+      },
+      "water": {
+        "th": "น้ำ",
+        "icon": "water",
+        "strong": [
+          "fire"
+        ]
+      },
+      "lightning": {
+        "th": "สายฟ้า",
+        "icon": "lightning",
+        "strong": [
+          "water"
+        ]
+      },
+      "earth": {
+        "th": "ดิน",
+        "icon": "rock_mp",
+        "strong": [
+          "lightning"
+        ]
+      },
+      "nature": {
+        "th": "ธรรมชาติ",
+        "icon": "leaf",
+        "strong": [
+          "earth"
+        ]
+      },
+      "poison": {
+        "th": "พิษ",
+        "icon": "drop_green",
+        "strong": [
+          "nature"
+        ]
+      },
+      "alchemy": {
+        "th": "เล่นแร่แปรธาตุ",
+        "icon": "potion_mortar",
+        "strong": [
+          "poison"
+        ]
+      },
+      "dark": {
+        "th": "มืด",
+        "icon": "moon",
+        "strong": [
+          "holy"
+        ]
+      },
+      "holy": {
+        "th": "แสง",
+        "icon": "sun",
+        "strong": [
+          "dark"
+        ]
+      },
+      "physical": {
+        "th": "กายภาพ",
+        "icon": "swords",
+        "strong": []
+      },
+      "neutral": {
+        "th": "กลาง",
+        "icon": "coin",
+        "strong": []
+      },
+      "wind": {
+        "th": "ลม",
+        "icon": "smoke",
+        "strong": [
+          "poison"
+        ]
+      }
+    }
+  }
+}

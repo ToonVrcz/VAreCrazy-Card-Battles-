@@ -1,0 +1,495 @@
+{
+  "source": "Supabase project jcjqooeckoapoikcwpet, read-only SELECT on cards, 2026-11-19",
+  "cards": [
+    {
+      "character_id": "1GOKU-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 3
+    },
+    {
+      "character_id": "1GOKU-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BABY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BACKJI-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 2
+    },
+    {
+      "character_id": "BADGUY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BADGUY-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BAM-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BAMMIE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "BOBO-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "CHAEM-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "CUTIE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "published",
+      "production_version_no": 1
+    },
+    {
+      "character_id": "DNMAN-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "FOLLOW-YOU-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "FOLLOW-YOU-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "FOLLOW-YOU-070",
+      "card_type": "character",
+      "level": 70,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "GOD-WA-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "I-M-GRAPE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "JAOJAY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LALAPING-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LALAPING-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LALAPING-070",
+      "card_type": "character",
+      "level": 70,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LEON-S-KENNEDY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LINLADA-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LORDNAM-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "LUCKY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "MELON-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "MIKI-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "MON-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "NONG-TAENGMO-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "in_review",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "NORMAN-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "NORMAN-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "OUFILLING-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "PIKACHU-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "PK-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "PKXCY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SATOSHI-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SATOSHI-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SKYMOON-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SMILE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SOMYES-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TAN-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TEE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TEE-040",
+      "card_type": "character",
+      "level": 40,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "THAI26-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "THAI32-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "THOMAS-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "WENDYWENDIE-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "ZEESKY-015",
+      "card_type": "character",
+      "level": 15,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "EVO-001",
+      "card_type": "evolution",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "FUS-001",
+      "card_type": "fusion",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-001",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-002",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-003",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-004",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-005",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-006",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-007",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-008",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-009",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "SPL-010",
+      "card_type": "spell",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-001",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-002",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-003",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-004",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-005",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-006",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-007",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-008",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-009",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    },
+    {
+      "character_id": "TRP-010",
+      "card_type": "trap",
+      "level": null,
+      "production_status": "draft",
+      "production_version_no": 0
+    }
+  ]
+}
