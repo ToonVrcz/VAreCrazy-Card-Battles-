@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { migrateUp } from '../db/migrate';
 import { CardService, type User } from '../src/server/service';
 import { Economy, ECONOMY } from '../src/server/economy';
+import { dispatch } from '../src/server/api';
 
 // Phase 1 (security & data integrity). Nothing here changes a game rule, a card value or the economy.
 let svc: CardService, db: PGlite;
@@ -114,5 +115,29 @@ describe('generated bundles match their source (drift guard)', () => {
     const out = buildSync({ entryPoints: ['src/edge/index.ts'], bundle: true, format: 'esm', platform: 'node', external: ['@electric-sql/pglite', 'postgres'], minify: true, charset: 'utf8', write: false, logLevel: 'silent' }).outputFiles[0].text;
     expect(out.length).toBeGreaterThan(50_000);
     for (const marker of ['admin_login_failures', 'pvp-pair:', 'profile_create_log']) expect(out).toContain(marker);
+  });
+});
+
+describe('IP guard no longer trusts proxy headers (Phase 1 Remediation)', () => {
+  const create = (headers: Record<string, string>) => dispatch(svc, { method: 'POST', path: '/api/play/profile', query: new URLSearchParams(), headers, body: async () => Buffer.from('{"name":"x"}') });
+  it('a spoofed or rotating x-forwarded-for / x-real-ip neither blocks nor bypasses anything, and writes no per-IP rows', async () => {
+    for (let i = 0; i < 15; i++) {
+      const r = await create({ 'x-forwarded-for': `203.0.113.${i}, 10.0.0.1`, 'x-real-ip': `198.51.100.${i}` });
+      expect(r.status).toBe(201); expect((r.data as any).points).toBe(500);
+    }
+    expect((await create({ 'x-forwarded-for': '1.1.1.1' })).status).toBe(201);                 // the same value many times is not throttled by header
+    for (let i = 0; i < 12; i++) await create({ 'x-forwarded-for': '9.9.9.9' });
+    expect((await create({ 'x-forwarded-for': '9.9.9.9' })).status).toBe(201);
+    expect((await db.query<any>(`SELECT count(*)::int n FROM profile_create_log`)).rows[0].n).toBe(0);
+  });
+  it('the global ceiling still stops a flood (headers irrelevant) and the starter gift stays 500', async () => {
+    await db.query(`INSERT INTO players(key_hash,name,points) SELECT 'k'||g,'bot',500 FROM generate_series(1,300) g`);
+    const r = await create({ 'x-forwarded-for': '203.0.113.7' });
+    expect(r.status).toBe(429);
+    expect(ECONOMY.starterPoints).toBe(500);
+  });
+  it('the per-IP capability stays available for a future trusted source', async () => {
+    for (let i = 0; i < 10; i++) await new Economy(svc).createProfile('p', 'trusted-ip');
+    await expect(new Economy(svc).createProfile('p', 'trusted-ip')).rejects.toMatchObject({ code: 429 });
   });
 });

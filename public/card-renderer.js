@@ -26,7 +26,7 @@ const VCZ = (() => {
     demon: p('M4 3l4.5 4h7L20 3v9a8 8 0 0 1-16 0z', '#c24ac2') + '<circle cx="9" cy="12" r="1.6" fill="#fff"/><circle cx="15" cy="12" r="1.6" fill="#fff"/>',
   };
   const glyph = (k, x, y, s) => `<g transform="translate(${x} ${y}) scale(${s / 24})">${GLYPH[k] || GLYPH.fire}</g>`;
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const defs = '';
   const ref = { frame: '' };            // page sets VCZ.ref.frame = URL of frame image
   const F = `font-family="Georgia,'Times New Roman',serif" font-weight="800"`;
@@ -39,8 +39,8 @@ const VCZ = (() => {
     const def = card.def > 0 ? `<g transform="translate(715 1040)"><rect width="190" height="84" rx="42" fill="#2a1244" stroke="#e2b440" stroke-width="6"/>${glyph('def', 16, 12, 60)}<text x="128" y="60" text-anchor="middle" ${F} font-size="50" fill="${card.def === base.def || base.def == null ? '#fff1c9' : card.def > base.def ? '#7dffa0' : '#ff8a80'}" stroke="#12061f" stroke-width="5" paint-order="stroke">${card.def}</text></g>` : '';
     return `<svg viewBox="0 0 1023 1538" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(nm)} ${esc(card.name)} Lv.${lv}">
       <rect x="20" y="20" width="983" height="1498" rx="30" fill="#120620"/>
-      <image href="${card.img}" x="60" y="172" width="903" height="990" preserveAspectRatio="xMidYMid slice"/>
-      <image href="${card.frame||ref.frame}" x="0" y="0" width="1023" height="1538"/>
+      <image href="${esc(card.img)}" x="60" y="172" width="903" height="990" preserveAspectRatio="xMidYMid slice"/>
+      <image href="${esc(card.frame||ref.frame)}" x="0" y="0" width="1023" height="1538"/>
       ${pt(512, 135 + nfs * 0.1, nfs, esc(nm), '#f6df9a', '#2a0f44', 7, 3)}
       <circle cx="122" cy="262" r="54" fill="#2a1244" stroke="#e2b440" stroke-width="7"/>
       ${pt(122, 262 + lfs * 0.35, lfs, lv, '#f6df9a', '#12061f', 4)}
