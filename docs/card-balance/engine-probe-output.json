@@ -1,0 +1,102 @@
+{
+  "damage": {
+    "atk30_def0_neutral": 30,
+    "atk30_def10": 20,
+    "atk30_def29": 1,
+    "atk30_def30": 1,
+    "atk30_def99": 1,
+    "atk30_def0_fire_vs_nature(x1.5)": 45,
+    "atk30_def0_nature_vs_fire(x0.75)": 22,
+    "atk10_def5_fire_vs_nature": 7
+  },
+  "spl003x3": {
+    "bonusDef": 45,
+    "atk": 30,
+    "castsInOneTurn": 3
+  },
+  "spl004x3": {
+    "bonusAtk": 45,
+    "totalAtk": 75
+  },
+  "spl007": {
+    "myFieldNow": "FOLLOW-YOU-070",
+    "stolenAtk": 100,
+    "stolenAttackedFlag": false,
+    "stolenCanAttackSameTurn": true,
+    "error": null
+  },
+  "evolution": {
+    "evoCardsConsumed": 1,
+    "sacrificeRequired": {
+      "40": 1,
+      "70": 2,
+      "99": 3
+    },
+    "zeroSacrificeRejected": true,
+    "newPoison": 0,
+    "newLockedUntil": 0,
+    "evolvedUnitCanAttackSameTurn": false,
+    "attackError": "ตัวที่เพิ่งถูกเรียกโจมตีไม่ได้",
+    "evolvePerTurnLimit": 1
+  },
+  "fusion": {
+    "top": "BACKJI-015",
+    "bottom": "NONG-TAENGMO-015",
+    "hp": 136,
+    "atk": 49,
+    "def": 0,
+    "effectsOfCard": 1,
+    "fusedCards": [
+      "BACKJI-015",
+      "NONG-TAENGMO-015"
+    ],
+    "countsAsSummon": true
+  },
+  "spl008": {
+    "enemyTurnNo": 2,
+    "attackBlocked": true,
+    "err": "ถูกห้ามโจมตีในเทิร์นนี้"
+  },
+  "auras": {
+    "bobo15AuraAtk": 10,
+    "bobo15AuraHp": 20
+  },
+  "spellVolume": {
+    "castsInOneTurn": 3,
+    "handAfter": 4,
+    "handMax": 5,
+    "deckAfter": 21
+  },
+  "trp006": {
+    "firedAtEndOfActivePlayersTurn": true,
+    "hpLost": 15
+  },
+  "recursion": {
+    "handAfterRevive": 1,
+    "handAfterResummon": 1,
+    "deckAfter": 24,
+    "note": "CHAEM-015 on_summon draw fired again after revive+summon"
+  },
+  "lalaping070": {
+    "newHp": 320,
+    "newMaxHp": 320,
+    "note": "evolve from hp 20/160; aura +10 max HP; on_evolve heals ally1 (auto picks lowest HP ratio)"
+  },
+  "cardIdDriven": {
+    "spells": [
+      "SPL-001..010"
+    ],
+    "traps": [
+      "TRP-001..010 (event map TRAP{})"
+    ],
+    "note": "numeric values of spells/traps live in game.ts, not in card data"
+  },
+  "startingLp": {
+    "engine": 100,
+    "handMax": 5,
+    "startHand": 5,
+    "fieldSlots": 7,
+    "backSlots": 5
+  },
+  "summonLv40": "เรียกได้เฉพาะตัวละคร Lv.15"
+}

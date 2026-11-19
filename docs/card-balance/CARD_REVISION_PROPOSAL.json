@@ -1,0 +1,4315 @@
+{
+  "status": "PROPOSED - NOT APPROVED",
+  "generated_by": "scripts/gen-card-balance-docs.ts",
+  "hp_atk_changed": false,
+  "card_count": 70,
+  "note": "HP and ATK equal the current values for every card. Character effect rows listed under proposed.effects were validated with parseEffect. Spells/traps/EVO/FUS have no data change; engine work is listed in engine_proposals.",
+  "engine_proposals": [
+    {
+      "id": "ENGINE-PROP-01",
+      "title": "SPL-007: stolen unit cannot attack the turn it arrives",
+      "status": "PROPOSED / NOT APPROVED / NEW ENGINE WORK",
+      "change": "In the SPL-007 case of src/engine/game.ts set summonedTurn = g.turn on both swapped units (the existing \"just summoned cannot attack\" rule then applies).",
+      "evidence": "verify.spl007: stolenCanAttackSameTurn = true (a Lv70 FOLLOW-YOU-070 obtained for a Lv15 attacks at once).",
+      "tests": "T-ENG-01..03"
+    },
+    {
+      "id": "ENGINE-PROP-02",
+      "title": "SPL-003 / SPL-004: cap stacking per unit",
+      "status": "PROPOSED / NOT APPROVED / NEW ENGINE WORK",
+      "change": "Allow one SPL-003 and one SPL-004 buff per unit, or cap total bonusDef / bonusAtk from spells at +30 (Toon decides the form). Needs a per-unit counter in Unit.",
+      "evidence": "verify.spl003x3: bonusDef 45; verify.spl004x3: bonusAtk 45 (total ATK 75 from a 30-ATK unit).",
+      "tests": "T-ENG-04..06"
+    },
+    {
+      "id": "ENGINE-PROP-03",
+      "title": "Optional: spells per turn limit (e.g. 2)",
+      "status": "PROPOSED / NOT APPROVED / NEW ENGINE WORK / OPTIONAL",
+      "change": "Add a per-turn spell counter on Player; reject the 3rd cast.",
+      "evidence": "verify.spellVolume: 3 casts in one turn, deck 30 -> 21 (SPL-005 draws).",
+      "tests": "T-ENG-07"
+    },
+    {
+      "id": "ENGINE-PROP-04",
+      "title": "Optional: activate the \"combo\" trigger (FOLLOW-YOU-040)",
+      "status": "PROPOSED / NOT APPROVED / NEW ENGINE WORK / OPTIONAL",
+      "change": "Define \"another Combo card on the field\" in the parser/registry and the engine; today any combo row returns null from parseEffect and is not executed. Must stay in parity with src/engine/effect-registry.ts.",
+      "evidence": "effects.ts parseRaw does not accept trigger \"combo\"; has_combo exists only as card metadata.",
+      "tests": "T-ENG-08"
+    },
+    {
+      "id": "ENGINE-PROP-05",
+      "title": "Text/data alignment: SPL-003 and SPL-004 duration",
+      "status": "PROPOSED / NOT APPROVED / DATA CHANGE",
+      "change": "Choose one canonical behaviour: \"until the unit leaves the field\" (what the engine does and rules_text says) or \"until end of turn\" (what the effect row says). Update the other text; if the engine is changed it is new engine work.",
+      "evidence": "Effect row: DEF +15 จนจบเทิร์น; rules_text and engine: until the unit leaves the field.",
+      "tests": "T-ENG-09"
+    }
+  ],
+  "cards": [
+    {
+      "card_id": "1GOKU-015",
+      "name": "Fighter",
+      "card_type": "character",
+      "level": 15,
+      "class": "Fighter",
+      "element": "fire",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.864,
+        "proposed": 0.95
+      },
+      "current": {
+        "hp": 84,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 84,
+        "atk": 20,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 20 / HP 84 with +10 on attack. Evolves to a strong 1GOKU-040.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Lv15 is below average while Lv40 is above; closes a little of the gap.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "1GOKU-040",
+      "name": "Warlord",
+      "card_type": "character",
+      "level": 40,
+      "class": "Warlord",
+      "element": "fire",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.317,
+        "proposed": 1.104
+      },
+      "current": {
+        "hp": 152,
+        "atk": 55,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
+            "action_text": "HP −20",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 152,
+        "atk": 55,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+            "action_text": "HP −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 55 / HP 152 with +20 on attack plus 20 damage when destroyed.",
+      "recommendation": "Death damage 20 -> 10.",
+      "reason": "Two strong effects on a strong body; trim the secondary one.",
+      "risk": "Drops from S to A, borderline with B (about 1.10x).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "BABY-015",
+      "name": "Acolyte",
+      "card_type": "character",
+      "level": 15,
+      "class": "Acolyte",
+      "element": "holy",
+      "role": "Healer / support",
+      "approved": false,
+      "change_type": "def+effect",
+      "tier": {
+        "current": "D",
+        "proposed": "D"
+      },
+      "power_ratio": {
+        "current": 0.329,
+        "proposed": 0.411
+      },
+      "current": {
+        "hp": 70,
+        "atk": 10,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 70,
+        "atk": 10,
+        "def": 5,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ฟื้น HP 30 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 30",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Lowest power of all cards (ATK 10 / HP 70, summon heal 20).",
+      "recommendation": "DEF 0 -> 5 and summon heal 20 -> 30.",
+      "reason": "A support card has to be a good heal; ATK is locked.",
+      "risk": "Heal 30 is the same size as SPL-002; still a once-per-summon effect, so low exploit risk, but recursion (SPL-006) can reuse it.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "BACKJI-015",
+      "name": "Assassin",
+      "card_type": "character",
+      "level": 15,
+      "class": "Assassin",
+      "element": "water",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.867,
+        "proposed": 0.954
+      },
+      "current": {
+        "hp": 76,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +15",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 76,
+        "atk": 24,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +15",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Conditional +15 attack bonus (HP of target lower than self). ATK 24 / HP 76.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Fragile assassin; small DEF.",
+      "risk": "Fusion partner of NONG-TAENGMO (production data): fused unit uses the top card only, so DEF applies to the top card.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "BADGUY-015",
+      "name": "Assassin",
+      "card_type": "character",
+      "level": 15,
+      "class": "Assassin",
+      "element": "poison",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.725,
+        "proposed": 0.825
+      },
+      "current": {
+        "hp": 94,
+        "atk": 15,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +15",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 94,
+        "atk": 15,
+        "def": 4,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +15 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +15",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Same conditional bonus as BACKJI-015 with ATK 15 / HP 94: the bonus is too weak to matter.",
+      "recommendation": "DEF 0 -> 4.",
+      "reason": "A tank-leaning assassin that needs survivability.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "BADGUY-040",
+      "name": "Assassin",
+      "card_type": "character",
+      "level": 40,
+      "class": "Assassin",
+      "element": "poison",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.351,
+        "proposed": 1.218
+      },
+      "current": {
+        "hp": 153,
+        "atk": 60,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +25 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +25",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 20",
+            "action_text": "HP −20",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 153,
+        "atk": 60,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีเป้าหมายที่ HP น้อยกว่าตัวเอง ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": "HP ของเป้าหมายน้อยกว่าตัวเอง",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 15",
+            "action_text": "HP −15",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 60 is the highest Lv40; with +25 it reaches 85 and leaves 20 damage when destroyed.",
+      "recommendation": "Attack bonus +25 -> +20 and death damage 20 -> 15.",
+      "reason": "Strongest Lv40; trim the effects only.",
+      "risk": "Drops from S to A (about 1.22x).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "BAM-015",
+      "name": "Swordswoman",
+      "card_type": "character",
+      "level": 15,
+      "class": "Swordswoman",
+      "element": "fire",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "A",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.172,
+        "proposed": 1.172
+      },
+      "current": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.17x the Lv average (tier A); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "BAMMIE-015",
+      "name": "Swordswoman",
+      "card_type": "character",
+      "level": 15,
+      "class": "Swordswoman",
+      "element": "water",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "A",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.172,
+        "proposed": 1.172
+      },
+      "current": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.17x the Lv average (tier A); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "BOBO-015",
+      "name": "Swordsman",
+      "card_type": "character",
+      "level": 15,
+      "class": "Swordsman",
+      "element": "water",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "A",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.152,
+        "proposed": 1.152
+      },
+      "current": {
+        "hp": 80,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.15x the Lv average (tier A); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "CHAEM-015",
+      "name": "Merchant",
+      "card_type": "character",
+      "level": 15,
+      "class": "Merchant",
+      "element": "neutral",
+      "role": "Card-advantage engine",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.007,
+        "proposed": 1.007
+      },
+      "current": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.01x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "CUTIE-015",
+      "name": "Mage",
+      "card_type": "character",
+      "level": 15,
+      "class": "Mage",
+      "element": "nature",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.399,
+        "proposed": 1.348
+      },
+      "current": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+            "action_text": "HP −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 5",
+            "action_text": "HP −5",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "ATK 35 / HP 90 plus a free 10 damage on summon.",
+      "recommendation": "Summon damage 10 -> 5.",
+      "reason": "Same reason as PIKACHU-015; keeps the 3 chip-damage Mages consistent.",
+      "risk": "Remains S-tier because of stats.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "DNMAN-015",
+      "name": "Crusader",
+      "card_type": "character",
+      "level": 15,
+      "class": "Crusader",
+      "element": "lightning",
+      "role": "Frontline attacker",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.481,
+        "proposed": 1.399
+      },
+      "current": {
+        "hp": 80,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 40 plus a +10 attack bonus = 50 ATK at Lv15; far above the Lv15 average incoming ATK.",
+      "recommendation": "Attack bonus +10 -> +5.",
+      "reason": "The stat line is locked, so the effect is the only lever.",
+      "risk": "Still S-tier. Do not combine with SPL-004 stacking without the cap proposal (ENGINE-PROP-02).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "FOLLOW-YOU-015",
+      "name": "Demon Summoner",
+      "card_type": "character",
+      "level": 15,
+      "class": "Demon Summoner",
+      "element": "dark",
+      "role": "Card-advantage engine",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.888,
+        "proposed": 0.946
+      },
+      "current": {
+        "hp": 90,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 20,
+        "def": 2,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Draw 1 on summon like MON/PK/CHAEM but ATK 20 / HP 90.",
+      "recommendation": "DEF 0 -> 2.",
+      "reason": "Lowest-stats of the four draw-on-summon cards.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "FOLLOW-YOU-040",
+      "name": "Master Summoner",
+      "card_type": "character",
+      "level": 40,
+      "class": "Master Summoner",
+      "element": "dark",
+      "role": "Frontline attacker",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.743,
+        "proposed": 0.811
+      },
+      "current": {
+        "hp": 150,
+        "atk": 50,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "combo",
+            "description": "พลังแฝง: เมื่อใช้ร่วมกับการ์ดที่มี Combo ใบอื่น ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": "มีการ์ด Combo ใบอื่นบนสนาม",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 150,
+        "atk": 50,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "combo",
+            "description": "พลังแฝง: เมื่อใช้ร่วมกับการ์ดที่มี Combo ใบอื่น ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": "มีการ์ด Combo ใบอื่นบนสนาม",
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Weakest Lv40 (ATK 50 / HP 150). Its second ability is a \"combo\" row that the engine cannot run (not active).",
+      "recommendation": "Attack bonus +10 -> +20 (the value the other Lv40 attackers use). The combo row is NOT touched: decision pending (see CLAUDE_IMPLEMENTATION_HANDOFF Open Decisions).",
+      "reason": "Compensates for the dead second ability with a supported number.",
+      "risk": "If Toon later activates combo (new engine work), the +20 may overshoot.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "FOLLOW-YOU-070",
+      "name": "Grand Summoner",
+      "card_type": "character",
+      "level": 70,
+      "class": "Grand Summoner",
+      "element": "dark",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.005,
+        "proposed": 1.005
+      },
+      "current": {
+        "hp": 300,
+        "atk": 100,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 30",
+            "action_text": "HP −30",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "passive",
+            "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ ATK +5",
+            "action_text": "ATK +5",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 300,
+        "atk": 100,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 30",
+            "action_text": "HP −30",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "passive",
+            "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ ATK +5",
+            "action_text": "ATK +5",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 100 / HP 300, +5 ATK aura for all allies and 30 damage when it evolves in. B tier.",
+      "recommendation": "No change.",
+      "reason": "Within the Lv70 band; only 2 Lv70 cards exist, so there is nothing to balance against.",
+      "risk": "Aura ATK stacks with attack buffs; see exploit tests.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "GOD-WA-015",
+      "name": "Thief",
+      "card_type": "character",
+      "level": 15,
+      "class": "Thief",
+      "element": "poison",
+      "role": "Thief (draw on kill)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "A",
+        "proposed": "A"
+      },
+      "power_ratio": {
+        "current": 1.199,
+        "proposed": 1.199
+      },
+      "current": {
+        "hp": 90,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.20x the Lv average (tier A); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "I-M-GRAPE-015",
+      "name": "Druid",
+      "card_type": "character",
+      "level": 15,
+      "class": "Druid",
+      "element": "fire",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.938,
+        "proposed": 0.938
+      },
+      "current": {
+        "hp": 80,
+        "atk": 21,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_start",
+            "description": "เริ่มเทิร์น ATK +5 ถาวร (สูงสุด +15)",
+            "action_text": "ATK +5 ถาวร (สูงสุด +15)",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 21,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_start",
+            "description": "เริ่มเทิร์น ATK +5 ถาวร (สูงสุด +15)",
+            "action_text": "ATK +5 ถาวร (สูงสุด +15)",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Estimated power is 0.94x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "JAOJAY-015",
+      "name": "Thief",
+      "card_type": "character",
+      "level": 15,
+      "class": "Thief",
+      "element": "water",
+      "role": "Thief (draw on kill)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.066,
+        "proposed": 1.066
+      },
+      "current": {
+        "hp": 60,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 60,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.07x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "LALAPING-015",
+      "name": "Priest",
+      "card_type": "character",
+      "level": 15,
+      "class": "Priest",
+      "element": "holy",
+      "role": "Healer / support",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.745,
+        "proposed": 0.848
+      },
+      "current": {
+        "hp": 80,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 20,
+        "def": 4,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Heal 10 per turn with ATK 20 / HP 80; below average.",
+      "recommendation": "DEF 0 -> 4.",
+      "reason": "Small survivability for a defensive card; effect stays the same as the other healers.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "LALAPING-040",
+      "name": "Bishop",
+      "card_type": "character",
+      "level": 40,
+      "class": "Bishop",
+      "element": "holy",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.729,
+        "proposed": 0.818
+      },
+      "current": {
+        "hp": 160,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเราทุกใบ",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 160,
+        "atk": 40,
+        "def": 6,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเราทุกใบ",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Heals every ally by 10 each turn (strong) but ATK 40 / HP 160.",
+      "recommendation": "DEF 0 -> 6.",
+      "reason": "Support unit that has to survive to heal; effect already powerful.",
+      "risk": "Stacks with LALAPING-070 aura HP +10 and healing loops: see exploit tests.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "LALAPING-070",
+      "name": "Saint Bishop",
+      "card_type": "character",
+      "level": 70,
+      "class": "Saint Bishop",
+      "element": "holy",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.995,
+        "proposed": 0.995
+      },
+      "current": {
+        "hp": 310,
+        "atk": 80,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ฟื้น HP เต็มให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP เต็ม",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "passive",
+            "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ HP +10",
+            "action_text": "HP +10",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 310,
+        "atk": 80,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ฟื้น HP เต็มให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP เต็ม",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "passive",
+            "description": "ต่อเนื่อง: ตัวละครฝ่ายเราทุกใบ HP +10",
+            "action_text": "HP +10",
+            "target_text": "ตัวละครฝ่ายเราทุกใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 80 / HP 310, aura +10 HP to all allies and a full heal on evolution. B tier.",
+      "recommendation": "No change (engine note: the full heal also undoes the \"keeps damage taken\" evolution rule: 320/320 in the probe).",
+      "reason": "The full heal is part of the effect text; changing it is a design decision for Toon.",
+      "risk": "Evolution of a damaged unit becomes a full heal; keep in the exploit tests.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "LEON-S-KENNEDY-015",
+      "name": "Necromancer",
+      "card_type": "character",
+      "level": 15,
+      "class": "Necromancer",
+      "element": "dark",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.883,
+        "proposed": 0.971
+      },
+      "current": {
+        "hp": 85,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 25,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Same effect as OUFILLING-015; HP 85 / ATK 25 is a little stronger.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Keeps LEON slightly above OUFILLING while both rise from C.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "LINLADA-015",
+      "name": "Spearwoman",
+      "card_type": "character",
+      "level": 15,
+      "class": "Spearwoman",
+      "element": "fire",
+      "role": "Frontline attacker",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.481,
+        "proposed": 1.388
+      },
+      "current": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 35 / HP 90 plus +10 on attack: second-best attacker body.",
+      "recommendation": "Attack bonus +10 -> +5.",
+      "reason": "Same lever as DNMAN-015.",
+      "risk": "Still S-tier.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "LORDNAM-015",
+      "name": "Ninja",
+      "card_type": "character",
+      "level": 15,
+      "class": "Ninja",
+      "element": "dark",
+      "role": "Evasive ninja",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.892,
+        "proposed": 0.949
+      },
+      "current": {
+        "hp": 85,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+            "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 25,
+        "def": 2,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+            "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Untargetable on the turn it is summoned (a tiny effect). Mid/low C tier.",
+      "recommendation": "DEF 0 -> 2.",
+      "reason": "Minimal buff to stay ahead of LUCKY-015.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "LUCKY-015",
+      "name": "Ninja",
+      "card_type": "character",
+      "level": 15,
+      "class": "Ninja",
+      "element": "water",
+      "role": "Evasive ninja",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.765,
+        "proposed": 0.871
+      },
+      "current": {
+        "hp": 76,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+            "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 76,
+        "atk": 24,
+        "def": 4,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "ในเทิร์นที่ถูกเรียก จะไม่ถูกเลือกเป็นเป้าหมายของเอฟเฟกต์ฝ่ายตรงข้าม",
+            "action_text": "ป้องกันการเลือกเป็นเป้าหมาย",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Same untargetable-on-summon effect as LORDNAM-015 with weaker stats (HP 76 / ATK 24).",
+      "recommendation": "DEF 0 -> 4.",
+      "reason": "Closes the gap with LORDNAM-015, which has the same effect.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "MELON-015",
+      "name": "Warrior",
+      "card_type": "character",
+      "level": 15,
+      "class": "Warrior",
+      "element": "earth",
+      "role": "Frontline attacker",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.481,
+        "proposed": 1.388
+      },
+      "current": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 35 / HP 90 plus +10 on attack, identical to LINLADA-015 except element.",
+      "recommendation": "Attack bonus +10 -> +5.",
+      "reason": "Same lever as DNMAN-015.",
+      "risk": "Still S-tier.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "MIKI-015",
+      "name": "Fighter",
+      "card_type": "character",
+      "level": 15,
+      "class": "Fighter",
+      "element": "physical",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.014,
+        "proposed": 1.014
+      },
+      "current": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.01x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "MON-015",
+      "name": "Merchant",
+      "card_type": "character",
+      "level": 15,
+      "class": "Merchant",
+      "element": "poison",
+      "role": "Card-advantage engine",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.678,
+        "proposed": 1.51
+      },
+      "current": {
+        "hp": 85,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Highest estimated power of all Lv15 (ATK 40 at HP 85 plus a FREE card on summon). Same draw as PK/CHAEM/FOLLOW-YOU-015 but with +15 ATK.",
+      "recommendation": "Make the draw a loot (discard 1 to draw 1), the wording THOMAS-015 already uses.",
+      "reason": "Removes the pure card-advantage part; the ATK 40 body stays. Uses the one cost the parser knows.",
+      "risk": "Still S-tier after the change (stats are locked). Empty-hand summon: cost cannot be paid so no draw (engine behaviour to confirm in tests).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "NONG-TAENGMO-015",
+      "name": "Thief",
+      "card_type": "character",
+      "level": 15,
+      "class": "Thief",
+      "element": "nature",
+      "role": "Thief (draw on kill)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.066,
+        "proposed": 1.066
+      },
+      "current": {
+        "hp": 80,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 30,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.07x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "NORMAN-015",
+      "name": "Bear Warrior",
+      "card_type": "character",
+      "level": 15,
+      "class": "Bear Warrior",
+      "element": "physical",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.889,
+        "proposed": 0.978
+      },
+      "current": {
+        "hp": 94,
+        "atk": 18,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 94,
+        "atk": 18,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 18 / HP 94 with a +10 attack bonus; slightly below average.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Bear Warrior is a tank role.",
+      "risk": "Evolves to NORMAN-040 (B tier), no change needed there.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "NORMAN-040",
+      "name": "Master Bear Warrior",
+      "card_type": "character",
+      "level": 40,
+      "class": "Master Bear Warrior",
+      "element": "physical",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.918,
+        "proposed": 0.918
+      },
+      "current": {
+        "hp": 150,
+        "atk": 50,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "turn_start",
+            "description": "เริ่มเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 150,
+        "atk": 50,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +20 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +20",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "turn_start",
+            "description": "เริ่มเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 50 / HP 150, +20 on attack and a self heal of 10 per turn; around the Lv40 average.",
+      "recommendation": "No change.",
+      "reason": "Balanced.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "OUFILLING-015",
+      "name": "Necromancer",
+      "card_type": "character",
+      "level": 15,
+      "class": "Necromancer",
+      "element": "dark",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.748,
+        "proposed": 0.851
+      },
+      "current": {
+        "hp": 90,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 20,
+        "def": 4,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน ATK +5 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +5",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK +5 for one turn when an ally goes to the graveyard (rare, weak). Same effect as LEON-S-KENNEDY-015.",
+      "recommendation": "DEF 0 -> 4.",
+      "reason": "Weak effect; survivability is the only lever without changing the design.",
+      "risk": "Low. The effect itself remains redundant with LEON (see redundancy list).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "PIKACHU-015",
+      "name": "Mage",
+      "card_type": "character",
+      "level": 15,
+      "class": "Mage",
+      "element": "lightning",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.51,
+        "proposed": 1.454
+      },
+      "current": {
+        "hp": 85,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+            "action_text": "HP −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 5",
+            "action_text": "HP −5",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "ATK 40 plus a free 10 damage on summon; best body together with MON-015.",
+      "recommendation": "Summon damage 10 -> 5.",
+      "reason": "Trims the free value; the strong body is untouched.",
+      "risk": "Still S-tier. 5 damage no longer finishes 10-HP units alone (low impact).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "PK-015",
+      "name": "Merchant",
+      "card_type": "character",
+      "level": 15,
+      "class": "Merchant",
+      "element": "neutral",
+      "role": "Card-advantage engine",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.049,
+        "proposed": 1.049
+      },
+      "current": {
+        "hp": 85,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก จั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.05x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "PKXCY-015",
+      "name": "Fighter",
+      "card_type": "character",
+      "level": 15,
+      "class": "Fighter",
+      "element": "physical",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.014,
+        "proposed": 1.014
+      },
+      "current": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.01x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "SATOSHI-015",
+      "name": "Healer",
+      "card_type": "character",
+      "level": 15,
+      "class": "Healer",
+      "element": "holy",
+      "role": "Healer / support",
+      "approved": false,
+      "change_type": "def+effect",
+      "tier": {
+        "current": "D",
+        "proposed": "D"
+      },
+      "power_ratio": {
+        "current": 0.559,
+        "proposed": 0.697
+      },
+      "current": {
+        "hp": 60,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 60,
+        "atk": 20,
+        "def": 5,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "HP 60 / ATK 20 is the thinnest body and the heal is only 10.",
+      "recommendation": "DEF 0 -> 5 and end-turn heal 10 -> 15.",
+      "reason": "A pure healer should out-heal its siblings (LALAPING-015, SMILE-015 after nerf).",
+      "risk": "Heal 15 per turn can offset 15 ATK per turn: re-test stall decks.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "SATOSHI-040",
+      "name": "Grand Healer",
+      "card_type": "character",
+      "level": 40,
+      "class": "Grand Healer",
+      "element": "holy",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "A",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.21,
+        "proposed": 1.098
+      },
+      "current": {
+        "hp": 130,
+        "atk": 70,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ฟื้น HP 30 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 30",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 130,
+        "atk": 70,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          },
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 70 (highest healer) plus heal 20 per turn and heal 30 on death.",
+      "recommendation": "End heal 20 -> 15 and death heal 30 -> 20.",
+      "reason": "A healer with the second-highest Lv40 ATK should not also out-heal.",
+      "risk": "Drops from A to B (about 1.10x, borderline).",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "SKYMOON-015",
+      "name": "Blacksmith",
+      "card_type": "character",
+      "level": 15,
+      "class": "Blacksmith",
+      "element": "nature",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.925,
+        "proposed": 0.925
+      },
+      "current": {
+        "hp": 100,
+        "atk": 18,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ATK +10 ถาวร ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +10 ถาวร",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 100,
+        "atk": 18,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ATK +10 ถาวร ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +10 ถาวร",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "permanent",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Estimated power is 0.93x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "SMILE-015",
+      "name": "Cleric",
+      "card_type": "character",
+      "level": 15,
+      "class": "Cleric",
+      "element": "water",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "effect",
+      "tier": {
+        "current": "S",
+        "proposed": "S"
+      },
+      "power_ratio": {
+        "current": 1.467,
+        "proposed": 1.381
+      },
+      "current": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 35,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 5 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "ฟื้น HP 5",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "A healer with ATK 35 / HP 90 (the other Lv15 healers have ATK 20 or less).",
+      "recommendation": "End-of-turn heal 10 -> 5.",
+      "reason": "Attacker body plus support heal is double-dipping; keep heal as the weaker half.",
+      "risk": "Heal 5 is small; recheck it is still worth running vs LALAPING-015.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "SOMYES-015",
+      "name": "Archer",
+      "card_type": "character",
+      "level": 15,
+      "class": "Archer",
+      "element": "lightning",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.016,
+        "proposed": 1.016
+      },
+      "current": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก เลือกตัวละครฝ่ายตรงข้าม 1 ใบ ATK −10 จนจบเทิร์น",
+            "action_text": "ATK −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก เลือกตัวละครฝ่ายตรงข้าม 1 ใบ ATK −10 จนจบเทิร์น",
+            "action_text": "ATK −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.02x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "TAN-015",
+      "name": "Dev Sumoner",
+      "card_type": "character",
+      "level": 15,
+      "class": "Dev Sumoner",
+      "element": "water",
+      "role": "Evolution tutor",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.814,
+        "proposed": 0.896
+      },
+      "current": {
+        "hp": 90,
+        "atk": 20,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ค้นการ์ด Evolution 1 ใบจาก Main Deck ขึ้นมือ",
+            "action_text": "ค้นการ์ด Evolution ขึ้นมือ",
+            "target_text": "Main Deck",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 90,
+        "atk": 20,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ค้นการ์ด Evolution 1 ใบจาก Main Deck ขึ้นมือ",
+            "action_text": "ค้นการ์ด Evolution ขึ้นมือ",
+            "target_text": "Main Deck",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Searches an Evolution card from the main deck on summon. Useful but ATK 20 / HP 90 is low.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Evolution search has real tempo value; the body is below average.",
+      "risk": "EVO is in the main deck (confirmed), so the search never misses when one is left.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "TEE-015",
+      "name": "Alchemist",
+      "card_type": "character",
+      "level": 15,
+      "class": "Alchemist",
+      "element": "poison",
+      "role": "Buffer / ramp",
+      "approved": false,
+      "change_type": "def+effect",
+      "tier": {
+        "current": "D",
+        "proposed": "D"
+      },
+      "power_ratio": {
+        "current": 0.61,
+        "proposed": 0.704
+      },
+      "current": {
+        "hp": 80,
+        "atk": 18,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ATK +10 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +10",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 80,
+        "atk": 18,
+        "def": 4,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ATK +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Weak: a one-turn ATK +10 on summon with ATK 18 / HP 80.",
+      "recommendation": "DEF 0 -> 4 and summon buff +10 -> +15 (still one turn).",
+      "reason": "Raises the temporary value without making it permanent.",
+      "risk": "Alchemist chain TEE-040 is also weak; keep an eye on Lv40 pairing.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "TEE-040",
+      "name": "Alchemist",
+      "card_type": "character",
+      "level": 40,
+      "class": "Alchemist",
+      "element": "poison",
+      "role": "Hybrid attacker/healer",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "D",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.73,
+        "proposed": 0.82
+      },
+      "current": {
+        "hp": 170,
+        "atk": 40,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ATK +20 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 170,
+        "atk": 40,
+        "def": 6,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ATK +20 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ATK +20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          },
+          {
+            "trigger": "turn_end",
+            "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวเอง",
+            "action_text": "ฟื้น HP 10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "ATK 40 / HP 170 with a one-turn ally buff and a self heal of 10 per turn; low power.",
+      "recommendation": "DEF 0 -> 6.",
+      "reason": "Tank-leaning Lv40.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "THAI26-015",
+      "name": "Fighter",
+      "card_type": "character",
+      "level": 15,
+      "class": "Fighter",
+      "element": "physical",
+      "role": "Attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.014,
+        "proposed": 1.014
+      },
+      "current": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 85,
+        "atk": 24,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี ATK +10 จนจบเทิร์น (1 ครั้ง/เทิร์น)",
+            "action_text": "ATK +10",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "Estimated power is 1.01x the Lv average (tier B); no redundancy or exploit concern beyond those listed in the review.",
+      "recommendation": "No change.",
+      "reason": "Within the target band.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "THAI32-015",
+      "name": "Paladin",
+      "card_type": "character",
+      "level": 15,
+      "class": "Paladin",
+      "element": "holy",
+      "role": "Healer / support",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 0.845,
+        "proposed": 0.929
+      },
+      "current": {
+        "hp": 100,
+        "atk": 18,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 100,
+        "atk": 18,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อถูกทำลาย ฟื้น HP 20 ให้ตัวละครฝ่ายเรา 1 ใบ",
+            "action_text": "ฟื้น HP 20",
+            "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Heal 20 when destroyed (a deterrent), ATK 18 / HP 100.",
+      "recommendation": "DEF 0 -> 3.",
+      "reason": "Defensive card with the lowest ATK; small DEF suits its role.",
+      "risk": "Low.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "THOMAS-015",
+      "name": "Rogue",
+      "card_type": "character",
+      "level": 15,
+      "class": "Rogue",
+      "element": "fire",
+      "role": "Card-advantage engine",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "B",
+        "proposed": "B"
+      },
+      "power_ratio": {
+        "current": 1.055,
+        "proposed": 1.055
+      },
+      "current": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 95,
+        "atk": 25,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ทิ้งการ์ดจากมือ 1 ใบ เพื่อจั่วการ์ด 1 ใบ",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": "ทิ้งการ์ดจากมือ 1 ใบ",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Loot (discard 1 draw 1, once per game). Within the average band.",
+      "recommendation": "No change.",
+      "reason": "Balanced; also the wording reference for MON-015.",
+      "risk": "None identified.",
+      "engine_compatibility": "no change"
+    },
+    {
+      "card_id": "WENDYWENDIE-015",
+      "name": "Thief",
+      "card_type": "character",
+      "level": 15,
+      "class": "Thief",
+      "element": "poison",
+      "role": "Thief (draw on kill)",
+      "approved": false,
+      "change_type": "def+effect",
+      "tier": {
+        "current": "D",
+        "proposed": "D"
+      },
+      "power_ratio": {
+        "current": 0.422,
+        "proposed": 0.553
+      },
+      "current": {
+        "hp": 95,
+        "atk": 10,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตีและทำให้เป้าหมายถูกทำลาย จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": "เป้าหมายถูกทำลายจากการโจมตี",
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 95,
+        "atk": 10,
+        "def": 5,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อโจมตี จั่วการ์ด 1 ใบ (1 ครั้ง/เทิร์น)",
+            "action_text": "จั่ว 1 ใบ",
+            "target_text": "ตัวเอง",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_turn"
+          }
+        ]
+      },
+      "issue": "ATK 10 cannot realistically destroy a target, so \"draw on destroy\" almost never fires.",
+      "recommendation": "DEF 0 -> 5 and draw on attack (no kill condition), once per turn.",
+      "reason": "Makes the thief archetype usable with a 10-ATK body.",
+      "risk": "EXPLOIT WATCH: a draw every turn if it attacks; confirm with the deck-out and loop tests in TEST_PLAN. Still A-tier at most.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "ZEESKY-015",
+      "name": "Storm Priest",
+      "card_type": "character",
+      "level": 15,
+      "class": "Storm Priest",
+      "element": "lightning",
+      "role": "Chip-damage / removal",
+      "approved": false,
+      "change_type": "def",
+      "tier": {
+        "current": "C",
+        "proposed": "C"
+      },
+      "power_ratio": {
+        "current": 0.797,
+        "proposed": 0.877
+      },
+      "current": {
+        "hp": 78,
+        "atk": 23,
+        "def": 0,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+            "action_text": "HP −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": 78,
+        "atk": 23,
+        "def": 3,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อถูกเรียก ลด HP ตัวละครฝ่ายตรงข้าม 1 ใบ 10",
+            "action_text": "HP −10",
+            "target_text": "ตัวละครฝ่ายตรงข้าม 1 ใบ",
+            "condition_text": null,
+            "cost_text": null,
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Same summon chip damage as PIKACHU/CUTIE with a weaker body (HP 78 / ATK 23).",
+      "recommendation": "DEF 0 -> 3 (effect unchanged: it becomes the reference for the 10-damage Mage).",
+      "reason": "Lowest-power chip-damage Mage; small DEF raises survivability only.",
+      "risk": "DEF 3 trims attacks of ATK 18-24 by 3 (a 12-17 % cut): re-test low-ATK matchups.",
+      "engine_compatibility": "supported_by_parser"
+    },
+    {
+      "card_id": "EVO-001",
+      "name": "การ์ดวิวัฒนาการ",
+      "card_type": "evolution",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Evolution enabler",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "ใช้เป็นเงื่อนไขวิวัฒนาการของตัวละครได้ทุกใบ ไม่มีโบนัสเพิ่ม",
+            "action_text": "ใช้วิวัฒนาการได้ทุกใบ",
+            "target_text": "ตัวละครที่วิวัฒนาการ",
+            "duration": "instant",
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "ใช้เป็นเงื่อนไขวิวัฒนาการของตัวละครได้ทุกใบ ไม่มีโบนัสเพิ่ม",
+            "action_text": "ใช้วิวัฒนาการได้ทุกใบ",
+            "target_text": "ตัวละครที่วิวัฒนาการ",
+            "duration": "instant",
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Issue #2 says Evolution needs 1/2/3 Evolution cards. The ENGINE consumes exactly 1 Evolution card per step and requires 1/2/3 face-up characters to sacrifice (Lv40 / Lv70 / Lv99). The card text already says this correctly.",
+      "recommendation": "No data change. Correct the Issue text, not the card.",
+      "reason": "Source of truth is src/engine/game.ts (evolution probe: evoCardsConsumed = 1, zero sacrifice rejected).",
+      "risk": "The DB rule game_rules.evolution_sacrifice {15:1,40:2,70:3} is keyed by SOURCE level while the engine keys by TARGET level (40:1,70:2,99:3): same numbers, different keys. Not read by the engine.",
+      "engine_compatibility": "Supported (hard-coded in the engine)."
+    },
+    {
+      "card_id": "FUS-001",
+      "name": "ฟิวชั่น",
+      "card_type": "fusion",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Fusion enabler",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "passive",
+            "description": "ใช้ได้กับตัวละครทุกคู่ที่ติ๊กเป็นคู่ Fusion กัน ไม่มีโบนัสเพิ่มจากการ์ดนี้",
+            "action_text": "ซ้อนกันในช่องเดียว",
+            "target_text": "ตัวละครคู่ Fusion",
+            "duration": "permanent",
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "passive",
+            "description": "ใช้ได้กับตัวละครทุกคู่ที่ติ๊กเป็นคู่ Fusion กัน ไม่มีโบนัสเพิ่มจากการ์ดนี้",
+            "action_text": "ซ้อนกันในช่องเดียว",
+            "target_text": "ตัวละครคู่ Fusion",
+            "duration": "permanent",
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Fusion needs partner pairs that exist only in production data (7 pairs, not in the repo seed). The engine takes them from the rooms layer (createGame fusionPairs). Fused unit: top card 100 % and bottom card 50 % stats (probe: BACKJI-015 + NONG-TAENGMO-015 = 136 HP / 49 ATK / DEF 0); counts as the one Lv15 summon of the turn; only the top card effects run.",
+      "recommendation": "No data change.",
+      "reason": "Verified from source and probe. DB bonus values {20,10,0} and gender +5 ATK in game_rules are NOT used by the engine.",
+      "risk": "Partner data cannot be audited from the repo; production snapshot is in card-data-export/production-snapshot/.",
+      "engine_compatibility": "Supported; pair data is runtime-only."
+    },
+    {
+      "card_id": "SPL-001",
+      "name": "ลูกไฟเริ่มต้น",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Removal (damage 20)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ดาเมจ 20 ใส่ตัวละครคู่ต่อสู้ 1 ตัว (คิดตัวคูณธาตุ)",
+            "action_text": "ดาเมจ 20",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ดาเมจ 20 ใส่ตัวละครคู่ต่อสู้ 1 ตัว (คิดตัวคูณธาตุ)",
+            "action_text": "ดาเมจ 20",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Direct 20 damage to one enemy unit, element multiplier applies, respects untargetable. Fair.",
+      "recommendation": "No change.",
+      "reason": "Within range of Lv15 HP 60-100.",
+      "risk": "Repeatable: no per-turn spell cap exists (see ENGINE-PROP-03).",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-002",
+      "name": "น้ำบำบัด",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Healing (30)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ฟื้นฟู HP 30 ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "ฟื้น HP 30",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ฟื้นฟู HP 30 ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "ฟื้น HP 30",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Heal 30 (capped by max HP) on one own unit.",
+      "recommendation": "No change.",
+      "reason": "Balanced.",
+      "risk": "Combined with SMILE/SATOSHI heals in stall decks.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-003",
+      "name": "โล่มนตร์",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Defense buff",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "DEF +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "DEF +15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "DEF +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "DEF +15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Probe: three casts on one unit gave DEF +45 (no cap). Also the effect row says \"until end of turn\" while rules_text and the engine make it last until the unit leaves the field.",
+      "recommendation": "Data: align the effect description with rules_text (decision which is canonical is Toon's). Engine: ENGINE-PROP-02 cap stacking.",
+      "reason": "DEF 45 makes a unit take 1 damage from almost everything (damage floor is 1).",
+      "risk": "Unbreakable wall combined with LALAPING heals.",
+      "engine_compatibility": "Supported today; the cap is NEW ENGINE WORK."
+    },
+    {
+      "card_id": "SPL-004",
+      "name": "พลังผนึก",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Attack buff",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ATK +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "ATK +15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ATK +15 จนจบเทิร์น ให้ตัวละครฝ่ายเรา 1 ตัว",
+            "action_text": "ATK +15",
+            "target_text": "ตัวละครฝ่ายเรา 1 ตัว",
+            "duration": "until_end_of_turn",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Probe: three casts on one unit gave ATK +45 (total 75 from a 30-ATK unit). Same text/engine mismatch as SPL-003.",
+      "recommendation": "Same as SPL-003.",
+      "reason": "Uncapped permanent ATK.",
+      "risk": "One-turn kill setups with the attack bonus effects.",
+      "engine_compatibility": "Supported today; cap is NEW ENGINE WORK."
+    },
+    {
+      "card_id": "SPL-005",
+      "name": "จั่วปริศนา",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Card draw (2)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "จั่วการ์ด 2 ใบ",
+            "action_text": "จั่ว 2 ใบ",
+            "target_text": "ผู้ใช้",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "จั่วการ์ด 2 ใบ",
+            "action_text": "จั่ว 2 ใบ",
+            "target_text": "ผู้ใช้",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Draw 2 with no cost and no per-turn limit; limited only by hand size 5 and the spells in hand.",
+      "recommendation": "No data change; ENGINE-PROP-03 (spell cap per turn) pending decision.",
+      "reason": "Probe: 3 spells cast in one turn.",
+      "risk": "Draw loops with SPL-006 recursion; deck-out risk for the player that draws.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-006",
+      "name": "เรียกคืนจากสุสาน",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Recursion (Lv15 from graveyard)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "นำตัวละคร Lv.15 จากสุสาน 1 ใบขึ้นมือ",
+            "action_text": "ตัวละคร Lv.15 จากสุสานขึ้นมือ",
+            "target_text": "สุสานฝ่ายเรา",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "นำตัวละคร Lv.15 จากสุสาน 1 ใบขึ้นมือ",
+            "action_text": "ตัวละคร Lv.15 จากสุสานขึ้นมือ",
+            "target_text": "สุสานฝ่ายเรา",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Returns a Lv15 character to hand; re-summon re-triggers on_summon (probe: CHAEM-015 draw fired again).",
+      "recommendation": "No data change.",
+      "reason": "Requires a free hand slot; Lv15 only.",
+      "risk": "Loop: revive -> summon -> draw. Needs the once-per-game limit to be per unit instance, which resets on re-summon.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-007",
+      "name": "ลมพัดสลับ",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Steal / swap",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "สลับตำแหน่งตัวละครฝ่ายเรา 2 ตัวในสนาม",
+            "action_text": "สลับตำแหน่ง 2 ตัว",
+            "target_text": "ตัวละครฝ่ายเรา 2 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "สลับตำแหน่งตัวละครฝ่ายเรา 2 ตัวในสนาม",
+            "action_text": "สลับตำแหน่ง 2 ตัว",
+            "target_text": "ตัวละครฝ่ายเรา 2 ตัว",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Probe: the swapped-in enemy unit can attack in the same turn (summonedTurn is not reset). A Lv70 can be traded for a Lv15 and attack at once.",
+      "recommendation": "ENGINE-PROP-01: the stolen unit counts as summoned this turn (cannot attack).",
+      "reason": "Matches the existing rule that a freshly arrived unit cannot attack.",
+      "risk": "Without the fix this is the strongest card in the game; with the fix it is still a strong swap.",
+      "engine_compatibility": "Supported today; fix is NEW ENGINE WORK."
+    },
+    {
+      "card_id": "SPL-008",
+      "name": "พายุหยุดนิ่ง",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Control (no attack)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ตัวละครคู่ต่อสู้ 1 ตัวโจมตีไม่ได้ 1 เทิร์น",
+            "action_text": "โจมตีไม่ได้ 1 เทิร์น",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "n_turns",
+            "duration_turns": 1,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ตัวละครคู่ต่อสู้ 1 ตัวโจมตีไม่ได้ 1 เทิร์น",
+            "action_text": "โจมตีไม่ได้ 1 เทิร์น",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "n_turns",
+            "duration_turns": 1,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Probe: blocks all enemy attacks for exactly the next enemy turn only (noAttackUntil = turn + 2). Fair. Does not stop direct damage from effects.",
+      "recommendation": "No change.",
+      "reason": "Single turn, no stacking beyond one turn.",
+      "risk": "Two copies in a row could block two consecutive enemy turns only if cast on separate turns.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-009",
+      "name": "พิษร้ายค่อยๆกัด",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Damage over time (5 x 3)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ตัวละครคู่ต่อสู้ 1 ตัวโดนดาเมจ 5 ต่อเทิร์น นาน 3 เทิร์น",
+            "action_text": "ดาเมจ 5 ต่อเทิร์น x3",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "n_turns",
+            "duration_turns": 3,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ตัวละครคู่ต่อสู้ 1 ตัวโดนดาเมจ 5 ต่อเทิร์น นาน 3 เทิร์น",
+            "action_text": "ดาเมจ 5 ต่อเทิร์น x3",
+            "target_text": "ตัวละครคู่ต่อสู้ 1 ตัว",
+            "duration": "n_turns",
+            "duration_turns": 3,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "5 damage per enemy turn for 3 turns = 15 total, easy to avoid with SPL-002.",
+      "recommendation": "No change.",
+      "reason": "Low impact.",
+      "risk": "Poison resets to 3 turns when recast, not stacking.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "SPL-010",
+      "name": "ปัดป้องมนตร์",
+      "card_type": "spell",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Trap removal",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ทำลายกับดักหน้าคว่ำของคู่ต่อสู้ 1 ใบ",
+            "action_text": "ทำลายกับดัก 1 ใบ",
+            "target_text": "กับดักหน้าคว่ำของคู่ต่อสู้",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_cast",
+            "description": "ทำลายกับดักหน้าคว่ำของคู่ต่อสู้ 1 ใบ",
+            "action_text": "ทำลายกับดัก 1 ใบ",
+            "target_text": "กับดักหน้าคว่ำของคู่ต่อสู้",
+            "duration": "instant",
+            "duration_turns": null,
+            "use_limit": "none"
+          }
+        ]
+      },
+      "issue": "Destroys one set enemy trap. Needed as counterplay to the 10 traps.",
+      "recommendation": "No change.",
+      "reason": "Fair counterplay.",
+      "risk": "None identified.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-001",
+      "name": "หลุมพราง",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Negate attack",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: ยกเลิกการโจมตีนั้น ผู้โจมตีไม่ทำดาเมจ",
+            "action_text": "ยกเลิกการโจมตี",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: ยกเลิกการโจมตีนั้น ผู้โจมตีไม่ทำดาเมจ",
+            "action_text": "ยกเลิกการโจมตี",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Cancels one attack. Set trap becomes active from the next turn. Strong, hard counterplay except SPL-010.",
+      "recommendation": "No change.",
+      "reason": "One use, then graveyard.",
+      "risk": "Combined with SPL-008 can stall two turns.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-002",
+      "name": "กระจกสะท้อน",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Reflect (half damage)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: สะท้อนดาเมจครึ่งหนึ่งกลับไปที่ผู้โจมตี",
+            "action_text": "สะท้อนดาเมจ 50%",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: สะท้อนดาเมจครึ่งหนึ่งกลับไปที่ผู้โจมตี",
+            "action_text": "สะท้อนดาเมจ 50%",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "The attack still happens; the attacker takes half of its damage (floor).",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "Low.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-003",
+      "name": "ประตูลับหลังบ้าน",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Direct-attack halving",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี LP ผู้เล่นโดยตรง: ดาเมจที่ LP ลดลง 50%",
+            "action_text": "ลดดาเมจต่อ LP 50%",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี LP ผู้เล่นโดยตรง: ดาเมจที่ LP ลดลง 50%",
+            "action_text": "ลดดาเมจต่อ LP 50%",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Halves direct LP damage. With LP 100 in the engine this matters more than the DB value 8000 implies.",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "LP mismatch (engine 100 vs DB 8000) must be settled by Toon before any LP balance work.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-004",
+      "name": "โซ่พันธนาการ",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Summon lock",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อคู่ต่อสู้อัญเชิญตัวละคร: ตัวนั้นโจมตีไม่ได้ 1 เทิร์น",
+            "action_text": "ห้ามโจมตี 1 เทิร์น",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_summon",
+            "description": "เมื่อคู่ต่อสู้อัญเชิญตัวละคร: ตัวนั้นโจมตีไม่ได้ 1 เทิร์น",
+            "action_text": "ห้ามโจมตี 1 เทิร์น",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "The summoned or fused unit cannot attack on the next enemy turn.",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "Low.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-005",
+      "name": "ขัดขวางการเติบโต",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Evolution counter",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อคู่ต่อสู้วิวัฒนาการ: ยกเลิกการวิวัฒนาการ การ์ดอีโวที่ใช้ถูกทิ้ง",
+            "action_text": "ยกเลิกการวิวัฒนาการ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_evolve",
+            "description": "เมื่อคู่ต่อสู้วิวัฒนาการ: ยกเลิกการวิวัฒนาการ การ์ดอีโวที่ใช้ถูกทิ้ง",
+            "action_text": "ยกเลิกการวิวัฒนาการ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Cancels an evolution: the Evolution card goes to the graveyard, the unit stays, no sacrifice. Very punishing for the evolver.",
+      "recommendation": "No change (design decision: card text is explicit).",
+      "reason": "Counterplay to the strongest mechanic in the game.",
+      "risk": "The evolving player loses a card and a turn of the once-per-turn evolution.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-006",
+      "name": "ระเบิดเวลา",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Timed damage 15",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "เมื่อจบเทิร์นคู่ต่อสู้: ตัวละครที่ ATK สูงสุดของคู่ต่อสู้ได้รับดาเมจ 15",
+            "action_text": "ดาเมจ 15 ใส่ตัว ATK สูงสุด",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "turn_end",
+            "description": "เมื่อจบเทิร์นคู่ต่อสู้: ตัวละครที่ ATK สูงสุดของคู่ต่อสู้ได้รับดาเมจ 15",
+            "action_text": "ดาเมจ 15 ใส่ตัว ATK สูงสุด",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Probe: fires at the end of the ACTIVE player's turn and deals 15 to the unit with the highest ATK.",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "Can finish a unit weakened by chip effects.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-007",
+      "name": "ม่านหมอกพิษ",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Area damage 5",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "turn_start",
+            "description": "เมื่อเริ่มเทิร์นคู่ต่อสู้: ตัวละครทุกตัวของคู่ต่อสู้ได้รับดาเมจ 5",
+            "action_text": "ดาเมจ 5 ทุกตัว",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "turn_start",
+            "description": "เมื่อเริ่มเทิร์นคู่ต่อสู้: ตัวละครทุกตัวของคู่ต่อสู้ได้รับดาเมจ 5",
+            "action_text": "ดาเมจ 5 ทุกตัว",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "5 damage to every enemy unit at the start of the enemy turn.",
+      "recommendation": "No change.",
+      "reason": "Low impact per unit.",
+      "risk": "Multi-target damage: strong vs token-like boards, but 7 field slots only.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-008",
+      "name": "ปลุกผู้พิทักษ์",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Survive (HP 1)",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อตัวละครฝ่ายเรากำลังจะถูกทำลาย: ตัวนั้นรอดไว้ด้วย HP 1",
+            "action_text": "รอดด้วย HP 1",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_destroyed",
+            "description": "เมื่อตัวละครฝ่ายเรากำลังจะถูกทำลาย: ตัวนั้นรอดไว้ด้วย HP 1",
+            "action_text": "รอดด้วย HP 1",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Prevents destruction, unit stays at HP 1.",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "The unit at 1 HP still attacks; combine with healers.",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-009",
+      "name": "พัดกลับบ้าน",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Bounce attacker",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: ส่งตัวละครที่โจมตีกลับขึ้นมือเจ้าของ",
+            "action_text": "ส่งกลับขึ้นมือ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "on_attack",
+            "description": "เมื่อคู่ต่อสู้โจมตี: ส่งตัวละครที่โจมตีกลับขึ้นมือเจ้าของ",
+            "action_text": "ส่งกลับขึ้นมือ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Cancels the attack and returns the attacker (and fused cards) to its owner's hand; graveyard if the hand is full.",
+      "recommendation": "No change.",
+      "reason": "Resets Lv40/70 evolution investment.",
+      "risk": "An evolved unit returns as the evolved card: its cost is lost for the owner (design decision).",
+      "engine_compatibility": "Supported."
+    },
+    {
+      "card_id": "TRP-010",
+      "name": "เสียงเพรียกจากสุสาน",
+      "card_type": "trap",
+      "level": null,
+      "class": "-",
+      "element": "-",
+      "role": "Draw on death",
+      "approved": false,
+      "change_type": "unchanged",
+      "tier": {
+        "current": "n/a",
+        "proposed": "n/a"
+      },
+      "power_ratio": {
+        "current": 0,
+        "proposed": 0
+      },
+      "current": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน: จั่วการ์ด 1 ใบ",
+            "action_text": "จั่วการ์ด 1 ใบ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "proposed": {
+        "hp": null,
+        "atk": null,
+        "def": null,
+        "effects": [
+          {
+            "trigger": "to_graveyard",
+            "description": "เมื่อตัวละครฝ่ายเราลงสุสาน: จั่วการ์ด 1 ใบ",
+            "action_text": "จั่วการ์ด 1 ใบ",
+            "target_text": null,
+            "duration": "instant",
+            "use_limit": "once_per_game"
+          }
+        ]
+      },
+      "issue": "Draw 1 when an own character goes to the graveyard.",
+      "recommendation": "No change.",
+      "reason": "Fair.",
+      "risk": "Chain with sacrifices for evolution can draw more than 1 per turn only if several units die (one trap fires per event).",
+      "engine_compatibility": "Supported."
+    }
+  ]
+}
