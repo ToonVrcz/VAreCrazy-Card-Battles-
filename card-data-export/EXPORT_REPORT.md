@@ -40,7 +40,7 @@ Other counts: effect rows 78 (every card has ≥ 1), evolution chains 39, game_r
 | Cards (all fields as authored) | `db/seed/toon-cards.json` (48), `support-cards.json` (2), `spell-cards.json` (10), `trap-cards.json` (10) | `cards.json` (verbatim records + `_source_file`), `source-seed-verbatim/` (byte copies, md5 in `_integrity.json`) |
 | Cards, DB shape (joined names, status, version) | Migrations 001–017 + `importCards` rebuilt in-memory (PGlite) — same path the app uses | `cards-db-shape.json` |
 | Effects | seed `effects[]` → table `card_effects` | `card-effects.json` |
-| Config | `card_effects.config` does not exist on this branch (migration 019 is on `feature/cms-effects-c`, unapplied) | `card-configs.json` (note + shop_prices + frames) |
+| Config | `card_effects.config` (migration 019, in this branch's repo, NOT applied to production); no row has a config value | `card-configs.json` (empty `per_card_config` + shop_prices + frames) |
 | Rules | migrations 006/007/008 (`game_rules`, taxonomy, synergies) + `elements.json` | `card-rules.json` |
 | Relations | evolution chains, `fusion-pairs.json`, fusion partners, story links, affiliations | `card-relations.json` |
 | Images | `image_path` in data vs `assets/cards/` | `card-images-manifest.json` (binaries not copied) |
@@ -56,14 +56,14 @@ Reproduce: `npx tsx scripts/export-card-data.ts` (new script; writes only inside
 - Cards without effects: none. Effects without trigger: none.
 - Evolution forms (Lv40/70) without parent: none.
 - Missing `image_path`: none. Image file missing in `assets/cards/`: none.
-- Effects without config / config without effects: **cannot be evaluated** — the `config` column does not exist yet (see Known Issues #2).
+- Effects without config: all 78 (config is NULL everywhere); config without effects: none (see Known Issues #2).
 - Incomplete relations: see Known Issues #3–#4.
 - Non-exportable: image binaries (kept in repo/Supabase storage), player decks (browser localStorage), player/wallet/room data (not card data, intentionally excluded), 100 production `media_assets` rows (only the 70 card image paths are referenced by cards; the rest not exported).
 
 ## 4. Known Issues (recorded, nothing was fixed)
 
 1. **Production vs repo — card data is identical.** Verified read-only in production: for all 70 cards `level, hp, atk, def, rules_text, flavor_text` match the seed (md5 comparison, 0 differences) and all 78 effect rows (trigger/condition/cost/target/action/duration/duration_turns/use_limit/description) match (0 differences). Production-only fields: `status`, `version_no`, timestamps, UUIDs.
-2. **No effect config exists.** `card_effects.config` is added only by migration 019 (unapplied). Config data therefore cannot be exported; this is expected, not data loss.
+2. **No effect config values exist.** Migration 019 adds nullable `card_effects.config` (present in the repo, unapplied to production, so production has no such column). All 78 effects have config NULL; nothing to export. Expected, not data loss.
 3. **Production-only relation data (created in Admin CMS, not in repo)** — exported in `production-snapshot/production-only-data.json`: 7 `card_fusion_partners`, 8 `card_story_links`, 21 `card_affiliations`, 3 `card_frames` (Lv40/70/99), 6 `game_rules` (chain_rules, combat_formula, first_turn_attack, lp_start, spell_trap_timing, turn_phases), 2 element keys (`alchemy`, `wind`; no card uses them).
 4. `db/seed/fusion-pairs.json` (1 pair: backji ↔ nong-taengmo, +20 HP/+10 ATK) is **not applied by `importCards`**, so the rebuilt DB has 0 fusion partners; production has 7 partner rows (the seed pair in both directions + 5 others not in the repo).
 5. 3 image files in `assets/cards/` are not referenced by any card: `demon-summoner.jpg`, `grand-summoner.jpg`, `master-summoner.jpg` (old names; the cards use `FOLLOW-YOU-0xx.jpg`).
