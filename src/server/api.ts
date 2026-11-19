@@ -5,6 +5,8 @@ import { Rooms } from './rooms.ts';
 
 const need = (u: any, p: string) => { if (!can(u, p)) throw new AppError(403, 'ไม่มีสิทธิ์: ' + p); };
 export interface Rq { method: string; path: string; query: URLSearchParams; headers: Record<string, string | undefined>; body: () => Promise<Uint8Array | Buffer> }
+/** Caller address from the proxy headers (Vercel/Supabase set x-forwarded-for; the first entry is the client). undefined when absent. */
+export const clientIp = (h: Record<string, string | undefined>) => (h['x-forwarded-for'] ?? '').split(',')[0].trim() || (h['x-real-ip'] ?? '').trim() || undefined;
 export interface Rs { status: number; data: unknown; type: string }
 
 /** Transport-independent API router (used by the Node dev server and the Supabase Edge Function). */
@@ -20,7 +22,7 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       if (path === '/api/play/rooms' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Rooms(svc).create(b.deck, b.evo, pkey, { name: b.name, public: b.public, turnSec: b.turnSec })); }
       if (path === '/api/play/rooms/public' && m === 'GET') return send(res, 200, await new Rooms(svc).listPublic());
       // Guest profile, wallet and shop (Lv.40/70 cards)
-      if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
+      if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name, clientIp(rq.headers))); }
       if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
       if (path === '/api/play/profile' && m === 'PUT') return send(res, 200, await new Economy(svc).rename(pkey, JSON.parse((await body(req)).toString() || '{}').name));
       if (path === '/api/play/ledger' && m === 'GET') return send(res, 200, await new Economy(svc).ledger(pkey, Number(url.searchParams.get('limit') ?? 50)));

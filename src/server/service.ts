@@ -282,9 +282,16 @@ export class CardService {
       if (!r.rows[0]) throw new AppError(400, `ไม่พบร่างก่อนหน้า ${input.evolves_from}`);
       from = r.rows[0].id;
     }
-    const n = (v: any) => (v === '' || v == null ? null : Number(v));
-    const vals = [input.character_id, input.name, input.card_type, n(input.level), chain, from, n(input.hp), n(input.atk),
-      n(input.def) ?? 0, !!input.has_combo, CardService.cleanText('rules_text', input.rules_text, 'ข้อความกติกา'), CardService.cleanText('flavor_text', input.flavor_text, 'Flavor text'), el, ra, cl, input.media_id || null, n(input.shop_price_points), n(input.shop_price_vrcoin), input.atk_icon || null];
+    // Whole numbers only (blank = null). Ranges mirror the DB CHECKs (level 1..99, stats >= 0) plus an upper guard far above any real card.
+    const n = (v: any, label: string, min: number, max: number) => {
+      if (v === '' || v == null) return null;
+      const x = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN;
+      if (!Number.isInteger(x) || x < min || x > max) throw new AppError(400, `${label} ต้องเป็นจำนวนเต็ม ${min}–${max}`);
+      return x;
+    };
+    const STAT = 99999, PRICE = 1_000_000;
+    const vals = [input.character_id, input.name, input.card_type, n(input.level, 'Level', 1, 99), chain, from, n(input.hp, 'HP', 0, STAT), n(input.atk, 'ATK', 0, STAT),
+      n(input.def, 'DEF', 0, STAT) ?? 0, !!input.has_combo, CardService.cleanText('rules_text', input.rules_text, 'ข้อความกติกา'), CardService.cleanText('flavor_text', input.flavor_text, 'Flavor text'), el, ra, cl, input.media_id || null, n(input.shop_price_points, 'ราคา (แต้ม)', 0, PRICE), n(input.shop_price_vrcoin, 'ราคา (Vrcoin)', 0, PRICE), input.atk_icon || null];
     try {
       let cid = id;
       if (id) {
@@ -346,12 +353,23 @@ export class CardService {
     return this.getCard(u, id);
   }
 
+  /** Image type from the first bytes (JPEG FF D8 FF, PNG 89 'PNG' CRLF 1A LF, WEBP 'RIFF'....'WEBP'); null = not an accepted image. */
+  static sniffImage(b: Uint8Array): { mime: string; ext: string } | null {
+    const at = (i: number, s: number[]) => b.length >= i + s.length && s.every((v, k) => b[i + k] === v);
+    if (at(0, [0xff, 0xd8, 0xff])) return { mime: 'image/jpeg', ext: 'jpg' };
+    if (at(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return { mime: 'image/png', ext: 'png' };
+    if (at(0, [0x52, 0x49, 0x46, 0x46]) && at(8, [0x57, 0x45, 0x42, 0x50])) return { mime: 'image/webp', ext: 'webp' };
+    return null;
+  }
   async uploadMedia(u: User, filename: string, mime: string, data: Buffer, renderMode: 'full' | 'art_only' = 'art_only') {
     need(u, 'write');
-    const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[mime];
-    if (!ext) throw new AppError(400, 'รองรับเฉพาะ JPG/PNG/WEBP');
+    if (!({ 'image/jpeg': 1, 'image/png': 1, 'image/webp': 1 } as Record<string, number>)[mime]) throw new AppError(400, 'รองรับเฉพาะ JPG/PNG/WEBP');
     if (data.length > 5 * 1024 * 1024) throw new AppError(413, 'ไฟล์ใหญ่เกิน 5MB');
-    const name = `${randomBytes(8).toString('hex')}.${ext}`;
+    // The Content-Type header is client-supplied: trust the file signature instead. A real image sent with a wrong label is kept under its real type.
+    const real = CardService.sniffImage(data);
+    if (!real) throw new AppError(400, 'ไฟล์ไม่ใช่รูป JPG/PNG/WEBP ที่ถูกต้อง');
+    mime = real.mime;
+    const name = `${randomBytes(8).toString('hex')}.${real.ext}`;
     if (this.put) await this.put(`media/${name}`, data, mime);
     else { mkdirSync(this.storageDir, { recursive: true }); writeFileSync(join(this.storageDir, name), data); }
     const r = await this.db.query<any>(`INSERT INTO media_assets(storage_path,mime,render_mode) VALUES ($1,$2,$3) RETURNING id,storage_path`,

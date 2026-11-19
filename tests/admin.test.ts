@@ -4,6 +4,7 @@ import { migrateUp } from '../db/migrate';
 import { CardService, AppError, type User } from '../src/server/service';
 
 let svc: CardService;
+const IMG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0]);   // minimal JPEG signature (uploads are now checked by magic bytes)
 const asUser = async (email: string, role: any) => {
   await svc.createUser(email, 'password123', role);
   return (await svc.login(email, 'password123')).user as User;
@@ -55,7 +56,7 @@ describe('roles', () => {
 describe('workflow', () => {
   it('Draft -> Review -> Approved -> Published with right roles, then locks editing', async () => {
     const e = await asUser('e@x.com', 'card_editor'), r = await asUser('r@x.com', 'reviewer'), p = await asUser('p@x.com', 'publisher');
-    const m = await svc.uploadMedia(e, 'a.jpg', 'image/jpeg', Buffer.from('x'));
+    const m = await svc.uploadMedia(e, 'a.jpg', 'image/jpeg', IMG);
     const c = await svc.saveCard(e, card({ media_id: m.id }));
     await svc.transition(e, c.id, 'in_review');
     await svc.transition(r, c.id, 'approved');
@@ -117,7 +118,7 @@ describe('effects', () => {
   });
   it('published snapshot contains effects; JSON and CSV round-trip', async () => {
     const e = await asUser('e@x.com', 'super_admin');
-    const m = await svc.uploadMedia(e, 'a.jpg', 'image/jpeg', Buffer.from('x'));
+    const m = await svc.uploadMedia(e, 'a.jpg', 'image/jpeg', IMG);
     const c = await svc.saveCard(e, card({ media_id: m.id, effects: [fx({ target_text: 'ตัวเอง', action_text: 'จั่ว 1 ใบ', duration: 'instant' })] })); // must be runnable: publish gate
     await svc.transition(e, c.id, 'in_review'); await svc.transition(e, c.id, 'approved'); await svc.transition(e, c.id, 'published');
     const v = await svc.db.query<any>(`SELECT snapshot->'effects' fx FROM card_versions WHERE card_id=$1`, [c.id]);
@@ -135,7 +136,7 @@ describe('effects', () => {
 describe('media', () => {
   it('rejects bad type and oversize', async () => {
     const e = await asUser('e@x.com', 'card_editor');
-    await expect(svc.uploadMedia(e, 'a.gif', 'image/gif', Buffer.from('x'))).rejects.toThrow(/JPG/);
+    await expect(svc.uploadMedia(e, 'a.gif', 'image/gif', IMG)).rejects.toThrow(/JPG/);
     await expect(svc.uploadMedia(e, 'a.png', 'image/png', Buffer.alloc(6 * 1024 * 1024))).rejects.toThrow(/5MB/);
   });
 });

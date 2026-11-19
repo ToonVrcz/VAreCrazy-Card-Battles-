@@ -22,3 +22,27 @@ describe('play.html escaping (F-01)', () => {
     expect(html).not.toMatch(/\$\{x\.name\}<\/b>|\$\{R\.name\}|\$\{ME\.name\|\|'ผู้เล่น'\}/);
   });
 });
+
+// Phase 1: card names/texts and server messages reach players too (a card_editor could otherwise inject script into every player's browser).
+// No bare interpolation of those values may remain in play.html: everything must go through esc().
+describe('play.html: no unescaped text interpolation (Phase 1)', () => {
+  const bare = [
+    /\$\{(msg|why|link|e\.message)\}/g,
+    /\$\{I\.(source|text)\}/g,
+    /\$\{(?:[A-Za-z_]+\.)?(?:c|d|i|x|a)\??\.(?:card\.)?(?:name|text)(?:\|\|[^}]*)?\}/g,
+    /\$\{x\.c\.name\}/g,
+    /\$\{BY\[[^\]]+\]\??\.name(?:\|\|id)?\}/g,
+    /\$\{RS\[i\.reason\]\|\|i\.reason\}/g,
+    /\$\{u\.fused\.map\(x=>x\.name\)\.join\([^)]*\)\}/g,
+    /\$\{\(ME\.name\|\|''\)\.replace/g,
+  ];
+  it.each(bare.map((r, i) => [i, r] as const))('pattern %i finds nothing', (_i, re) => {
+    const hits = [...html.matchAll(re)].map(m => m[0]);
+    expect(hits).toEqual([]);
+  });
+  it('escaping stays neutral for every real card name and rules text in the exported data', () => {
+    const data = JSON.parse(readFileSync(new URL('../card-data-export/cards-db-shape.json', import.meta.url), 'utf8'));
+    const rows: any[] = Array.isArray(data) ? data : (data.cards ?? data.rows ?? Object.values(data)[0]);
+    for (const c of rows) for (const k of ['name', 'rules_text']) if (c[k]) expect(esc(c[k])).toBe(c[k]);
+  });
+});

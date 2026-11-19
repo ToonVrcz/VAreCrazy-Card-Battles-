@@ -13,6 +13,12 @@ export const ECONOMY = {
   minTurnsForReward: 6,    // a match that ends sooner (instant resign) earns nothing: anti-farming
 } as const;
 
+/** Guest-profile flood guard. These limits only slow bulk creation; they never change what a profile receives (starterPoints above). */
+export const PROFILE_LIMITS = {
+  perIpPerHour: 10,        // one network address may open at most this many profiles per hour (shared school/event Wi-Fi fits easily)
+  globalPer10Min: 300,     // across all addresses; far above real traffic (21 profiles exist in production), stops scripts that rotate IPs
+} as const;
+
 const hash = (k: string) => createHash('sha256').update(k).digest('hex');
 type Db = { query: <T = any>(sql: string, p?: any[]) => Promise<{ rows: T[] }> };
 
@@ -23,13 +29,33 @@ export class Economy {
   private get db(): any { return this.svc.db; }
   private wallet(r: any): Wallet { return { id: r.id, name: r.name, points: r.points, vrcoin: r.vrcoin, matches: r.pvp_matches, matchesToVrcoin: ECONOMY.vrcoinEvery - (r.pvp_matches % ECONOMY.vrcoinEvery) }; }
 
-  async createProfile(name?: string) {
+  /** Runs a flood-guard query. If migration 021 is not applied yet (table missing, 42P01) the guard is skipped instead of blocking sign-ups; any other error is raised. */
+  private async guardSql(sql: string, params: any[] = []) {
+    try { return await this.db.query(sql, params); }
+    catch (e: any) { if (e?.code === '42P01' && /profile_create_log/.test(String(e.message))) { console.error('profile_create_log missing: apply migration 021 (per-IP profile limit inactive)'); return { rows: [] as any[] }; } throw e; }
+  }
+
+  /** @param ip address of the caller when known (edge function / dev server). Without it only the global ceiling applies. */
+  async createProfile(name?: string, ip?: string) {
+    const ipHash = ip ? hash('vcz-ip:' + ip) : null;
+    const tooMany = new AppError(429, 'สร้างโปรไฟล์ถี่เกินไป โปรดลองใหม่ภายหลัง');
+    const recent = Number((await this.db.query(`SELECT count(*)::int AS n FROM players WHERE created_at > now() - interval '10 minutes'`)).rows[0].n);
+    if (recent >= PROFILE_LIMITS.globalPer10Min) throw tooMany;
+    if (ipHash) {
+      const r = await this.guardSql(`SELECT count(*)::int AS n FROM profile_create_log WHERE ip_hash=$1 AND at > now() - interval '1 hour'`, [ipHash]);
+      if (Number(r.rows[0]?.n ?? 0) >= PROFILE_LIMITS.perIpPerHour) throw tooMany;
+    }
     const key = randomBytes(24).toString('hex'), nm = String(name ?? '').trim().slice(0, 24) || 'ผู้เล่น';
-    return this.db.transaction(async (tx: Db) => {
+    const out = await this.db.transaction(async (tx: Db) => {
       const r = (await tx.query(`INSERT INTO players(key_hash,name,points) VALUES ($1,$2,$3) RETURNING *`, [hash(key), nm, ECONOMY.starterPoints])).rows[0];
       if (ECONOMY.starterPoints) await tx.query(`INSERT INTO economy_ledger(player_id,kind,points,ref) VALUES ($1,'starter',$2,'welcome')`, [r.id, ECONOMY.starterPoints]);
       return { key, ...this.wallet(r) };
     });
+    if (ipHash) {
+      await this.guardSql(`INSERT INTO profile_create_log(ip_hash) VALUES ($1)`, [ipHash]);
+      await this.guardSql(`DELETE FROM profile_create_log WHERE at < now() - interval '1 day'`);
+    }
+    return out;
   }
 
   /** Resolves a profile key. null/empty = guest (undefined); a key that matches nobody is an error so a stale key is noticed. */
