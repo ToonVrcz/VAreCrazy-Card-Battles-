@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VAreCrazy Card CMS</title><script src="/card-renderer.js"></script>
+<title>VAreCrazy Card CMS</title><script src="/card-renderer.js"></script><script src="/admin-tools.js"></script>
 <style>
 [hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#15101d;color:#eee}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#221833;position:sticky;top:0;z-index:5}
@@ -56,10 +56,10 @@ async function list(){
   try{const r=await api('/import'+(dry?'?dry=1':''),{method:'POST',headers:{'content-type':f.name.endsWith('.csv')?'text/csv':'application/json'},body:t});
    $('#ir').hidden=false;$('#ir').textContent=JSON.stringify(r,null,2);toast(r.ok?(dry?'ไฟล์ถูกต้อง':'นำเข้าแล้ว (ทั้งหมดเป็น Draft)'):'มีแถวผิด ไม่มีการบันทึก',r.ok);if(r.ok&&!dry)setTimeout(list,900)}catch(e){toast(e.message)}};
  if($('#dry')){$('#dry').onclick=()=>run(true);$('#doimp').onclick=()=>run(false);const sd=(f,b)=>async()=>{try{const t=await (await fetch('/db/seed/'+f)).text();const r=await api('/import',{method:'POST',headers:{'content-type':'application/json'},body:t});$('#ir').hidden=false;$('#ir').textContent=JSON.stringify(r,null,2);toast(r.ok?'นำเข้า '+r.created+' ใบ (Draft)':'มีแถวผิด ไม่มีการบันทึก',r.ok);if(r.ok)setTimeout(list,900)}catch(e){toast(e.message)}};$('#seed').onclick=sd('toon-cards.json');$('#seed2').onclick=sd('support-cards.json');$('#seed3').onclick=sd('trap-cards.json');$('#seed4').onclick=sd('spell-cards.json')}
- api('/audit').then(a=>$('#au').innerHTML=a.slice(0,10).map(r=>`<tr><td>${new Date(r.at).toLocaleString('th-TH')}</td><td>${esc(r.actor)}</td><td>${esc(r.action)}</td></tr>`).join(''))}
+ api('/audit').then(a=>$('#au')&&($('#au').innerHTML=a.slice(0,10).map(r=>`<tr><td>${new Date(r.at).toLocaleString('th-TH')}</td><td>${esc(r.actor)}</td><td>${esc(r.action)}</td></tr>`).join('')))}
 async function edit(id){
  cur=id?await api('/cards/'+id):{card_type:'character',def:0,has_combo:false,effects:[]};
- let fx=(cur.effects||[]).map(e=>({...e}));
+ let fx=(cur.effects||[]).map(e=>prepFx({...e}));
  const ro=id&&cur.status!=='draft'||!can('write');const f=(k,l,t='text')=>`<div><label>${l}</label><input data-k="${k}" type="${t}" value="${esc(cur[k])}" ${ro?'disabled':''}></div>`;
  const nx={draft:[['in_review','ส่งตรวจ']],in_review:[['approved','อนุมัติ'],['draft','ตีกลับ']],approved:[['published','เผยแพร่'],['draft','ตีกลับ']],published:[['archived','เก็บถาวร'],['draft','ถอนเป็นร่างเพื่อแก้']],archived:[['draft','กู้เป็นร่าง']]}[cur.status]||[];
  app.innerHTML=`<div class="row"><button id="back">← กลับ</button>${id?`<span class="badge ${cur.status}" style="align-self:center">${cur.status} · v${cur.version_no}</span>`:''}</div>
@@ -70,22 +70,22 @@ async function edit(id){
  ${f('level','Level','number')}${f('chain_key','สายวิวัฒนาการ (chain)')}${f('evolves_from','ร่างก่อนหน้า (Character ID)')}${f('hp','HP','number')}${f('atk','ATK 🔥','number')}${f('def','DEF 🛡','number')}
  ${f('atk_icon','ไอคอน ATK (เช่น fire, water)')}${f('shop_price_points','ราคาร้านค้า (แต้ม)','number')}${f('shop_price_vrcoin','ราคาร้านค้า (Vrcoin)','number')}${f('element','Element')}${f('race','Race')}${f('class','Class')}</div>
  <label><input type="checkbox" data-k="has_combo" ${cur.has_combo?'checked':''} ${ro?'disabled':''}> มีไอคอนพลังแฝง (Combo)</label>
- <label>ข้อความกติกา</label><textarea data-k="rules_text" rows="3" style="width:100%" ${ro?'disabled':''}>${esc(cur.rules_text)}</textarea>
- <label>Flavor text</label><textarea data-k="flavor_text" rows="2" style="width:100%" ${ro?'disabled':''}>${esc(cur.flavor_text)}</textarea>
+ <label>ข้อความกติกา <span id="ct_rules_text" style="float:right"></span></label><textarea data-k="rules_text" rows="3" style="width:100%" ${ro?'disabled':''}>${esc(cur.rules_text)}</textarea>
+ <label>Flavor text <span id="ct_flavor_text" style="float:right"></span></label><textarea data-k="flavor_text" rows="2" style="width:100%" ${ro?'disabled':''}>${esc(cur.flavor_text)}</textarea>
  <div class="sec"><label style="font-size:14px;color:#d9a93b">เอฟเฟกต์ (${(cur.effects||[]).length}/10)</label><div id="fx"></div>${!ro?'<button id="addfx">+ เพิ่มเอฟเฟกต์</button>':''}</div>
  <div class="sec" id="meta"></div>
  ${id&&can('write')?`<div class="sec"><label style="font-size:14px;color:#d9a93b">🖼 กรอบเฉพาะใบนี้ ${FR['card:'+cur.character_id]?'(กำหนดเองอยู่)':'(ใช้กรอบตามประเภท)'}</label><div class="row"><input type="file" id="cfu" accept="image/png,image/webp,image/jpeg">${FR['card:'+cur.character_id]?'<button id="cfr">รีเซ็ต</button>':''}</div></div>`:''}
  <div class="row">${!ro?'<button class="pri" id="save">บันทึก</button>':''}${id&&cur.status==='draft'&&can('write')?'<button class="warn" id="del">🗑 ลบการ์ด</button>':''}${id?nx.filter(([to])=>can({in_review:'submit',approved:'review',draft:cur.status==='in_review'||cur.status==='approved'?'review':'publish',published:'publish',archived:'publish'}[to])).map(([to,l])=>`<button data-to="${to}" class="${to==='draft'?'warn':''}">${l}</button>`).join(''):''}</div>`;
  if($('#cfu'))$('#cfu').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await upFrame('card:'+cur.character_id,f);toast('ตั้งกรอบแล้ว',1);edit(id)}catch(x){toast(x.message)}};if($('#cfr'))$('#cfr').onclick=async()=>{try{await api('/frames/card:'+cur.character_id,{method:'DELETE'});await loadFr();edit(id)}catch(x){toast(x.message)}};
- $('#back').onclick=list;renderFx(fx,ro);metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push({trigger:'on_summon',duration:'instant',use_limit:'none',description:''});renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
+ $('#back').onclick=list;renderFx(fx,ro);wireCounters();metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push(typeof VCZX==='undefined'?{trigger:'on_summon',duration:'instant',use_limit:'none',description:''}:newFx());renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
  const collect=()=>{const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.type==='checkbox'?e.checked:e.value);o.media_id=cur.media_id||null;o.effects=fx;return o};
  $('#up').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;try{const r=await api('/media',{method:'POST',headers:{'content-type':fl.type,'x-filename':fl.name,'x-render-mode':$('#rm').value},body:fl});cur.media_id=r.id;cur.image_path=r.storage_path;pvDraw();toast('อัปโหลดแล้ว (กดบันทึกเพื่อผูกกับการ์ด)',1)}catch(x){toast(x.message)}};
- if($('#save'))$('#save').onclick=async()=>{try{const r=await api(id?'/cards/'+id:'/cards',J(id?'PUT':'POST',collect()));if(metaC)await api(`/cards/${r.id}/meta`,J('PUT',metaC()));toast('บันทึกแล้ว',1);edit(r.id)}catch(e){toast(e.message)}};
+ if($('#save'))$('#save').onclick=async()=>{try{const co=collect(),pr=fxProblems(fx,co);if(pr)return toast(pr);const r=await api(id?'/cards/'+id:'/cards',J(id?'PUT':'POST',co));if(metaC)await api(`/cards/${r.id}/meta`,J('PUT',metaC()));toast('บันทึกแล้ว',1);edit(r.id)}catch(e){toast(e.message)}};
  if($('#del'))$('#del').onclick=async()=>{if(!confirm('ลบการ์ด '+(cur.name||cur.character_id)+' ถาวร? ย้อนกลับไม่ได้'))return;try{await api('/cards/'+id,{method:'DELETE'});toast('ลบแล้ว',1);list()}catch(e){toast(e.message)}};
  document.querySelectorAll('[data-to]').forEach(b=>b.onclick=async()=>{try{await api(`/cards/${id}/status`,J('POST',{to:b.dataset.to}));toast('เปลี่ยนสถานะแล้ว',1);edit(id)}catch(e){toast(e.message)}})}
 const TR={on_summon:'เมื่อถูกเรียก',on_evolve:'เมื่อวิวัฒนาการ',on_attack:'เมื่อโจมตี',on_destroyed:'เมื่อถูกทำลาย',turn_start:'เริ่มเทิร์น',turn_end:'จบเทิร์น',to_graveyard:'เมื่อลงสุสาน',passive:'ต่อเนื่อง',on_cast:'เมื่อใช้เวท',combo:'พลังแฝง (Combo)'};
 const DU={instant:'ทันที',until_end_of_turn:'จนจบเทิร์น',n_turns:'N เทิร์น',permanent:'ถาวร'},LM={none:'ไม่จำกัด',once_per_turn:'1 ครั้ง/เทิร์น',once_per_game:'1 ครั้ง/เกม'};
-function renderFx(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');
+function renderFxOld(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');
  box.innerHTML=fx.map((e,i)=>`<div class="card" style="cursor:default;display:block"><div class="row"><select data-f="trigger" data-i="${i}" ${ro?'disabled':''}>${opt(TR,e.trigger)}</select>${ro?'':`<button class="warn" data-del="${i}">ลบ</button>`}</div>
  <label>คำอธิบายที่ผู้เล่นเห็น</label><textarea data-f="description" data-i="${i}" rows="2" maxlength="500" style="width:100%" ${ro?'disabled':''}>${esc(e.description)}</textarea>
  <details><summary style="font-size:12px;color:#b9a;cursor:pointer">รายละเอียดกติกา (Rule Builder)</summary><div class="g">
@@ -95,6 +95,69 @@ function renderFx(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).m
  <div><label>ขีดจำกัดการใช้</label><select data-f="use_limit" data-i="${i}" ${ro?'disabled':''}>${opt(LM,e.use_limit)}</select></div></div></details></div>`).join('')||'<p class="s" style="color:#b9a;font-size:12px">ยังไม่มีเอฟเฟกต์</p>';
  box.querySelectorAll('[data-f]').forEach(el=>{el.oninput=el.onchange=()=>{fx[+el.dataset.i][el.dataset.f]=el.value}});
  box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{fx.splice(+b.dataset.del,1);renderFx(fx,ro)})}
+/* ---- Effect editor v2 (Registry-driven). Falls back to the old free-text editor if /admin-tools.js did not load. ---- */
+const ST={supported:'✔',experimental:'⚠',deprecated:'⌛',unsupported:'✖'},PVW=250,PVL={description:4,special:2};
+function prepFx(e){if(typeof VCZX==='undefined')return e;const s=(e.config&&e.config.system)||VCZX.fromLegacy(e);
+ if(!s||VCZX.validateSystem(s).length)return {...e,config:null,_legacy:true};
+ return {...e,config:{schema:1,system:s,content:(e.config&&e.config.content)||{},ack:((e.config&&e.config.ack)||[]).map(a=>a.code||a)}}}
+function newFx(){return {trigger:'on_summon',description:'',duration:'until_end_of_turn',use_limit:'none',config:{schema:1,system:{trigger:'on_summon',target:'self',action:'atk_up',amount:1,perm:false,duration:'until_end_of_turn',use_limit:'none'},content:{},ack:[]}}}
+function normSys(s){const X=VCZX,A=['atk_up','atk_down','damage','draw','maxhp_up'];
+ if(!A.includes(s.action)&&!(s.action==='heal'&&!s.full))delete s.amount;else if(!s.amount)s.amount=1;
+ if(s.action!=='heal')delete s.full;
+ const ok=k=>!X.validateSystem({...s,duration:k,perm:s.action==='atk_up'&&s.trigger!=='passive'&&k==='permanent'}).some(i=>i.fields.includes('duration'));
+ if(!ok(s.duration)){const c=X.entries('duration').find(d=>d.status==='supported'&&ok(d.key));if(c)s.duration=c.key}
+ s.perm=s.action==='atk_up'&&s.trigger!=='passive'&&s.duration==='permanent';
+ if(!s.perm||s.action!=='atk_up')delete s.max;
+ if(s.cost&&s.action!=='draw')s.cost=null;if(s.condition&&s.trigger!=='on_attack')s.condition=null;
+ return s}
+function fxCounter(f,v){const c=VCZX.checkLimit(f,v),st=VCZX.counterState(c.len,c.max);return `<span style="color:${st==='over'?'#ff6b6b':st==='near'?'#e8c24a':'#9c9'}">${c.len} / ${c.max}</span>`}
+function fxDyn(e,i){const X=VCZX,s=e.config.system,c=e.config.content,d=e.description||'';const W=X.consistencyWarnings(s,d),ack=e.config.ack;
+ return `<div style="font-size:12px;margin-top:4px">ชื่อ ${fxCounter('effect_name',c.effect_name)} · คำอธิบาย ${fxCounter('description',d)} · เงื่อนไขพิเศษ ${fxCounter('special_condition_text',c.special_condition_text)}</div>`
+ +W.map(w=>`<div style="background:#4a3a0a;border-radius:6px;padding:4px 8px;margin-top:4px;font-size:12px">⚠ ${esc(w.message)} <label style="display:inline;color:#fff"><input type="checkbox" data-ack="${w.code}" data-i="${i}" ${ack.includes(w.code)?'checked':''}> รับทราบ</label></div>`).join('')
+ +`<div style="margin-top:6px"><label>Preview (ประมาณ ${PVW}px — ยังไม่ได้วัดกับกรอบการ์ดจริง)</label><div class="pvx" style="width:${PVW}px;border:1px solid #5a4a7a;border-radius:8px;padding:8px;background:#0006;font-size:12px;line-height:16px;word-break:normal;line-break:auto;overflow-wrap:break-word"><b>${esc(c.effect_name||'')}</b><div class="pvd">${esc(d).replace(/\n/g,'<br>')}</div><i class="pvs" style="color:#bbb">${esc(c.special_condition_text||'')}</i><div class="pvo" style="color:#ff6b6b"></div></div></div>`}
+function fxMeasure(box){box.querySelectorAll('.pvx').forEach(p=>{const L=(el,n)=>{const h=el.getBoundingClientRect().height;return Math.round(h/16)};const o=[];const d=L(p.querySelector('.pvd')),sp=p.querySelector('.pvs').textContent?L(p.querySelector('.pvs')):0;
+ if(d>PVL.description)o.push(`คำอธิบายล้นกรอบ ${d} บรรทัด (ไม่เกิน ${PVL.description})`);if(sp>PVL.special)o.push(`เงื่อนไขพิเศษล้นกรอบ ${sp} บรรทัด (ไม่เกิน ${PVL.special})`);p.querySelector('.pvo').textContent=o.join(' · ')})}
+function renderFx(fx,ro){
+ if(!$('#fx'))return;
+ if(typeof VCZX==='undefined')return renderFxOld(fx,ro);
+ const X=VCZX,box=$('#fx'),dis=ro?'disabled':'';
+ const opt=(f,cat,s,none)=>(none?'<option value="">— ไม่มี —</option>':'')+X.optionsFor(f,cat,s).map(p=>`<option value="${p.key}" ${s[f]===p.key?'selected':''} ${p.enabled||s[f]===p.key?'':'disabled'} title="${esc(p.reason||'')}">${ST[p.status]} ${esc(p.label)}${p.status==='unsupported'?' (ยังไม่รองรับ)':p.enabled?'':' ✕'}</option>`).join('');
+ const sel=(i,f,cat,s,l,none)=>`<div><label>${l}</label><select data-s="${f}" data-i="${i}" ${dis}>${opt(f,cat,s,none)}</select></div>`;
+ box.innerHTML=fx.map((e,i)=>{
+  const del=ro?'':`<button class="warn" data-del="${i}">ลบ</button>`;
+  if(!e.config){return `<div class="card" style="cursor:default;display:block"><div class="row"><span class="badge" style="background:#7a2530">✖ Unsupported</span><span style="flex:3;font-size:12px;color:#b9a">ค่าเดิมที่ไม่อยู่ใน Registry — เอนจินไม่ทำงาน (เวท/กับดัก/Evolution/Fusion ทำงานตาม ID ในเอนจิน) · ส่งต่อไม่ได้สำหรับตัวละคร</span>${del}</div>
+   <div style="font-size:12px;color:#b9a">${esc(e.trigger)} · ${esc(e.target_text||'')} · ${esc(e.action_text||'')} · ${esc(e.duration)}</div>
+   <label>คำอธิบายที่ผู้เล่นเห็น</label><textarea data-f="description" data-i="${i}" rows="2" style="width:100%" ${dis}>${esc(e.description)}</textarea></div>`}
+  const s=e.config.system,c=e.config.content,iss=X.validateSystem(s);
+  const heal=s.action==='heal',amt=['atk_up','atk_down','damage','draw','maxhp_up'].includes(s.action)||(heal&&!s.full);
+  return `<div class="card" style="cursor:default;display:block"><div class="row"><b style="flex:3;align-self:center">เอฟเฟกต์ #${i+1} ${iss.length?'<span class="badge" style="background:#7a2530">✖ ใช้ไม่ได้</span>':'<span class="badge published">✔ Supported</span>'}</b>${del}</div>
+  <div style="font-size:12px;color:#d9a93b">A. ตั้งค่าระบบ (เลือกจากรายการ)</div><div class="g">
+  ${sel(i,'trigger','trigger',s,'จังหวะ')}${sel(i,'condition','condition',s,'เงื่อนไข',1)}${sel(i,'cost','cost',s,'ต้นทุน',1)}${sel(i,'target','target',s,'เป้าหมาย')}${sel(i,'action','action',s,'การกระทำ')}
+  ${amt?`<div><label>ค่าตัวเลข (1–99)</label><input type="number" min="1" max="99" data-s="amount" data-i="${i}" value="${esc(s.amount)}" ${dis}></div>`:''}
+  ${heal?`<div><label>ฟื้นเต็ม</label><input type="checkbox" data-s="full" data-i="${i}" ${s.full?'checked':''} ${dis}></div>`:''}
+  ${s.perm?`<div><label>ค่าสูงสุดรวม (ไม่บังคับ)</label><input type="number" min="1" data-s="max" data-i="${i}" value="${esc(s.max)}" ${dis}></div>`:''}
+  ${sel(i,'duration','duration',s,'ระยะเวลา')}${sel(i,'use_limit','use_limit',s,'ขีดจำกัดการใช้')}</div>
+  ${iss.map(m=>`<div style="color:#ff8a8a;font-size:12px">✖ ${esc(m.message)}</div>`).join('')}
+  <div style="font-size:12px;color:#d9a93b;margin-top:8px">B. ข้อความที่ผู้เล่นเห็น</div>
+  <label>ชื่อ Effect</label><input data-c="effect_name" data-i="${i}" value="${esc(c.effect_name)}" style="width:100%" ${dis}>
+  <label>คำอธิบาย Effect</label><textarea data-f="description" data-i="${i}" rows="2" style="width:100%" ${dis}>${esc(e.description)}</textarea>
+  <label>ข้อความเงื่อนไขพิเศษ</label><input data-c="special_condition_text" data-i="${i}" value="${esc(c.special_condition_text)}" style="width:100%" ${dis}>
+  <div id="fxd${i}">${fxDyn(e,i)}</div></div>`}).join('')||'<p class="s" style="color:#b9a;font-size:12px">ยังไม่มีเอฟเฟกต์</p>';
+ const upd=i=>{const d=$('#fxd'+i);if(!d)return;d.innerHTML=fxDyn(fx[i],i);fxMeasure(d);wireAck()};
+ const wireAck=()=>box.querySelectorAll('[data-ack]').forEach(el=>el.onchange=()=>{const a=fx[+el.dataset.i].config.ack,k=el.dataset.ack;const j=a.indexOf(k);if(el.checked&&j<0)a.push(k);if(!el.checked&&j>=0)a.splice(j,1)});
+ box.querySelectorAll('select[data-s],input[data-s]').forEach(el=>el.onchange=()=>{const e=fx[+el.dataset.i],s=e.config.system,k=el.dataset.s;
+  s[k]=el.type==='checkbox'?el.checked:el.type==='number'?(el.value===''?null:+el.value):(el.value||null);normSys(s);e.trigger=s.trigger;setTimeout(()=>renderFx(fx,ro),0)});
+ box.querySelectorAll('[data-c]').forEach(el=>el.oninput=()=>{fx[+el.dataset.i].config.content[el.dataset.c]=el.value;upd(+el.dataset.i)});
+ box.querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{fx[+el.dataset.i].description=el.value;if(fx[+el.dataset.i].config)upd(+el.dataset.i)});
+ box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{fx.splice(+b.dataset.del,1);renderFx(fx,ro)});
+ fx.forEach((e,i)=>e.config&&fxMeasure($('#fxd'+i)));wireAck()}
+function fxProblems(fx,o){if(typeof VCZX==='undefined')return null;const X=VCZX;
+ for(const [i,e] of fx.entries()){const n=i+1;if(e.config){const live=X.consistencyWarnings(e.config.system,e.description||'').map(w=>w.code);e.config.ack=(e.config.ack||[]).filter(a=>live.includes(a));const v=X.validateSystem(e.config.system);if(v.length)return `เอฟเฟกต์ #${n}: ${v[0].message}`;
+  for(const [f,v2,l] of [['effect_name',e.config.content.effect_name,'ชื่อ Effect'],['special_condition_text',e.config.content.special_condition_text,'เงื่อนไขพิเศษ']])if(X.checkLimit(f,v2).over)return `เอฟเฟกต์ #${n}: ${l} ยาวเกินขีดจำกัด`}
+  if(X.checkLimit('description',e.description).over)return `เอฟเฟกต์ #${n}: คำอธิบายยาวเกิน ${X.LIMITS.description} ตัวอักษร`}
+ if(X.checkLimit('rules_text',o.rules_text).over)return `ข้อความกติกายาวเกิน ${X.LIMITS.rules_text} ตัวอักษร`;
+ if(X.checkLimit('flavor_text',o.flavor_text).over)return `Flavor text ยาวเกิน ${X.LIMITS.flavor_text} ตัวอักษร`;return null}
+function wireCounters(){if(typeof VCZX==='undefined')return;for(const f of ['rules_text','flavor_text']){const t=document.querySelector(`[data-k="${f}"]`),c=$('#ct_'+f);if(!t||!c)continue;const u=()=>{const c2=$('#ct_'+f);if(c2)c2.innerHTML=fxCounter(f,t.value)};t.addEventListener('input',u);u()}}
 let metaC=null;
 function pvDraw(){const el=$('#pv');if(!el||typeof VCZ==='undefined')return;const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.value);
  const n=k=>+o[k]||0;const src=cur.image_path?'/'+cur.image_path:'';

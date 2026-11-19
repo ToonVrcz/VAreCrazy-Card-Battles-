@@ -105,7 +105,7 @@ describe('effects', () => {
   it('published snapshot contains effects; JSON and CSV round-trip', async () => {
     const e = await asUser('e@x.com', 'super_admin');
     const m = await svc.uploadMedia(e, 'a.jpg', 'image/jpeg', Buffer.from('x'));
-    const c = await svc.saveCard(e, card({ media_id: m.id, effects: [fx()] }));
+    const c = await svc.saveCard(e, card({ media_id: m.id, effects: [fx({ target_text: 'ตัวเอง', action_text: 'จั่ว 1 ใบ', duration: 'instant' })] })); // must be runnable: publish gate
     await svc.transition(e, c.id, 'in_review'); await svc.transition(e, c.id, 'approved'); await svc.transition(e, c.id, 'published');
     const v = await svc.db.query<any>(`SELECT snapshot->'effects' fx FROM card_versions WHERE card_id=$1`, [c.id]);
     expect(v.rows[0].fx[0]).toMatchObject({ trigger: 'on_summon', description: 'จั่วการ์ด 1 ใบ' });

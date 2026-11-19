@@ -2,6 +2,9 @@ import type { PGlite } from '@electric-sql/pglite';
 import { scryptSync, randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { validateSystem, toLegacy, type SystemConfig } from '../engine/effect-registry.ts';
+import { checkLimit, type LimitField } from '../engine/effect-text.ts';
+import { parseEffect } from '../engine/effects.ts';
 
 export type Role = 'super_admin' | 'card_editor' | 'reviewer' | 'publisher' | 'viewer';
 export class AppError extends Error {
@@ -188,29 +191,54 @@ export class CardService {
   private async effectsFor(ids: string[]) {
     const m = new Map<string, any[]>();
     if (!ids.length) return m;
-    const r = await this.db.query<any>(`SELECT card_id,trigger,condition_text,cost_text,target_text,action_text,duration,duration_turns,use_limit,description
+    const r = await this.db.query<any>(`SELECT card_id,trigger,condition_text,cost_text,target_text,action_text,duration,duration_turns,use_limit,description,config
       FROM card_effects WHERE card_id = ANY($1::uuid[]) ORDER BY card_id, sort_order`, [ids]);
     for (const { card_id, ...e } of r.rows) (m.get(card_id) ?? m.set(card_id, []).get(card_id)!).push(e);
     return m;
   }
 
-  private static cleanEffects(raw: any): any[] {
+  /** Text field with the CMS limits (Unicode code points, normalized). Over the limit = 400. */
+  static cleanText(field: LimitField, raw: unknown, label: string): string | null {
+    const c = checkLimit(field, raw);
+    if (c.over) throw new AppError(400, `${label} ยาวเกิน ${c.max} ตัวอักษร (ตอนนี้ ${c.len})`);
+    return c.text || null;
+  }
+
+  private static cleanEffects(raw: any, by: string): any[] {
     if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch { throw new AppError(400, 'effects ต้องเป็น JSON'); } }
     if (!Array.isArray(raw)) throw new AppError(400, 'effects ต้องเป็นรายการ');
     if (raw.length > 10) throw new AppError(400, 'เอฟเฟกต์ได้ไม่เกิน 10 รายการต่อการ์ด');
     return raw.map((e, i) => {
-      const t = (v: any) => (v == null || String(v).trim() === '' ? null : String(v).trim());
-      const x = { trigger: t(e.trigger), condition_text: t(e.condition_text), cost_text: t(e.cost_text), target_text: t(e.target_text),
-        action_text: t(e.action_text), duration: t(e.duration) ?? 'instant', duration_turns: e.duration_turns ? Number(e.duration_turns) : null,
-        use_limit: t(e.use_limit) ?? 'none', description: t(e.description) };
       const n = i + 1;
+      const t = (v: any) => (v == null || String(v).trim() === '' ? null : String(v).trim());
+      const sys: SystemConfig | undefined = e.config?.system;
+      let x: any;
+      let config: any = null;
+      if (sys) {
+        // Structured Editor payload: the Registry decides; the legacy text columns are derived here, never trusted from the client.
+        const issues = validateSystem(sys);
+        if (issues.length) throw new AppError(400, `เอฟเฟกต์ #${n}: ${issues.map(s => s.message).join(' / ')}`);
+        const l = toLegacy(sys);
+        x = { ...l, description: t(e.description) };
+        const c = e.config.content ?? {};
+        const now = new Date().toISOString();
+        config = { schema: 1, system: sys,
+          content: { effect_name: CardService.cleanText('effect_name', c.effect_name, `เอฟเฟกต์ #${n}: ชื่อ Effect`), special_condition_text: CardService.cleanText('special_condition_text', c.special_condition_text, `เอฟเฟกต์ #${n}: ข้อความเงื่อนไขพิเศษ`) },
+          ack: (Array.isArray(e.config.ack) ? e.config.ack : []).filter((a: any) => typeof a === 'string').slice(0, 20).map((code: string) => ({ code, by, at: now })) };
+      } else {
+        x = { trigger: t(e.trigger), condition_text: t(e.condition_text), cost_text: t(e.cost_text), target_text: t(e.target_text),
+          action_text: t(e.action_text), duration: t(e.duration) ?? 'instant', duration_turns: e.duration_turns ? Number(e.duration_turns) : null,
+          use_limit: t(e.use_limit) ?? 'none', description: t(e.description) };
+      }
+      x.use_limit = x.use_limit ?? 'none'; x.duration = x.duration ?? 'instant';
       if (!x.trigger || !TRIGGERS.includes(x.trigger)) throw new AppError(400, `เอฟเฟกต์ #${n}: จังหวะ (trigger) ไม่ถูกต้อง`);
       if (!x.description) throw new AppError(400, `เอฟเฟกต์ #${n}: ต้องมีคำอธิบายที่ผู้เล่นเห็น`);
-      if (x.description.length > 500) throw new AppError(400, `เอฟเฟกต์ #${n}: คำอธิบายยาวเกิน 500 ตัวอักษร`);
+      x.description = CardService.cleanText('description', x.description, `เอฟเฟกต์ #${n}: คำอธิบาย`);
       if (!DURATIONS.includes(x.duration)) throw new AppError(400, `เอฟเฟกต์ #${n}: ระยะเวลาไม่ถูกต้อง`);
       if (!LIMITS.includes(x.use_limit)) throw new AppError(400, `เอฟเฟกต์ #${n}: ขีดจำกัดการใช้ไม่ถูกต้อง`);
       if (x.duration === 'n_turns' && !x.duration_turns) throw new AppError(400, `เอฟเฟกต์ #${n}: ระบุจำนวนเทิร์น`);
       if (x.duration !== 'n_turns') x.duration_turns = null;
+      x.config = config;
       return x;
     });
   }
@@ -224,7 +252,7 @@ export class CardService {
       if (!cur) throw new AppError(404, 'ไม่พบการ์ด');
       if (cur.status !== 'draft') throw new AppError(409, 'แก้ไขได้เฉพาะสถานะ Draft (ถอนกลับเป็น Draft ก่อน)');
     }
-    const effects = input.effects == null || input.effects === '' ? undefined : CardService.cleanEffects(input.effects);
+    const effects = input.effects == null || input.effects === '' ? undefined : CardService.cleanEffects(input.effects, u.email);
     const chain = await this.chainId(input.chain_key, input.chain_name);
     const [el, ra, cl] = await Promise.all([
       this.taxId('element', input.element), this.taxId('race', input.race), this.taxId('class', input.class)]);
@@ -236,7 +264,7 @@ export class CardService {
     }
     const n = (v: any) => (v === '' || v == null ? null : Number(v));
     const vals = [input.character_id, input.name, input.card_type, n(input.level), chain, from, n(input.hp), n(input.atk),
-      n(input.def) ?? 0, !!input.has_combo, input.rules_text || null, input.flavor_text || null, el, ra, cl, input.media_id || null, n(input.shop_price_points), n(input.shop_price_vrcoin), input.atk_icon || null];
+      n(input.def) ?? 0, !!input.has_combo, CardService.cleanText('rules_text', input.rules_text, 'ข้อความกติกา'), CardService.cleanText('flavor_text', input.flavor_text, 'Flavor text'), el, ra, cl, input.media_id || null, n(input.shop_price_points), n(input.shop_price_vrcoin), input.atk_icon || null];
     try {
       let cid = id;
       if (id) {
@@ -250,8 +278,8 @@ export class CardService {
       if (effects) {
         await this.db.query(`DELETE FROM card_effects WHERE card_id=$1`, [cid]);
         for (const [i, e] of effects.entries())
-          await this.db.query(`INSERT INTO card_effects(card_id,sort_order,trigger,condition_text,cost_text,target_text,action_text,duration,duration_turns,use_limit,description)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, [cid, i, e.trigger, e.condition_text, e.cost_text, e.target_text, e.action_text, e.duration, e.duration_turns, e.use_limit, e.description]);
+          await this.db.query(`INSERT INTO card_effects(card_id,sort_order,trigger,condition_text,cost_text,target_text,action_text,duration,duration_turns,use_limit,description,config)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)`, [cid, i, e.trigger, e.condition_text, e.cost_text, e.target_text, e.action_text, e.duration, e.duration_turns, e.use_limit, e.description, e.config ? JSON.stringify(e.config) : null]);
       }
       await this.audit(u, id ? 'update' : 'create', cid!, input);
       return this.getCard(u, cid!);
@@ -278,11 +306,17 @@ export class CardService {
   }
 
   async transition(u: User, id: string, to: string) {
-    const cur = (await this.db.query<any>(`SELECT status,character_id FROM cards WHERE id=$1`, [id])).rows[0];
+    const cur = (await this.db.query<any>(`SELECT status,character_id,card_type FROM cards WHERE id=$1`, [id])).rows[0];
     if (!cur) throw new AppError(404, 'ไม่พบการ์ด');
     const perm = FLOW[cur.status]?.[to];
     if (!perm) throw new AppError(409, `เปลี่ยน ${cur.status} → ${to} ไม่ได้`);
     need(u, perm);
+    if (['in_review', 'approved', 'published'].includes(to) && cur.card_type === 'character') {
+      // Publish gate: a character may only advance when every ability is one the engine really runs (spells/traps/evolution/fusion run by card ID, so they are exempt).
+      const fx = (await this.effectsFor([id])).get(id) ?? [];
+      const dead = fx.map((e, i) => ({ e, n: i + 1 })).filter(({ e }) => !parseEffect(e));
+      if (dead.length) throw new AppError(422, `ส่งต่อไม่ได้: เอฟเฟกต์ ${dead.map(({ e, n }) => `#${n} "${String(e.description).slice(0, 30)}"`).join(', ')} ยังไม่ทำงานในเอนจิน (แก้ให้เป็นค่าที่ Registry รองรับ หรือลบออก)`);
+    }
     try {
       await this.db.query(`UPDATE cards SET status=$1 WHERE id=$2`, [to, id]);
     } catch (e: any) {

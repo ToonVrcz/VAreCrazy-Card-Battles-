@@ -29,6 +29,9 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Rebuild browser engine after changing anything under `src/engine` or `src/play-entry.ts`:
   `npx esbuild src/play-entry.ts --bundle --format=iife --global-name=VCZE --minify --charset=utf8 --outfile=public/engine.js`
   (verified byte-identical to the committed file)
+- Admin Effect editor tools (generated; rebuild after changing `src/engine/effect-registry.ts` or `effect-text.ts`):
+  `npx esbuild src/admin-entry.ts --bundle --format=iife --global-name=VCZX --minify --charset=utf8 --outfile=public/admin-tools.js`
+  Local browser check: `PORT=8799 node scripts/cms-effects-e2e.cjs` (in-memory DB, no production).
 - Edge function bundle (do this, then deploy the whole file as `index.ts`):
   `npx esbuild src/edge/index.ts --bundle --format=esm --platform=node --external:@electric-sql/pglite --external:postgres --minify --charset=utf8 --outfile=/tmp/edge.js && sed -i 's#from"postgres"#from"npm:postgres@3"#g' /tmp/edge.js`
   The bundle is ~76 KB. Pasting it by hand is error-prone; last time a stub `index.ts` that imports the bundle from a commit-pinned raw GitHub URL (temporary branch, repo is public) worked, then the branch was deleted.
@@ -40,6 +43,9 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Economy: guest profile (secret key in the browser, hashed in DB), starter 500 points; PvP match (≥ 6 turns) = 200 points; every 10th match = +10 Vrcoin; shop: Lv.40 = 500 points, Lv.70 = 100 Vrcoin (Lv.99 price not set); max 3 copies per card. Prices editable in Admin.
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
+
+## Status (2026-11-19)
+Branch `feature/cms-effects-c` (NOT merged, NOT deployed): CMS Effect Registry + split editor (system config vs player text, limits/counters, warn-only consistency check, publish gate). Migration `019_effect_config` (adds `card_effects.config jsonb`) is written, NOT applied to production. Deploy order when Toon says "Deploy": apply 019 → deploy edge → merge → verify. Coordinate with `feature/hardening-1` (touches service.ts; migration 018 unapplied).
 
 ## Status (2026-11-12)
 Deployed 2026-11-12 (main = 34af1cf, edge function `api` v9 via stub -> `edge-bundle.js` on temporary branch `tmp-edge-bundle-g1`, do not delete: rollback reference; previous Vercel production deployment `dpl_4R3yC476BBXQG8byAxKDTyHLRxvJ`):
