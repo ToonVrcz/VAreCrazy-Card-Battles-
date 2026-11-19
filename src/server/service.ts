@@ -37,6 +37,7 @@ const DURATIONS = ['instant','until_end_of_turn','n_turns','permanent'];
 const LIMITS = ['none','once_per_turn','once_per_game'];
 
 // ---- auth ----
+export const LOGIN_MAX_FAILS = 5, LOGIN_WINDOW_MIN = 10;
 const hashPw = (pw: string, salt = randomBytes(16).toString('hex')) =>
   `${salt}:${scryptSync(pw, salt, 32).toString('hex')}`;
 const checkPw = (pw: string, stored: string) => {
@@ -56,10 +57,29 @@ export class CardService {
       [email.toLowerCase(), role, hashPw(password)]);
   }
 
+  /** Runs a throttle query. If migration 018 is not applied yet (table missing, 42P01) login keeps working unthrottled instead of locking every admin out; any other error is raised. */
+  private async throttleSql(sql: string, params: any[] = []) {
+    try { return await this.db.query<any>(sql, params); }
+    catch (e: any) { if (e?.code === '42P01' && /admin_login_failures/.test(String(e.message))) { console.error('admin_login_failures missing: apply migration 018 (login throttle inactive)'); return { rows: [] as any[] }; } throw e; }
+  }
+  private async recentFailures(em: string) {
+    const r = await this.throttleSql(`SELECT count(*)::int AS n FROM admin_login_failures WHERE email=$1 AND at > now() - make_interval(mins => $2)`, [em, LOGIN_WINDOW_MIN]);
+    return Number(r.rows[0]?.n ?? 0);
+  }
+
+  /** Throttle: after LOGIN_MAX_FAILS wrong attempts for one email within LOGIN_WINDOW_MIN minutes, every attempt (even a correct one) is refused until the window passes. */
   async login(email: string, password: string) {
-    const r = await this.db.query<any>(`SELECT * FROM admin_users WHERE email=$1 AND is_active`, [email.toLowerCase()]);
+    const em = email.toLowerCase().slice(0, 200);
+    const recent = await this.recentFailures(em);
+    if (recent >= LOGIN_MAX_FAILS) throw new AppError(429, `ลองผิดหลายครั้งเกินไป รอ ${LOGIN_WINDOW_MIN} นาทีแล้วลองใหม่`);
+    const r = await this.db.query<any>(`SELECT * FROM admin_users WHERE email=$1 AND is_active`, [em]);
     const u = r.rows[0];
-    if (!u || !u.password_hash || !checkPw(password, u.password_hash)) throw new AppError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    if (!u || !u.password_hash || !checkPw(password, u.password_hash)) {
+      await this.throttleSql(`INSERT INTO admin_login_failures(email) VALUES ($1)`, [em]);
+      await this.throttleSql(`DELETE FROM admin_login_failures WHERE at < now() - interval '1 day'`);
+      throw new AppError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    }
+    await this.throttleSql(`DELETE FROM admin_login_failures WHERE email=$1`, [em]);
     const token = randomBytes(32).toString('hex');
     await this.db.query(`INSERT INTO admin_sessions(token_hash,user_id,expires_at) VALUES ($1,$2, now() + interval '12 hours')`, [sha(token), u.id]);
     return { token, user: { id: u.id, email: u.email, role: u.role_key } as User };

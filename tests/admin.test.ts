@@ -24,6 +24,19 @@ describe('auth', () => {
     await svc.logout(token);
     await expect(svc.auth(token)).rejects.toThrow(AppError);
   });
+  it('login throttle: 5 wrong tries lock that email (even for the right password), other emails unaffected, success clears the count', async () => {
+    await svc.createUser('t@x.com', 'password123', 'viewer'); await svc.createUser('u@x.com', 'password123', 'viewer');
+    for (let i = 0; i < 4; i++) await expect(svc.login('T@x.com', 'bad')).rejects.toMatchObject({ code: 401 });
+    await svc.login('t@x.com', 'password123');                                      // success resets the counter
+    for (let i = 0; i < 5; i++) await expect(svc.login('t@x.com', 'bad')).rejects.toMatchObject({ code: 401 });
+    await expect(svc.login('t@x.com', 'password123')).rejects.toMatchObject({ code: 429 });   // locked, even with the right password
+    await expect(svc.login('t@x.com', 'bad')).rejects.toMatchObject({ code: 429 });
+    expect((await svc.login('u@x.com', 'password123')).user.email).toBe('u@x.com');
+    await svc.db.query(`UPDATE admin_login_failures SET at = now() - interval '11 minutes'`);   // the window passes
+    expect((await svc.login('t@x.com', 'password123')).user.email).toBe('t@x.com');
+    for (let i = 0; i < 3; i++) await expect(svc.login('nobody@x.com', 'x')).rejects.toMatchObject({ code: 401 });
+    expect(Number((await svc.db.query<any>(`SELECT count(*)::int n FROM admin_login_failures WHERE email='nobody@x.com'`)).rows[0].n)).toBe(3);
+  });
   it('rejects short passwords', async () => {
     await expect(svc.createUser('b@x.com', '123', 'viewer')).rejects.toThrow();
   });
