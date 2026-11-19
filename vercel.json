@@ -16,6 +16,10 @@
       "destination": "/public/play.html"
     },
     {
+      "source": "/admin-tools.js",
+      "destination": "/public/admin-tools.js"
+    },
+    {
       "source": "/engine.js",
       "destination": "/public/engine.js"
     },
