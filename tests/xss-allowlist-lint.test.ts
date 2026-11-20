@@ -24,12 +24,12 @@ const ALLOW: Allow[] = ([
 ] as [string, string, string][]).map(([file, code, w]) => ({ file, code: KIND + code, why: w }));
 
 describe('XSS allowlist lint (replaces the old deny-list regexes)', () => {
-  it.each(['public/play.html', 'public/admin.html', 'public/card-renderer.js'])('%s has no unescaped interpolation', f => {
+  it.each(['public/play.html', 'public/admin.html', 'public/card-renderer.js', 'public/admin-bulk.js'])('%s has no unescaped interpolation', f => {
     expect(lintSource(f, read(f), ALLOW)).toEqual([]);
   });
 
   it('the allowlist has no stale or extra entries: without it the lint reports exactly these findings, nothing more', () => {
-    const raw = ['public/play.html', 'public/admin.html', 'public/card-renderer.js'].flatMap(f => lintSource(f, read(f)));
+    const raw = ['public/play.html', 'public/admin.html', 'public/card-renderer.js', 'public/admin-bulk.js'].flatMap(f => lintSource(f, read(f)));
     const key = (x: { file: string; code: string }) => x.file + '|' + x.code;
     expect(new Set(raw.map(key))).toEqual(new Set(ALLOW.map(key)));
   });

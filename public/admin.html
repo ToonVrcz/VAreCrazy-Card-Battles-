@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VAreCrazy Card CMS</title><script src="/card-renderer.js"></script><script src="/admin-tools.js"></script>
+<title>VAreCrazy Card CMS</title><script src="/card-renderer.js"></script><script src="/admin-tools.js"></script><script src="/admin-bulk.js"></script>
 <style>
 [hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#15101d;color:#eee}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#221833;position:sticky;top:0;z-index:5}
@@ -200,7 +200,7 @@ async function economy(){const d=await api('/admin/economy'),pr=Object.fromEntri
  document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=async()=>{const l=+b.dataset.sp;try{await api('/admin/economy/price',J('PUT',{level:l,currency:$('#pc'+l).value,price:+$('#pp'+l).value}));toast('บันทึกราคาแล้ว',1);economy()}catch(e){toast(e.message)}});
  document.querySelectorAll('[data-rp]').forEach(b=>b.onclick=async()=>{try{await api('/admin/economy/price',J('DELETE',{level:+b.dataset.rp}));toast('เลิกขายแล้ว',1);economy()}catch(e){toast(e.message)}});
  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=async()=>{const id=b.dataset.g;try{await api('/admin/economy/grant',J('POST',{playerId:id,points:+($('#gp'+id).value||0),vrcoin:+($('#gv'+id).value||0),note:'admin'}));toast('ทำรายการแล้ว',1);economy()}catch(e){toast(e.message)}})}
-function nav(){$('#nav').innerHTML=`<button id="n1">🃏 การ์ด</button>${can('users')?'<button id="n2">👥 ผู้ใช้</button>':''}<button id="n5">🖼 กรอบการ์ด</button><button id="n4">⚙ ระบบเกม</button>${can('users')?'<button id="n6">🛒 ร้านค้า/ผู้เล่น</button>':''}<button id="n3">🔑 บัญชีฉัน</button>`;$('#n4').onclick=sys;$('#n5').onclick=frames;if($('#n6'))$('#n6').onclick=economy;
+function nav(){$('#nav').innerHTML=`<button id="n1">🃏 การ์ด</button>${can('users')?'<button id="n2">👥 ผู้ใช้</button>':''}<button id="n7">🧩 ตั้งค่าละเอียด</button><button id="n5">🖼 กรอบการ์ด</button><button id="n4">⚙ ระบบเกม</button>${can('users')?'<button id="n6">🛒 ร้านค้า/ผู้เล่น</button>':''}<button id="n3">🔑 บัญชีฉัน</button>`;$('#n4').onclick=sys;$('#n7').onclick=bulkMeta;$('#n5').onclick=frames;if($('#n6'))$('#n6').onclick=economy;
  $('#n1').onclick=list;if($('#n2'))$('#n2').onclick=users;$('#n3').onclick=account}
 const FT=[['character','ตัวละคร'],['evolution','วิวัฒนาการ'],['fusion','ฟิวชั่น'],['spell','เวทมนตร์'],['trap','กับดัก'],['item','ไอเท็ม/อื่นๆ']];
 async function upFrame(scope,file){const r=await api('/media',{method:'POST',headers:{'content-type':file.type,'x-filename':file.name,'x-render-mode':'art_only'},body:file});await api('/frames/'+scope,J('PUT',{media_id:r.id}));await loadFr()}

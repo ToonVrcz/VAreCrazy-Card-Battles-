@@ -20,6 +20,10 @@
       "destination": "/public/admin-tools.js"
     },
     {
+      "source": "/admin-bulk.js",
+      "destination": "/public/admin-bulk.js"
+    },
+    {
       "source": "/engine.js",
       "destination": "/public/engine.js"
     },

@@ -8,6 +8,7 @@ const rules = new Map(cfg.rewrites.map(r => [r.source, r.destination]));
 describe('vercel.json routing (F-06)', () => {
   it('has no duplicate rewrite sources', () => { expect(cfg.rewrites.length).toBe(rules.size); });
   it('/admin-tools.js is rewritten to the generated bundle', () => { expect(rules.get('/admin-tools.js')).toBe('/public/admin-tools.js'); });
+  it('/admin-bulk.js (bulk meta table) is rewritten to its file', () => { expect(rules.get('/admin-bulk.js')).toBe('/public/admin-bulk.js'); });
   it('every rewrite to /public/* points at an existing file', () => {
     for (const d of rules.values()) if (d.startsWith('/public/')) expect(existsSync(d.slice(1)), d).toBe(true);
   });
