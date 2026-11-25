@@ -9,7 +9,7 @@ export type CardType = 'character' | 'evolution' | 'fusion' | 'spell' | 'trap' |
 import type { Effect, EffectTrigger } from './effects';
 import { emit, type GameEvent } from './events';
 export interface CardDef { id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null; effects?: Effect[] }
-export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, poison: { dmg: 5, turns: 3 } };
+export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, sacrificeSameLevel: true, poison: { dmg: 5, turns: 3 } };
 export class EngineError extends Error {}
 
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
@@ -294,6 +294,7 @@ function step(g: Game, a: Action): Game {
       if (form.type !== 'character' || form.chain !== u.card.chain || form.level !== next) fail('ร่างใหม่ต้องเป็นขั้นถัดไปของสายเดียวกัน');
       const need = RULES.sacrifice[next], sac = Array.isArray(a.sacrifice) ? [...new Set(a.sacrifice)] : [];
       if (sac.length !== need || sac.some(s => !Number.isInteger(s) || s < 0 || s >= RULES.fieldSlots || s === a.slot || !me.field[s])) fail(`ต้องสังเวยตัวละครอื่น ${need} ใบ`);
+      if (RULES.sacrificeSameLevel && sac.some(s => me.field[s]!.card.level !== u.card.level)) fail(`ต้องสังเวยตัวละครเลเวล ${u.card.level} ${need} ใบ`);
       if (ex) { me.hand.splice(a.evo, 1); ex.splice(a.form, 1); } else { const [hi, lo] = [Math.max(a.evo, a.form), Math.min(a.evo, a.form)]; me.hand.splice(hi, 1); me.hand.splice(lo, 1); }
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); emit(g, { t: 'evolve_cancelled', p: pi, card: u.card.name }); return g; }
@@ -388,7 +389,7 @@ export function legalActions(g: Game): Action[] {
     if (!me.evolved) me.field.forEach((u, s) => {
       if (!u) return; const nx = ({ 15: 40, 40: 70, 70: 99 } as Record<number, number>)[u.card.level ?? 0];
       const e = me.hand.findIndex(c => c.type === 'evolution'), f = (me.extra ?? me.hand).findIndex(c => c.type === 'character' && c.chain === u.card.chain && c.level === nx);
-      const sac = me.field.map((x, i) => x && i !== s ? i : -1).filter(i => i >= 0).slice(0, RULES.sacrifice[nx] ?? 9);
+      const sac = me.field.map((x, i) => x && i !== s && (!RULES.sacrificeSameLevel || x.card.level === u.card.level) ? i : -1).filter(i => i >= 0).slice(0, RULES.sacrifice[nx] ?? 9);
       if (e >= 0 && f >= 0 && sac.length === RULES.sacrifice[nx]) out.push({ t: 'evolve', slot: s, evo: e, form: f, sacrifice: sac });
     });
   } else {
