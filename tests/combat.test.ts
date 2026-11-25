@@ -26,3 +26,12 @@ describe('combat v0', () => {
     expect(evolveHp(90, 1, 100)).toBe(11); expect(evolveHp(10, 0, 5)).toBe(1);
   });
 });
+
+describe('element table = union of seed and export (owner decision 2026-11-25)', () => {
+  it('fire beats alchemy; poison beats nature and lightning; nature beats water', () => {
+    expect(elementMultiplier('fire', 'alchemy')).toBe(1.5); expect(elementMultiplier('alchemy', 'fire')).toBe(0.75);
+    expect(elementMultiplier('poison', 'nature')).toBe(1.5); expect(elementMultiplier('poison', 'lightning')).toBe(1.5);
+    expect(elementMultiplier('nature', 'water')).toBe(1.5); expect(elementMultiplier('fire', 'poison')).toBe(1.5);
+  });
+  it('physical and neutral stay without advantages', () => { expect(elementMultiplier('physical', 'fire')).toBe(1); expect(elementMultiplier('neutral', 'neutral')).toBe(1); });
+});
