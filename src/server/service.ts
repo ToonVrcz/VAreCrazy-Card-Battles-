@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { validateSystem, toLegacy, type SystemConfig } from '../engine/effect-registry.ts';
 import { checkLimit, type LimitField } from '../engine/effect-text.ts';
 import { parseEffect } from '../engine/effects.ts';
+import { validateSupport } from '../engine/support-registry.ts';
 
 export type Role = 'super_admin' | 'card_editor' | 'reviewer' | 'publisher' | 'viewer';
 export class AppError extends Error {
@@ -181,7 +182,7 @@ export class CardService {
   // ---- read ----
   private static SELECT = `
     SELECT c.id, c.character_id, c.name, c.card_type, c.level, c.hp, c.atk, c.def, c.has_combo,
-      c.rules_text, c.flavor_text, c.atk_icon, c.shop_price_points, c.shop_price_vrcoin, c.status, c.version_no, c.updated_at,
+      c.rules_text, c.flavor_text, c.atk_icon, c.shop_price_points, c.shop_price_vrcoin, c.status, c.version_no, c.updated_at, c.support,
       ch.key AS chain_key, ch.name AS chain_name, pf.character_id AS evolves_from,
       el.key AS element, ra.key AS race, cl.key AS class,
       m.storage_path AS image_path, m.render_mode, m.id AS media_id
@@ -206,6 +207,21 @@ export class CardService {
     const r = await this.db.query<any>(`${CardService.SELECT} WHERE c.id=$1`, [id]);
     if (!r.rows[0]) throw new AppError(404, 'ไม่พบการ์ด');
     return { ...r.rows[0], effects: (await this.effectsFor([id])).get(id) ?? [] };
+  }
+
+  /** Edit the data-driven config of a Signature Spell/Trap. Draft only; validated against the shared registry; audit-logged. */
+  async saveSupport(u: User, id: string, input: any) {
+    need(u, 'write');
+    const cur = (await this.db.query<any>(`SELECT status, card_type, support FROM cards WHERE id=$1`, [id])).rows[0];
+    if (!cur) throw new AppError(404, 'ไม่พบการ์ด');
+    if (!['spell', 'trap'].includes(cur.card_type)) throw new AppError(409, 'ตั้งค่านี้ใช้ได้เฉพาะเวทมนตร์/กับดัก');
+    if (cur.status !== 'draft') throw new AppError(409, 'แก้ไขได้เฉพาะสถานะ Draft (ถอนกลับเป็น Draft ก่อน)');
+    const chains = (await this.db.query<any>(`SELECT key FROM evolution_chains`)).rows.map(r => r.key as string);
+    const { errors, clean } = validateSupport(input?.support, { cardType: cur.card_type, chains });
+    if (errors.length) throw new AppError(422, errors.join('; '));
+    await this.db.query(`UPDATE cards SET support=$1::jsonb WHERE id=$2`, [JSON.stringify(clean), id]);
+    await this.audit(u, 'support:update', id, { before: cur.support, after: clean });
+    return this.getCard(u, id);
   }
 
   private async effectsFor(ids: string[]) {

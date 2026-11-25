@@ -60,6 +60,8 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
         if (m === 'PUT') return send(res, 200, await svc.saveCard(u, JSON.parse((await body(req)).toString()), a[1]));
         if (m === 'DELETE') return send(res, 200, await svc.deleteCard(u, a[1]));
       }
+      if ((a = path.match(/^\/api\/cards\/([\w-]+)\/support$/)) && m === 'PUT')
+        return send(res, 200, await svc.saveSupport(u, a[1], JSON.parse((await body(req)).toString())));
       if ((a = path.match(/^\/api\/cards\/([\w-]+)\/status$/)) && m === 'POST')
         return send(res, 200, await svc.transition(u, a[1], JSON.parse((await body(req)).toString()).to));
       if (path === '/api/media' && m === 'POST') {

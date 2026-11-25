@@ -73,11 +73,12 @@ async function edit(id){
  <label>ข้อความกติกา <span id="ct_rules_text" style="float:right"></span></label><textarea data-k="rules_text" rows="3" style="width:100%" ${ro?'disabled':''}>${esc(cur.rules_text)}</textarea>
  <label>Flavor text <span id="ct_flavor_text" style="float:right"></span></label><textarea data-k="flavor_text" rows="2" style="width:100%" ${ro?'disabled':''}>${esc(cur.flavor_text)}</textarea>
  <div class="sec"><label style="font-size:14px;color:#d9a93b">เอฟเฟกต์ (${esc((cur.effects||[]).length)}/10)</label><div id="fx"></div>${!ro?'<button id="addfx">+ เพิ่มเอฟเฟกต์</button>':''}</div>
+ ${cur.support&&['spell','trap'].includes(cur.card_type)?'<div class="sec" id="sup"></div>':''}
  <div class="sec" id="meta"></div>
  ${id&&can('write')?`<div class="sec"><label style="font-size:14px;color:#d9a93b">🖼 กรอบเฉพาะใบนี้ ${FR['card:'+cur.character_id]?'(กำหนดเองอยู่)':'(ใช้กรอบตามประเภท)'}</label><div class="row"><input type="file" id="cfu" accept="image/png,image/webp,image/jpeg">${FR['card:'+cur.character_id]?'<button id="cfr">รีเซ็ต</button>':''}</div></div>`:''}
  <div class="row">${!ro?'<button class="pri" id="save">บันทึก</button>':''}${id&&cur.status==='draft'&&can('write')?'<button class="warn" id="del">🗑 ลบการ์ด</button>':''}${id?nx.filter(([to])=>can({in_review:'submit',approved:'review',draft:cur.status==='in_review'||cur.status==='approved'?'review':'publish',published:'publish',archived:'publish'}[to])).map(([to,l])=>`<button data-to="${esc(to)}" class="${to==='draft'?'warn':''}">${esc(l)}</button>`).join(''):''}</div>`;
  if($('#cfu'))$('#cfu').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await upFrame('card:'+cur.character_id,f);toast('ตั้งกรอบแล้ว',1);edit(id)}catch(x){toast(x.message)}};if($('#cfr'))$('#cfr').onclick=async()=>{try{await api('/frames/card:'+cur.character_id,{method:'DELETE'});await loadFr();edit(id)}catch(x){toast(x.message)}};
- $('#back').onclick=list;renderFx(fx,ro);wireCounters();metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push(typeof VCZX==='undefined'?{trigger:'on_summon',duration:'instant',use_limit:'none',description:''}:newFx());renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
+ $('#back').onclick=list;renderFx(fx,ro);if($('#sup'))renderSupport(JSON.parse(JSON.stringify(cur.support)),id,ro);wireCounters();metaC=null;meta(id,ro);pvDraw();document.querySelectorAll('[data-k]').forEach(e=>e.addEventListener('input',pvDraw));if($('#addfx'))$('#addfx').onclick=()=>{if(fx.length>=10)return toast('ได้ไม่เกิน 10 เอฟเฟกต์');fx.push(typeof VCZX==='undefined'?{trigger:'on_summon',duration:'instant',use_limit:'none',description:''}:newFx());renderFx(fx,ro)};$('#rm').value=cur.render_mode||'art_only';
  const collect=()=>{const o={};document.querySelectorAll('[data-k]').forEach(e=>o[e.dataset.k]=e.type==='checkbox'?e.checked:e.value);o.media_id=cur.media_id||null;o.effects=fx;return o};
  $('#up').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;try{const r=await api('/media',{method:'POST',headers:{'content-type':fl.type,'x-filename':fl.name,'x-render-mode':$('#rm').value},body:fl});cur.media_id=r.id;cur.image_path=r.storage_path;pvDraw();toast('อัปโหลดแล้ว (กดบันทึกเพื่อผูกกับการ์ด)',1)}catch(x){toast(x.message)}};
  if($('#save'))$('#save').onclick=async()=>{try{const co=collect(),pr=fxProblems(fx,co);if(pr)return toast(pr);const r=await api(id?'/cards/'+id:'/cards',J(id?'PUT':'POST',co));if(metaC)await api(`/cards/${r.id}/meta`,J('PUT',metaC()));toast('บันทึกแล้ว',1);edit(r.id)}catch(e){toast(e.message)}};
@@ -85,6 +86,29 @@ async function edit(id){
  document.querySelectorAll('[data-to]').forEach(b=>b.onclick=async()=>{try{await api(`/cards/${id}/status`,J('POST',{to:b.dataset.to}));toast('เปลี่ยนสถานะแล้ว',1);edit(id)}catch(e){toast(e.message)}})}
 const TR={on_summon:'เมื่อถูกเรียก',on_evolve:'เมื่อวิวัฒนาการ',on_attack:'เมื่อโจมตี',on_destroyed:'เมื่อถูกทำลาย',turn_start:'เริ่มเทิร์น',turn_end:'จบเทิร์น',to_graveyard:'เมื่อลงสุสาน',passive:'ต่อเนื่อง',on_cast:'เมื่อใช้เวท',combo:'พลังแฝง (Combo)'};
 const DU={instant:'ทันที',until_end_of_turn:'จนจบเทิร์น',n_turns:'N เทิร์น',permanent:'ถาวร'},LM={none:'ไม่จำกัด',once_per_turn:'1 ครั้ง/เทิร์น',once_per_game:'1 ครั้ง/เกม'};
+/* ---- Signature Spell/Trap config editor (dropdowns from the shared support registry; server validates again) ---- */
+function renderSupport(sp,id,ro){const box=$('#sup');if(!box)return;if(typeof VCZX==='undefined'){box.innerHTML='<label>ตั้งค่า Signature (โหลด admin-tools.js ไม่สำเร็จ)</label>';return}
+ const X=VCZX,L=X.SUPPORT_LABELS,dis=ro?'disabled':'';
+ const opt=(arr,lab,v,blank)=>(blank?`<option value="">${esc(blank)}</option>`:'')+arr.map(k=>`<option value="${esc(k)}" ${v===k?'selected':''}>${esc(lab[k]||k)}</option>`).join('');
+ const rows=sp.ops.map((o,i)=>{const p=X.OP_PARAMS[o.op]||{};return `<div class="row" data-i="${esc(i)}" style="align-items:flex-end;flex-wrap:wrap"><div><label>การกระทำ</label><select data-f="op" ${dis}>${opt(X.SUPPORT_OPS,L.op,o.op)}</select></div>`
+  +(p.who?`<div><label>เป้า</label><select data-f="who" ${dis}>${opt(X.SUPPORT_WHO,L.who,o.who,'(ตัวละครที่ผูก)')}</select></div>`:'')
+  +(p.stat?`<div><label>ค่า</label><select data-f="stat" ${dis}>${opt(X.SUPPORT_STAT,L.stat,o.stat)}</select></div>`:'')
+  +(p.amount?`<div><label>จำนวน</label><input data-f="amount" type="number" step="1" value="${esc(o.amount)}" style="width:80px" ${dis}></div>`:'')
+  +(p.until?`<div><label>ระยะเวลา</label><select data-f="until" ${dis}>${opt(X.SUPPORT_UNTIL,L.until,o.until,'(จนจบเทิร์น)')}</select></div>`:'')
+  +(ro?'':`<button data-del="${esc(i)}">✕</button>`)+'</div>'}).join('');
+ box.innerHTML=`<label style="font-size:14px;color:#d9a93b">⚙ ตั้งค่า ${esc(sp.kind==='trap'?'กับดัก':'เวทมนตร์')} (Signature)</label>`
+  +`<div class="row" style="align-items:flex-end"><div><label>ผูกกับสาย (chain key)</label><input data-f="link" value="${esc(sp.link)}" ${dis}></div>`
+  +(sp.kind==='trap'?`<div><label>ทริกเกอร์</label><select data-f="trigger" ${dis}>${opt(X.SUPPORT_TRIGGERS,L.trigger,sp.trigger)}</select></div>`:'')+'</div>'
+  +rows+(ro?'':'<div class="row"><button id="supadd">+ เพิ่มการกระทำ</button><button class="pri" id="supsave">บันทึกการตั้งค่า</button></div><div style="font-size:12px;color:#999">บันทึกแยกจากปุ่ม "บันทึก" ด้านล่าง · แก้ได้เฉพาะสถานะ Draft</div>');
+ if(ro)return;
+ box.querySelectorAll('[data-f]').forEach(el=>el.onchange=()=>{const f=el.dataset.f,row=el.closest('[data-i]');
+  if(!row){sp[f]=el.value;if(f==='trigger'&&sp.trigger!=='enemy_target')delete sp.source;renderSupport(sp,id,ro);return}
+  const o=sp.ops[+row.dataset.i];
+  if(f==='op'){for(const k of Object.keys(o))delete o[k];o.op=el.value;renderSupport(sp,id,ro);return}
+  if(f==='amount'){if(el.value==='')delete o.amount;else o.amount=+el.value}else if(el.value==='')delete o[f];else o[f]=el.value});
+ box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{sp.ops.splice(+b.dataset.del,1);renderSupport(sp,id,ro)});
+ $('#supadd').onclick=()=>{if(sp.ops.length>=6)return toast('ได้ไม่เกิน 6 การกระทำ');sp.ops.push({op:'buff',who:'link',stat:'atk',amount:0,until:'turn'});renderSupport(sp,id,ro)};
+ $('#supsave').onclick=async()=>{try{await api('/cards/'+id+'/support',J('PUT',{support:sp}));toast('บันทึกการตั้งค่าแล้ว',1);edit(id)}catch(e){toast(e.message)}};}
 function renderFxOld(fx,ro){const box=$('#fx');const opt=(o,v)=>Object.entries(o).map(([k,l])=>`<option value="${esc(k)}" ${v===k?'selected':''}>${esc(l)}</option>`).join('');
  box.innerHTML=fx.map((e,i)=>`<div class="card" style="cursor:default;display:block"><div class="row"><select data-f="trigger" data-i="${+i}" ${ro?'disabled':''}>${opt(TR,e.trigger)}</select>${ro?'':`<button class="warn" data-del="${+i}">ลบ</button>`}</div>
  <label>คำอธิบายที่ผู้เล่นเห็น</label><textarea data-f="description" data-i="${+i}" rows="2" maxlength="500" style="width:100%" ${ro?'disabled':''}>${esc(e.description)}</textarea>

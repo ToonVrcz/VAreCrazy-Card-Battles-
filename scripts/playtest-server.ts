@@ -12,6 +12,7 @@ const svc = new CardService(db, process.env.E2E_STORAGE ?? '/tmp/vcz-e2e-storage
 await svc.createUser('e2e@local', 'e2e-password-123', 'super_admin');
 const admin = (await svc.login('e2e@local', 'e2e-password-123')).user;
 for (const f of ['toon-cards.json', 'support-cards.json', 'spell-cards.json', 'trap-cards.json']) await svc.importCards(admin, JSON.parse(readFileSync(`db/seed/${f}`, 'utf8')));
+if (process.env.E2E_SIGNATURE) await db.exec(readFileSync('db/seed/signature-cards.sql', 'utf8'));   // opt-in: the 39 Signature draft cards
 const handler = makeHandler(svc), port = Number(process.env.PORT ?? 8791);
 createServer((req, res) => { req.url = req.url!.replace(/^\/play(?=[?#]|$)/, '/play.html'); return handler(req, res); })
   .listen(port, '127.0.0.1', () => console.log(`READY ${port}`));
