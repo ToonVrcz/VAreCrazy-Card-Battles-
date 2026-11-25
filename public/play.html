@@ -66,7 +66,7 @@ function deck(){const pick=a=>a[Math.floor(Math.random()*a.length)],chars=DEFS.f
  const put=c=>{if(!c||(n[c.id]||0)>=DK.max||d.length>=DK.size)return;n[c.id]=(n[c.id]||0)+1;d.push({...c})};
  for(const k of ch){const a=chars.find(x=>x.chain===k&&x.level===15);for(let i=0;i<3;i++)put(a)}
  for(let i=0;i<3;i++)put(BY['EVO-001']);if(PAIRS.length)for(let i=0;i<2;i++)put(BY['FUS-001']);
- const sp=DEFS.filter(x=>x.type==='spell'),tr=DEFS.filter(x=>x.type==='trap');
+ const sp=DEFS.filter(x=>x.type==='spell'&&!x.support),tr=DEFS.filter(x=>x.type==='trap'&&!x.support);
  for(let g=0;d.length<DK.size&&g<400&&(sp.length||tr.length);g++)put(pick(g%3===2&&tr.length?tr:sp.length?sp:tr));
  const l15=chars.filter(x=>x.level===15);for(let g=0;d.length<DK.size&&g<400;g++)put(pick(l15));return d}
 const chainsOf=m=>[...new Set(m.filter(c=>c.type==='character'&&c.chain).map(c=>c.chain))];
@@ -331,7 +331,7 @@ function deckEditor(d){const cnt={},ecnt={};d.cards.forEach(id=>cnt[id]=(cnt[id]
   $('#dev').style.display=tab==='evo'?'block':'none';$('#dev').innerHTML=`<button id="dat" style="padding:4px 10px">${auto?'✅ อัตโนมัติ: ใช้ทุกใบที่มีและตรงกับสายในเด็ค (กดเพื่อเลือกเอง)':'เลือกเอง (กดเพื่อกลับเป็นอัตโนมัติ)'}</button><div style="font-size:11px;color:#bba;margin-top:3px">ใช้การ์ดวิวัฒนาการแล้วเลือกร่างจากเด็คนี้ได้ทันที ไม่ต้องรอจั่ว</div>`;
   $('#dat').onclick=()=>{if(auto){auto=false;for(const k in ecnt)delete ecnt[k];formsOf(chainsOf(idsOf(cnt).map(id=>BY[id])),true).forEach(c=>ecnt[c.id]=(ecnt[c.id]||0)+1)}else auto=true;acts();rows();head()};
   bindActs()};
- const bump=(id,dl)=>{const isE=tab==='evo',C=isE?ecnt:cnt,lim=isE?DK.evoMax:DK.size,cap=isE?ownCap(id):DK.max;if(isE&&auto)return;const v=(C[id]||0)+dl;if(v<0||v>cap||(dl>0&&tot(C)>=lim))return;C[id]=v;if(!v)delete C[id];const el=document.querySelector('[data-n="'+id+'"]');if(el)el.textContent=v;head()};
+ const bump=(id,dl)=>{const isE=tab==='evo',C=isE?ecnt:cnt,lim=isE?DK.evoMax:DK.size,cap=isE||(BY[id]&&BY[id].support)?ownCap(id):DK.max;if(isE&&auto)return;const v=(C[id]||0)+dl;if(v<0||v>cap||(dl>0&&tot(C)>=lim))return;C[id]=v;if(!v)delete C[id];const el=document.querySelector('[data-n="'+id+'"]');if(el)el.textContent=v;head()};
  $('#dl').onclick=e=>{const p=e.target.closest('[data-p]'),m=e.target.closest('[data-m]');if(p)bump(p.dataset.p,1);else if(m)bump(m.dataset.m,-1)};
  $('#dq').oninput=e=>{q=e.target.value;rows()};$('#dn').oninput=e=>{name=e.target.value};
  $('#dty').onclick=e=>{const b=e.target.closest('[data-t]');if(b){ty=b.dataset.t;mark();rows()}};

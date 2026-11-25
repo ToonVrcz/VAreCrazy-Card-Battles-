@@ -10,6 +10,7 @@ const BASE = `http://127.0.0.1:${process.env.PORT || 8798}`; const out = []; con
     await p.goto(BASE + '/play'); await p.waitForSelector('#md.on');
     await p.click('#gnx'); await p.click('#gnx'); await p.click('#gnx'); await p.click('#gsk'); await p.waitForSelector('#lb');
     await p.waitForTimeout(800);
+    ok('random deck never holds unowned Signature cards', await p.evaluate(() => { for (let i = 0; i < 30; i++) if (deck().some(c => c.support)) return false; return true; }));
     await p.click('[data-nav=shop]'); await p.waitForSelector('[data-l]');
     ok('Signature tab exists', (await p.locator('[data-l=sig]').count()) === 1);
     await p.click('[data-l=sig]'); await p.waitForTimeout(300);
