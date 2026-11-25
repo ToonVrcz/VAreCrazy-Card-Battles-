@@ -20,7 +20,7 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - `src/server/` — api.ts (routes), rooms.ts (online rooms, polling 1.5s, timers processed lazily on poll/act), economy.ts (players/wallet/shop), admin services.
 - `src/edge/index.ts` — Supabase edge entry (Deno). `src/universe/` — Universe module contract + adapter (unused).
 - `public/play.html`, `public/admin.html` — vanilla JS pages. `public/engine.js` is a **generated** browser bundle.
-- `db/migrations/NNN_*.up.sql|down.sql` — 001..014 are on `main`; 014 (`pvp_match_history`) and the level-frames migration (file `015_level_frames`, applied to production under the name `014_level_frames`) are applied to production. 016 (`card_effect_texts`: clear WHEN/WHO/WHAT texts for traps and spells) is applied to production. New migrations start at 017.
+- `db/migrations/NNN_*.up.sql|down.sql` — 001..014 are on `main`; 025-029 are applied to production (see Status 2026-11-25). 014 (`pvp_match_history`) and the level-frames migration (file `015_level_frames`, applied to production under the name `014_level_frames`) are applied to production. 016 (`card_effect_texts`: clear WHEN/WHO/WHAT texts for traps and spells) is applied to production. New migrations start at 030.
 - `vercel.json` — rewrites: `/` → admin, `/play` → play.html, `/api/*` → Supabase function, `/media/*` → Supabase storage.
 - `tests/` — vitest + PGlite (in-memory Postgres).
 
@@ -43,6 +43,16 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Economy: guest profile (secret key in the browser, hashed in DB), starter 500 points; PvP match (≥ 6 turns) = 200 points; every 10th match = +10 Vrcoin; shop: Lv.40 = 500 points, Lv.70 = 100 Vrcoin (Lv.99 price not set); max 3 copies per card. Prices editable in Admin.
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
+
+## Status (2026-11-25)
+Deployed 2026-11-25 (main = f999d09, edge function `api` v16 via stub -> `edge-bundle.js` on temporary branch `tmp-edge-bundle-s2`; rollback references: `tmp-edge-bundle-s1` (v15), `tmp-edge-bundle-r1` (v14). Do not delete these branches):
+- Migrations 025-029 applied (020 intentionally excluded): hand limit 10, balance round 2 (29 DEF + 5 effects, HP/ATK untouched), game_rules synced with the engine, Story modifiers columns, `cards.support` column.
+- Evolution: Lv40 = 1 Lv15 sacrifice, Lv70 = 2 Lv40, Lv99 = 3 Lv70 (same level as the evolving unit).
+- Story runs in the game (directional, multi-modifier, never stacked per duplicate). The 8 baseline rows are unchanged; 21 proposed rows are NOT inserted (need Toon's approval).
+- 39 Signature Spell/Trap cards (SPL-011..035, TRP-011..024): data-driven (`cards.support`), 300 Point, published, placeholder art (replace in the CMS). Seed/regenerate: `scripts/gen-signature.py`, `scripts/gen-signature-art.py`, `db/seed/signature-cards.sql`. Signature cards in a main deck must be bought first (shop); auto-built decks never include them.
+- Element table = union of `db/seed/elements.json` and the card-data export (owner decision).
+- PvP anti-farming IS enforced: the same two profiles earn from at most 3 matches per Bangkok day (tests/reward-farming.test.ts). Still untested with a real PvP match; two accounts can still farm with several pairs.
+- Open: element advantage UI (green/red) not built; CMS cannot edit `cards.support` numbers, rules or the element table (see docs/CMS-EXTENSIBILITY-GAP-ANALYSIS.md); Mixed-story form missing; friend's online-room join error needs the exact message; OG-1 backup decrypt test; 18 original card images missing (EVO-002..010, FUS-002..010).
 
 ## Status (2026-11-19)
 Branch `feature/cms-effects-c` (NOT merged, NOT deployed): CMS Effect Registry + split editor (system config vs player text, limits/counters, warn-only consistency check, publish gate). Migration `019_effect_config` (adds `card_effects.config jsonb`) is written, NOT applied to production. Deploy order when Toon says "Deploy": apply 019 → deploy edge → merge → verify. Coordinate with `feature/hardening-1` (touches service.ts; migration 018 unapplied).
