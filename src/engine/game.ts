@@ -3,7 +3,8 @@
 // Chain window: with `interactive: true`, when a face-down trap could answer an event the game pauses (g.pending) and the trap's owner
 // answers with {t:'respond', back} or {t:'pass'}. Implemented by replaying the original action with the collected answers (deterministic, seeded).
 // With `interactive` off (default) the first matching trap fires automatically. Item cards are not included.
-import { elementMultiplier, evolveHp, type Element } from './combat';
+import { elementMultiplier, evolveHp, setActiveElements, type Element } from './combat';
+import type { GameConfig } from './config';
 
 export type CardType = 'character' | 'evolution' | 'fusion' | 'spell' | 'trap' | 'item';
 import type { Effect, EffectTrigger } from './effects';
@@ -15,6 +16,15 @@ export interface SupportOp { op: 'buff' | 'heal' | 'damage' | 'draw' | 'search_e
 export interface SupportDef { kind: 'spell' | 'trap'; link: string; trigger?: TrapTrigger; source?: 'spell'; ops: SupportOp[] }
 export interface CardDef { support?: SupportDef; id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null; effects?: Effect[] }
 export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, sacrificeSameLevel: true, poison: { dmg: 5, turns: 3 } };
+/** Run `fn` with this game's rules snapshot active (RULES + element matrix are module state; the engine is synchronous so this is safe). */
+let CFG_ON = false;
+function withCfg<T>(cfg: GameConfig | undefined, fn: () => T): T {
+  if (!cfg || CFG_ON) return fn();                  // nested calls (act -> legalActions) share the outer snapshot
+  CFG_ON = true;
+  const old = { lp: RULES.lp, handMax: RULES.handMax, sacrifice: RULES.sacrifice, same: RULES.sacrificeSameLevel };
+  RULES.lp = cfg.lp; RULES.handMax = cfg.handMax; RULES.sacrifice = cfg.sacrifice; RULES.sacrificeSameLevel = cfg.sacrificeSameLevel; setActiveElements(cfg);
+  try { return fn(); } finally { RULES.lp = old.lp; RULES.handMax = old.handMax; RULES.sacrifice = old.sacrifice; RULES.sacrificeSameLevel = old.same; setActiveElements(null); CFG_ON = false; }
+}
 export class EngineError extends Error {}
 
 /** Story link: while a unit of chain `a` and a unit of chain `b` are on the SAME side's field, every unit of chain `a` gets the modifiers (directional: one row = one side of the story). Never stacked per duplicate copy of `b`. */
@@ -24,7 +34,7 @@ export interface Unit { nextAtk?: { amount: number; turn: number }; untargetable
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
-export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; story?: StoryLink[]; stats?: [PlayerStats, PlayerStats]; events?: GameEvent[]; evSeq?: number }
+export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; story?: StoryLink[]; stats?: [PlayerStats, PlayerStats]; events?: GameEvent[]; evSeq?: number; cfg?: GameConfig }
 /** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
 export interface PlayerStats {
   summon: number; evolve: number; fuse: number; set: number; cast: number;
@@ -69,7 +79,10 @@ const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
-export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { storyLinks?: StoryLink[]; fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] } = {}): Game {
+export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { storyLinks?: StoryLink[]; fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]]; cfg?: GameConfig } = {}): Game {
+  return withCfg(opts.cfg, () => { const g = createGame0(decks, seed, first, opts); if (opts.cfg) g.cfg = structuredClone(opts.cfg); return g; });
+}
+function createGame0(decks: [CardDef[], CardDef[]], seed: number, first: 0 | 1, opts: { storyLinks?: StoryLink[]; fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] }): Game {
   // extras = each player's separate Evolution deck (Lv40/70/99 forms). Without it, forms live in the hand (legacy rules).
   const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 }, stats: [newStats(), newStats()] };
   if (opts.storyLinks?.length) g.story = opts.storyLinks.map(l => ({ a: l.a, b: l.b, name: l.name, mods: l.mods.map(m => ({ ...m })) }));
@@ -336,7 +349,8 @@ function validateAction(a: Action) {
     default: fail('คำสั่งไม่ถูกต้อง');
   }
 }
-export function act(g0: Game, a: Action): Game {
+export function act(g0: Game, a: Action): Game { return withCfg(g0.cfg, () => act0(g0, a)); }
+function act0(g0: Game, a: Action): Game {
   validateAction(a);
   if (g0.winner !== null) fail('เกมจบแล้ว');
   if (g0.pending) {
@@ -469,7 +483,8 @@ function step(g: Game, a: Action): Game {
   }
 }
 
-export function legalActions(g: Game): Action[] {
+export function legalActions(g: Game): Action[] { return withCfg(g.cfg, () => legalActions0(g)); }
+function legalActions0(g: Game): Action[] {
   if (g.winner !== null) return [];
   if (g.pending) return [...g.pending.options.map(back => ({ t: 'respond', back }) as Action), { t: 'pass' }];
   const me = g.players[g.active], en = g.players[other(g.active)], out: Action[] = [{ t: 'next' }];

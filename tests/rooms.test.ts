@@ -19,6 +19,14 @@ async function world() {
 const code5 = /^[A-Z0-9]{5}$/;
 
 describe('online rooms', () => {
+  it('a new room snapshots the current rules (starting LP / hand max); later edits do not touch it', async () => {
+    const { db, rooms } = await world();
+    await db.query(`UPDATE game_rules SET value='60'::jsonb WHERE key='starting_lp'`);
+    const a = await rooms.create(), b = await joinStart(rooms, a);
+    await db.query(`UPDATE game_rules SET value='90'::jsonb WHERE key='starting_lp'`);
+    const v: any = await rooms.view(a.code, a.token);
+    expect(v.game.players[0].lp).toBe(60); expect(v.game.cfg.lp).toBe(60); expect(b.seat).toBe(1);
+  });
   it('create -> join -> redacted seat-relative views', async () => {
     const { rooms } = await world();
     const a = await rooms.create(); expect(a.code).toMatch(code5); expect(a.seat).toBe(0);

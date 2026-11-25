@@ -88,7 +88,8 @@ const NC=(()=>{const MS={normal:1200,important:2000,special:2400};let key=null,N
   idle(max){return q.length||cur?new Promise(r=>{waiters.push(r);setTimeout(r,max)}):Promise.resolve()}}})();
 const ntSync=()=>{if(G&&!(ON&&ON.spec))NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
-function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{storyLinks:VCZE.story,fusionPairs:PAIRS,interactive:true,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});mode=null;sel=null;snap=take();render();drive()}
+let BOTCFG=null;const RL=()=>G&&G.cfg?G.cfg:E.RULES;function loadCfg(){try{fetch('/api/play/config').then(r=>r.ok?r.json():null).then(c=>{if(c&&c.lp)BOTCFG=c}).catch(()=>{})}catch(e){}}loadCfg();
+function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{storyLinks:VCZE.story,fusionPairs:PAIRS,interactive:true,cfg:BOTCFG||undefined,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});loadCfg();mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=+p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef+(u.auraDef||0)]})});return m}
 function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
  [[0,'❤'],[1,'⚔'],[2,'🛡']].forEach(([k,ic])=>{const d=b[k]-a[k];if(d)fl(el,(d>0?'+':'')+d+ic,d>0?'#7dffa0':'#ff8a80')})});
@@ -105,7 +106,7 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
   else if(id==='SPL-007'){if(mode.a===undefined)me.field.forEach((u,i)=>u&&t.f0.push(i));else en.field.forEach((u,i)=>u&&u.untargetableTurn!==G.turn&&t.f1.push(i))}
   else if(id==='SPL-010')en.back.forEach((b,i)=>b&&t.b1.push(i))}
  if(mode.k==='fuse'){me.hand.forEach((c,i)=>{if(i===mode.f||mode.picks.includes(i))return;if(mode.picks.length?E.fusionBonus(G,me.hand[mode.picks[0]],c):me.hand.some((o,j)=>j!==i&&j!==mode.f&&E.fusionBonus(G,c,o)))t.h.push(i)})}
- if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&(!E.RULES.sacrificeSameLevel||u.card.level===me.field[mode.slot].card.level)&&t.f0.push(i));return t}
+ if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&(!RL().sacrificeSameLevel||u.card.level===me.field[mode.slot].card.level)&&t.f0.push(i));return t}
 function render(){const me=G.players[0],en=G.players[1],T=targets(),SP=!!(ON&&ON.spec),my=!SP&&G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${esc(mode.sac.length)}/${+mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'สลับ 1/2: เลือกตัวละครของคุณ':'สลับ 2/2: เลือกตัวละครของศัตรูที่จะสลับด้วย'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
  $('#app').innerHTML=`<div class="bar"><span>${SP?'👁 ผู้ชม · ':''}เทิร์น ${esc(G.turn)} · ${SP?(G.active===0?'ฝั่งล่าง':'ฝั่งบน'):G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?` <button id="lv" class="r" style="padding:3px 8px;font-size:12px">${SP?'ออก':'ยอมแพ้'}</button>`:''}</span></div>
@@ -275,7 +276,7 @@ function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=fra
   if(d.type==='spell'&&main)b.push(['ใช้เวทมนตร์',()=>castStart(i,d.id)]);
   if(d.type==='fusion'&&main&&!me.summoned)b.push(['ฟิวชั่น',()=>{mode={k:'fuse',f:i,picks:[]};closeM();render();if(!targets().h.length)toast('ยังไม่มีคู่ Fusion บนมือ')}])}
  if(can&&z==='f'){if(main){const u=me.field[i],nx={15:40,40:70,70:99}[u.card.level],e=me.hand.findIndex(x=>x.type==='evolution'),f=(me.extra||me.hand).findIndex(x=>x.type==='character'&&x.chain===u.card.chain&&x.level===nx);
-   if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:E.RULES.sacrifice[nx],sac:[]};closeM();render()}])}
+   if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:RL().sacrifice[nx],sac:[]};closeM();render()}])}
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
  $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${esc(d.name)}</b> ${d.type!=='character'?'· '+esc(d.type):''}</p><p>${esc(d.text||'')}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${esc(u.fused.map(x=>x.name).join(' + '))}</p>`:''})():''}${(d.fx||[]).map(x=>`<p>• ${esc(x.t)}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${esc(d.flavor)}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${esc(x[0])}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;

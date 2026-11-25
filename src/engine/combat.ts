@@ -8,11 +8,15 @@ export const DEFAULT_RULES: Rules = { strong: elements.multiplier_strong, weak: 
 
 /** x1.5 if attacker element beats defender's, x0.75 if defender's beats attacker's, else x1. */
 export function elementMultiplier(a: Element, d: Element, r: Rules = DEFAULT_RULES) {
-  const E = elements.elements as Record<string, { strong: string[] }>;
-  if (E[a]?.strong.includes(d)) return r.strong;
-  if (E[d]?.strong.includes(a)) return r.weak;
+  const A = r === DEFAULT_RULES ? ACTIVE : null;                       // per-game snapshot (g.cfg), applied by the engine around each call
+  const win = (x: string, y: string) => (A ? A.elements[x]?.includes(y) : (elements.elements as Record<string, { strong: string[] }>)[x]?.strong.includes(y));
+  if (win(a, d)) return A ? A.strong : r.strong;
+  if (win(d, a)) return A ? A.weak : r.weak;
   return 1;
 }
+let ACTIVE: { strong: number; weak: number; elements: Record<string, string[]> } | null = null;
+/** Engine hook: use this snapshot's matrix/multipliers until reset with null. */
+export function setActiveElements(x: typeof ACTIVE) { ACTIVE = x; }
 /** Damage = (ATK - DEF, min 0) x element multiplier, rounded down. */
 export function damage(att: Unit, def: Unit, r: Rules = DEFAULT_RULES) {
   return Math.floor(Math.max(0, att.atk - def.def) * elementMultiplier(att.element, def.element, r));
