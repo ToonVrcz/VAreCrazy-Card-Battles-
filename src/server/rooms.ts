@@ -39,13 +39,13 @@ export class Rooms {
     return out;
   }
   private async loadPool() {
-    const rows = (await this.db.query<any>(`SELECT c.character_id id, c.name, c.card_type type, c.level, ch.key chain, c.hp, c.atk, c.def, el.key element
+    const rows = (await this.db.query<any>(`SELECT c.character_id id, c.name, c.card_type type, c.level, ch.key chain, c.hp, c.atk, c.def, el.key element, c.support
       FROM cards c LEFT JOIN evolution_chains ch ON ch.id=c.chain_id LEFT JOIN taxonomy_values el ON el.id=c.element_id WHERE c.status<>'archived'`)).rows;
     const fxRows = (await this.db.query<any>(`SELECT c.character_id id, e.trigger, e.target_text, e.action_text, e.condition_text, e.cost_text, e.duration, e.use_limit, e.description
       FROM card_effects e JOIN cards c ON c.id=e.card_id WHERE c.status<>'archived' ORDER BY c.character_id, e.sort_order`)).rows;
     const fx = new Map<string, Effect[]>();
     for (const r of fxRows) { const e = parseEffect(r); if (e) fx.set(r.id, [...(fx.get(r.id) ?? []), e]); }   // only abilities the engine understands exactly
-    const pool: CardDef[] = rows.map(r => ({ id: r.id, name: r.name, type: r.type, level: r.level ?? null, chain: r.chain ?? null, hp: r.hp ?? null, atk: r.atk ?? null, def: r.def ?? 0, element: r.element ?? null, effects: fx.get(r.id) }));
+    const pool: CardDef[] = rows.map(r => ({ id: r.id, name: r.name, type: r.type, level: r.level ?? null, chain: r.chain ?? null, hp: r.hp ?? null, atk: r.atk ?? null, def: r.def ?? 0, element: r.element ?? null, effects: fx.get(r.id), ...(r.support ? { support: typeof r.support === 'string' ? JSON.parse(r.support) : r.support } : {}) }));
     const fp = (await this.db.query<any>(`SELECT a.key a, b.key b, f.hp_bonus hp, f.atk_bonus atk, f.def_bonus def FROM card_fusion_partners f
       JOIN cards c ON c.id=f.card_id JOIN evolution_chains a ON a.id=c.chain_id JOIN evolution_chains b ON b.id=f.partner_chain_id`)).rows;
     return { pool, pairs: fp as FusionPair[], story: await this.loadStory() };
@@ -55,7 +55,13 @@ export class Rooms {
   private async checkDecks(deck: unknown, evo: unknown, key: string | undefined, pool: CardDef[]): Promise<{ pid: string | null; d: SeatDeck }> {
     const pid = await this.eco.resolve(key), byId = new Map(pool.map(c => [c.id, c]));
     let m: string[] | null = null, e: string[] | null = null;
-    if (deck !== undefined && deck !== null) { const err = validateDeck(deck, byId); if (err) throw new AppError(400, err); m = deck as string[]; }
+    if (deck !== undefined && deck !== null) { const err = validateDeck(deck, byId); if (err) throw new AppError(400, err); m = deck as string[];
+      const sig = m.filter(id => byId.get(id)?.support);                       // Signature Spell/Trap cards must be bought first (shop)
+      if (sig.length) {
+        if (!pid) throw new AppError(401, 'การ์ด Signature ต้องมีโปรไฟล์ผู้เล่นและซื้อจากร้านค้าก่อน');
+        const inv = await this.eco.inventory(pid), need = new Map<string, number>(); for (const id of sig) need.set(id, (need.get(id) ?? 0) + 1);
+        for (const [id, n] of need) if ((inv.get(id) ?? 0) < n) throw new AppError(400, `ยังมี ${byId.get(id)!.name} ไม่ครบ ${n} ใบ (ซื้อได้ที่ร้านค้า)`);
+      } }
     if (evo !== undefined && evo !== null) {
       if (!pid) throw new AppError(401, 'ต้องมีโปรไฟล์ผู้เล่นถึงจะใช้เด็คอีโวได้');
       const err = validateEvoDeck(evo, byId, await this.eco.inventory(pid)); if (err) throw new AppError(400, err); e = evo as string[];

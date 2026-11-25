@@ -13,7 +13,7 @@ const read = (f: string) => readFileSync(new URL('../' + f, import.meta.url), 'u
 const KIND = 'computed-property assignment: ';
 const why = (w: string) => w;
 const ALLOW: Allow[] = ([
-  ['public/play.html', '[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef]', why('snapshot map m[uid] = [numbers] used for damage floats')],
+  ['public/play.html', '[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef+(u.auraDef||0)]', why('snapshot map m[uid] = [numbers] used for damage floats')],
   ['public/play.html', 'v', why('deck-builder count map C[cardId] = number (v is a bounded integer computed from the previous count)')],
   ['public/admin.html', "e.type==='checkbox'?e.checked:e.value", why('card form field -> card model object, keyed by data-k rendered from constant field names')],
   ['public/admin.html', 'el.value', why('effect / frame form field -> model object keyed by data-i / data-f / data-fp rendered by the page (two sites)')],

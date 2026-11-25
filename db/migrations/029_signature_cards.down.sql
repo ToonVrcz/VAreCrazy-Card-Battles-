@@ -1,0 +1,3 @@
+DELETE FROM cards WHERE support IS NOT NULL;
+ALTER TABLE cards DROP CONSTRAINT IF EXISTS cards_support_chk;
+ALTER TABLE cards DROP COLUMN IF EXISTS support;

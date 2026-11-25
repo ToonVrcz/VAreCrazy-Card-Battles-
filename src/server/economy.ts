@@ -83,17 +83,17 @@ export class Economy {
   async shop(key?: string) {
     const id = key ? await this.resolve(key) : null, inv = id ? await this.inventory(id) : new Map<string, number>();
     const pr = new Map((await this.prices()).map((p: any) => [p.level, p]));
-    const rows = (await this.db.query(`SELECT character_id id, name, level FROM cards WHERE status<>'archived' AND card_type='character' AND level>15 ORDER BY level, character_id`)).rows;
-    return { items: rows.map((c: any) => { const p: any = pr.get(c.level); return { id: c.id, name: c.name, level: c.level, price: p ? { currency: p.currency, amount: p.price } : null, owned: inv.get(c.id) ?? 0 }; }), maxCopies: ECONOMY.maxCopies };
+    const rows = (await this.db.query(`SELECT character_id id, name, level, card_type, shop_price_points sp, support IS NOT NULL sig FROM cards WHERE status<>'archived' AND ((card_type='character' AND level>15) OR (support IS NOT NULL AND shop_price_points IS NOT NULL AND status='published')) ORDER BY sig, level, character_id`)).rows;
+    return { items: rows.map((c: any) => { const p: any = c.sig ? { currency: 'points', price: c.sp } : pr.get(c.level); return { id: c.id, name: c.name, level: c.level, type: c.card_type, price: p ? { currency: p.currency, amount: p.price } : null, owned: inv.get(c.id) ?? 0 }; }), maxCopies: ECONOMY.maxCopies };
   }
 
   async buy(key: string | undefined, cardId: unknown) {
     const pid = await this.need(key);
     if (typeof cardId !== 'string') throw new AppError(400, 'ไม่ระบุการ์ด');
     return this.db.transaction(async (tx: Db) => {
-      const c = (await tx.query(`SELECT character_id id, name, level FROM cards WHERE character_id=$1 AND status<>'archived' AND card_type='character' AND level>15`, [cardId])).rows[0];
+      const c = (await tx.query(`SELECT character_id id, name, level, shop_price_points sp, support IS NOT NULL sig FROM cards WHERE character_id=$1 AND status<>'archived' AND ((card_type='character' AND level>15) OR (support IS NOT NULL AND shop_price_points IS NOT NULL AND status='published'))`, [cardId])).rows[0];
       if (!c) throw new AppError(404, 'ไม่พบการ์ดนี้ในร้านค้า');
-      const pr = (await tx.query(`SELECT currency, price FROM shop_prices WHERE level=$1`, [c.level])).rows[0];
+      const pr = c.sig ? { currency: 'points', price: c.sp } : (await tx.query(`SELECT currency, price FROM shop_prices WHERE level=$1`, [c.level])).rows[0];
       if (!pr) throw new AppError(409, `การ์ดเลเวล ${c.level} ยังไม่เปิดขาย`);
       const p = (await tx.query(`SELECT * FROM players WHERE id=$1 FOR UPDATE`, [pid])).rows[0];
       const have = (await tx.query(`SELECT qty FROM player_cards WHERE player_id=$1 AND card_id=$2`, [pid, cardId])).rows[0]?.qty ?? 0;

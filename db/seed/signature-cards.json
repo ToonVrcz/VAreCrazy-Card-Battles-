@@ -1,0 +1,854 @@
+[
+ {
+  "character_id": "SPL-011",
+  "name": "หมัดทะลวงขีดจำกัด",
+  "card_type": "spell",
+  "linked_character": "1GOKU-015",
+  "rules_text": "ต้องมี 1GOKU Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "1goku",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-012",
+  "name": "พลังผู้พิทักษ์ตัวน้อย",
+  "card_type": "spell",
+  "linked_character": "BABY-015",
+  "rules_text": "ต้องมี BABY Lv.15 ในสนาม: เลือกตัวละครฝั่งเรา 1 ตัว (รวม BABY) ฟื้น HP 15",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "baby",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "ally",
+     "amount": 15
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-011",
+  "name": "สวนกลับฉับพลัน",
+  "card_type": "trap",
+  "linked_character": "BACKJI-015",
+  "rules_text": "เมื่อ BACKJI ถูกเลือกเป็นเป้าโจมตี: ATK +10 จนจบการต่อสู้นั้น",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "backji",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "victim",
+     "stat": "atk",
+     "amount": 10,
+     "until": "battle"
+    }
+   ],
+   "trigger": "self_attacked"
+  }
+ },
+ {
+  "character_id": "TRP-012",
+  "name": "กลยุทธ์ลวงศัตรู",
+  "card_type": "trap",
+  "linked_character": "BADGUY-015",
+  "rules_text": "เมื่อ BADGUY ถูกโจมตี: ATK ผู้โจมตี -10 จนจบการต่อสู้นั้น",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "badguy",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "attacker",
+     "stat": "atk",
+     "amount": -10,
+     "until": "battle"
+    }
+   ],
+   "trigger": "self_attacked"
+  }
+ },
+ {
+  "character_id": "SPL-013",
+  "name": "คมดาบเร่งพลัง",
+  "card_type": "spell",
+  "linked_character": "BAM-015",
+  "rules_text": "ต้องมี BAM Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "bam",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-013",
+  "name": "ตั้งรับเคียงข้าง",
+  "card_type": "trap",
+  "linked_character": "BAMMIE-015",
+  "rules_text": "เมื่อตัวละครฝั่งเราจะได้รับความเสียหายจากการต่อสู้: ลดลง 10 (ต้องมี BAMMIE ในสนาม)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "bammie",
+   "ops": [
+    {
+     "op": "reduce_battle_damage",
+     "amount": 10
+    }
+   ],
+   "trigger": "ally_battle_damage"
+  }
+ },
+ {
+  "character_id": "SPL-014",
+  "name": "ฟันเปิดทาง",
+  "card_type": "spell",
+  "linked_character": "BOBO-015",
+  "rules_text": "ต้องมี BOBO Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "bobo",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "next_attack"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-015",
+  "name": "แผนสำรองของแช่ม",
+  "card_type": "spell",
+  "linked_character": "CHAEM-015",
+  "rules_text": "ต้องมี CHAEM Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +5 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "chaem",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "ally",
+     "stat": "def",
+     "amount": 5,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-016",
+  "name": "เวทมนตร์สะกดขวัญ",
+  "card_type": "spell",
+  "linked_character": "CUTIE-015",
+  "rules_text": "ต้องมี CUTIE Lv.15 ในสนาม: เลือกตัวละครศัตรู 1 ตัว ATK -10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "cutie",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "enemy",
+     "stat": "atk",
+     "amount": -10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-017",
+  "name": "คำพิพากษาครูเสด",
+  "card_type": "spell",
+  "linked_character": "DNMAN-015",
+  "rules_text": "ต้องมี DNMAN Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "dnman",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "next_attack"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-018",
+  "name": "ส่งกำลังใจ",
+  "card_type": "spell",
+  "linked_character": "FOLLOW-YOU-015",
+  "rules_text": "ต้องมี FOLLOW-YOU Lv.15 ในสนาม: ตัวละครฝั่งเราตัวอื่น 1 ตัว ATK +5 และ DEF +5 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "follow-you",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "other_ally",
+     "stat": "atk",
+     "amount": 5,
+     "until": "turn"
+    },
+    {
+     "op": "buff",
+     "who": "other_ally",
+     "stat": "def",
+     "amount": 5,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-014",
+  "name": "พันธสัญญานักล่า",
+  "card_type": "trap",
+  "linked_character": "GOD-WA-015",
+  "rules_text": "เมื่อ GOD-WA ทำลายตัวละครศัตรูด้วยการโจมตี: GOD-WA ฟื้น HP 10",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "god-wa",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "link",
+     "amount": 10
+    }
+   ],
+   "trigger": "kill_by_attack"
+  }
+ },
+ {
+  "character_id": "SPL-019",
+  "name": "เถาวัลย์คุ้มกัน",
+  "card_type": "spell",
+  "linked_character": "I-M-GRAPE-015",
+  "rules_text": "ต้องมี I-M-GRAPE Lv.15 ในสนาม: DEF +5 จนจบเทิร์นถัดไปของคู่ต่อสู้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "i-m-grape",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "def",
+     "amount": 5,
+     "until": "opp_turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-015",
+  "name": "กับดักจู่โจมย้อนศร",
+  "card_type": "trap",
+  "linked_character": "JAOJAY-015",
+  "rules_text": "เมื่อ JAOJAY ถูกเลือกเป็นเป้าโจมตี: ATK ผู้โจมตี -10 จนจบการต่อสู้นั้น",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "jaojay",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "attacker",
+     "stat": "atk",
+     "amount": -10,
+     "until": "battle"
+    }
+   ],
+   "trigger": "self_attacked"
+  }
+ },
+ {
+  "character_id": "SPL-020",
+  "name": "พรแห่งการเยียวยา",
+  "card_type": "spell",
+  "linked_character": "LALAPING-015",
+  "rules_text": "ต้องมี LALAPING Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัวฟื้น HP 20",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "lalaping",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "ally",
+     "amount": 20
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-016",
+  "name": "ยุทธวิธีเอาตัวรอด",
+  "card_type": "trap",
+  "linked_character": "LEON-S-KENNEDY-015",
+  "rules_text": "เมื่อตัวละครฝั่งเราตัวอื่นลงสุสาน: LEON DEF +5 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "leon-s-kennedy",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "def",
+     "amount": 5,
+     "until": "turn"
+    }
+   ],
+   "trigger": "ally_grave"
+  }
+ },
+ {
+  "character_id": "SPL-021",
+  "name": "หอกพิชิตแนวหน้า",
+  "card_type": "spell",
+  "linked_character": "LINLADA-015",
+  "rules_text": "ต้องมี LINLADA Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "linlada",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "next_attack"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-017",
+  "name": "เกราะคุ้มกันเจ้าน้ำ",
+  "card_type": "trap",
+  "linked_character": "LORDNAM-015",
+  "rules_text": "เมื่อเอฟเฟกต์ของศัตรูเลือก LORDNAM เป็นเป้าหมาย: ยกเลิกผลต่อ LORDNAM (ไม่ยกเลิกเอฟเฟกต์ที่ไม่เลือกเป้าหมายหรือการโจมตี)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "lordnam",
+   "ops": [
+    {
+     "op": "negate_target"
+    }
+   ],
+   "trigger": "enemy_target"
+  }
+ },
+ {
+  "character_id": "TRP-018",
+  "name": "จังหวะโชคช่วย",
+  "card_type": "trap",
+  "linked_character": "LUCKY-015",
+  "rules_text": "เมื่อ LUCKY ถูกเลือกเป็นเป้าโจมตี: ผู้โจมตีต้องเลือกเป้าหมายอื่นถ้ามี ถ้าไม่มีการโจมตีดำเนินต่อตามปกติ",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "lucky",
+   "ops": [
+    {
+     "op": "redirect_attack"
+    }
+   ],
+   "trigger": "self_attacked"
+  }
+ },
+ {
+  "character_id": "SPL-022",
+  "name": "พลังนักรบเมลอน",
+  "card_type": "spell",
+  "linked_character": "MELON-015",
+  "rules_text": "ต้องมี MELON Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "melon",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-023",
+  "name": "จังหวะเร่งฝีเท้า",
+  "card_type": "spell",
+  "linked_character": "MIKI-015",
+  "rules_text": "ต้องมี MIKI Lv.15 ในสนาม: ATK +5 และ DEF +5 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "miki",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 5,
+     "until": "turn"
+    },
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "def",
+     "amount": 5,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-019",
+  "name": "อ่านเกมขาด",
+  "card_type": "trap",
+  "linked_character": "MON-015",
+  "rules_text": "เมื่อเวทมนตร์ของศัตรูเลือก MON เป็นเป้าหมาย: ลดตัวเลขความเสียหาย/การลดค่าสถานะต่อ MON ลง 5 (ถ้าไม่มีตัวเลข กับดักไม่มีผล)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "mon",
+   "ops": [
+    {
+     "op": "reduce_numeric",
+     "amount": 5
+    }
+   ],
+   "trigger": "enemy_target"
+  }
+ },
+ {
+  "character_id": "SPL-024",
+  "name": "แรงฮึดนักสู้",
+  "card_type": "spell",
+  "linked_character": "NONG-TAENGMO-015",
+  "rules_text": "ต้องมี NONG-TAENGMO Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "nong-taengmo",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "next_attack"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-025",
+  "name": "พลังหมีคำราม",
+  "card_type": "spell",
+  "linked_character": "NORMAN-015",
+  "rules_text": "ต้องมี NORMAN Lv.15 ในสนาม: DEF +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "norman",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "def",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-020",
+  "name": "สัญญาจากสุสาน",
+  "card_type": "trap",
+  "linked_character": "OUFILLING-015",
+  "rules_text": "เมื่อตัวละครฝั่งเราตัวอื่นลงสุสาน: OUFILLING ฟื้น HP 10",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "oufilling",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "link",
+     "amount": 10
+    }
+   ],
+   "trigger": "ally_grave"
+  }
+ },
+ {
+  "character_id": "SPL-026",
+  "name": "สายฟ้าช็อตสนาม",
+  "card_type": "spell",
+  "linked_character": "PIKACHU-015",
+  "rules_text": "ต้องมี PIKACHU Lv.15 ในสนาม: ทำความเสียหาย 10 ใส่ตัวละครศัตรู 1 ตัว",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "pikachu",
+   "ops": [
+    {
+     "op": "damage",
+     "who": "enemy",
+     "amount": 10
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-027",
+  "name": "คำแนะนำจากพีเค",
+  "card_type": "spell",
+  "linked_character": "PK-015",
+  "rules_text": "ต้องมี PK Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +5 จนจบเทิร์นถัดไปของคู่ต่อสู้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "pk",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "ally",
+     "stat": "def",
+     "amount": 5,
+     "until": "opp_turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-028",
+  "name": "หมัดประสานพลัง",
+  "card_type": "spell",
+  "linked_character": "PKXCY-015",
+  "rules_text": "ต้องมี PKXCY Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "pkxcy",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-029",
+  "name": "พรฟื้นฟูซาโตชิ",
+  "card_type": "spell",
+  "linked_character": "SATOSHI-015",
+  "rules_text": "ต้องมี SATOSHI Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัวฟื้น HP 15",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "satoshi",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "ally",
+     "amount": 15
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-030",
+  "name": "โลหะจันทราคุ้มภัย",
+  "card_type": "spell",
+  "linked_character": "SKYMOON-015",
+  "rules_text": "ต้องมี SKYMOON Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +10 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "skymoon",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "ally",
+     "stat": "def",
+     "amount": 10,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-021",
+  "name": "รอยยิ้มแห่งการปกป้อง",
+  "card_type": "trap",
+  "linked_character": "SMILE-015",
+  "rules_text": "เมื่อตัวละครฝั่งเราจะถูกทำลายด้วยเอฟเฟกต์ของศัตรู: ป้องกันการทำลาย 1 ครั้ง เหลือ HP 1 (ไม่ป้องกันการทำลายจากการต่อสู้)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "smile",
+   "ops": [
+    {
+     "op": "survive_at_1"
+    }
+   ],
+   "trigger": "effect_destroy"
+  }
+ },
+ {
+  "character_id": "TRP-022",
+  "name": "ศรผนึกพลัง",
+  "card_type": "trap",
+  "linked_character": "SOMYES-015",
+  "rules_text": "เมื่อตัวละครศัตรูประกาศโจมตี: ATK ของมัน -5 จนจบการต่อสู้นั้น (ต้องมี SOMYES ในสนาม)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "somyes",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "attacker",
+     "stat": "atk",
+     "amount": -5,
+     "until": "battle"
+    }
+   ],
+   "trigger": "enemy_attack"
+  }
+ },
+ {
+  "character_id": "SPL-031",
+  "name": "แผนค้นหาวิวัฒนาการ",
+  "card_type": "spell",
+  "linked_character": "TAN-015",
+  "rules_text": "ต้องมี TAN Lv.15 ในสนาม: ดูการ์ด 3 ใบบนสุดของเด็ค เปิดการ์ดอีโวลูชั่นที่เจอ เลือก 1 ใบขึ้นมือ ที่เหลือวางใต้เด็คตามเดิม",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "tan",
+   "ops": [
+    {
+     "op": "search_evo_top3"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-032",
+  "name": "เร่งเครื่องเต็มกำลัง",
+  "card_type": "spell",
+  "linked_character": "TEE-015",
+  "rules_text": "ต้องมี TEE Lv.15 ในสนาม: ATK +15 จนจบเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "tee",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 15,
+     "until": "turn"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "SPL-033",
+  "name": "คมดาบไทยยี่สิบหก",
+  "card_type": "spell",
+  "linked_character": "THAI26-015",
+  "rules_text": "ต้องมี THAI26 Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "thai26",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 10,
+     "until": "next_attack"
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-023",
+  "name": "น้ำใจหลังการต่อสู้",
+  "card_type": "trap",
+  "linked_character": "THAI32-015",
+  "rules_text": "เมื่อ THAI32 ถูกทำลายและลงสุสาน: ตัวละครฝั่งเราตัวอื่น 1 ตัวฟื้น HP 10",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "thai32",
+   "ops": [
+    {
+     "op": "heal",
+     "who": "other_ally",
+     "amount": 10
+    }
+   ],
+   "trigger": "self_destroyed"
+  }
+ },
+ {
+  "character_id": "SPL-034",
+  "name": "คำสั่งการของโทมัส",
+  "card_type": "spell",
+  "linked_character": "THOMAS-015",
+  "rules_text": "ต้องมี THOMAS Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว ATK +5 จนจบเทิร์นนี้ แล้วจั่ว 1 ใบ (ไม่จั่วถ้ามือเต็ม)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "thomas",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "ally",
+     "stat": "atk",
+     "amount": 5,
+     "until": "turn"
+    },
+    {
+     "op": "draw",
+     "amount": 1
+    }
+   ]
+  }
+ },
+ {
+  "character_id": "TRP-024",
+  "name": "จังหวะโจมตีต่อเนื่อง",
+  "card_type": "trap",
+  "linked_character": "WENDYWENDIE-015",
+  "rules_text": "เมื่อ WENDYWENDIE ประกาศโจมตี: ATK +5 สำหรับการโจมตีนั้น (ไม่จั่วการ์ด)",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "trap",
+   "link": "wendywendie",
+   "ops": [
+    {
+     "op": "buff",
+     "who": "link",
+     "stat": "atk",
+     "amount": 5,
+     "until": "battle"
+    }
+   ],
+   "trigger": "own_attack"
+  }
+ },
+ {
+  "character_id": "SPL-035",
+  "name": "คลื่นพลังสะท้านฟ้า",
+  "card_type": "spell",
+  "linked_character": "ZEESKY-015",
+  "rules_text": "ต้องมี ZEESKY Lv.15 ในสนาม: ทำความเสียหาย 10 ใส่ตัวละครศัตรู 1 ตัว",
+  "shop_price_points": 300,
+  "status": "draft",
+  "support": {
+   "kind": "spell",
+   "link": "zeesky",
+   "ops": [
+    {
+     "op": "damage",
+     "who": "enemy",
+     "amount": 10
+    }
+   ]
+  }
+ }
+]
