@@ -37,7 +37,7 @@ Scope: Master Handoff §8. **Analysis and proposal only — nothing here is impl
 ## 4. Decisions needed from Toon
 - Build Step A first? (recommended; no schema change)
 - Should Admin edits to rules/elements apply live to new games (Step C), or stay code-reviewed?
-- Approve the 21 Story proposals (all, some, none)?
+- (Done 2026-11-25) 21 Story rows approved and applied.
 
 ## 5. Risks
 Steps B and C touch the engine: each needs the full test suite, a rebuilt `engine.js`, a rebuilt edge bundle and a "Deploy". No existing Story/Fusion/stat data would be modified by any step.

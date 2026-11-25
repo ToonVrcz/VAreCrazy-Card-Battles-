@@ -44,15 +44,15 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
 
-## Status (2026-11-25)
-Deployed 2026-11-25 (main = f999d09, edge function `api` v16 via stub -> `edge-bundle.js` on temporary branch `tmp-edge-bundle-s2`; rollback references: `tmp-edge-bundle-s1` (v15), `tmp-edge-bundle-r1` (v14). Do not delete these branches):
-- Migrations 025-029 applied (020 intentionally excluded): hand limit 10, balance round 2 (29 DEF + 5 effects, HP/ATK untouched), game_rules synced with the engine, Story modifiers columns, `cards.support` column.
-- Evolution: Lv40 = 1 Lv15 sacrifice, Lv70 = 2 Lv40, Lv99 = 3 Lv70 (same level as the evolving unit).
-- Story runs in the game (directional, multi-modifier, never stacked per duplicate). The 8 baseline rows are unchanged; 21 proposed rows are NOT inserted (need Toon's approval).
-- 39 Signature Spell/Trap cards (SPL-011..035, TRP-011..024): data-driven (`cards.support`), 300 Point, published, placeholder art (replace in the CMS). Seed/regenerate: `scripts/gen-signature.py`, `scripts/gen-signature-art.py`, `db/seed/signature-cards.sql`. Signature cards in a main deck must be bought first (shop); auto-built decks never include them.
-- Element table = union of `db/seed/elements.json` and the card-data export (owner decision).
-- PvP anti-farming IS enforced: the same two profiles earn from at most 3 matches per Bangkok day (tests/reward-farming.test.ts). Still untested with a real PvP match; two accounts can still farm with several pairs.
-- Open: element advantage UI (green/red) not built; CMS cannot edit `cards.support` numbers, rules or the element table (see docs/CMS-EXTENSIBILITY-GAP-ANALYSIS.md); Mixed-story form missing; friend's online-room join error needs the exact message; OG-1 backup decrypt test; 18 original card images missing (EVO-002..010, FUS-002..010).
+## Status (2026-11-25, evening)
+Deployed (main = 872a81e, edge function `api` v17 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s3`; rollback references, do not delete: `tmp-edge-bundle-s2` (v16), `s1` (v15), `r1` (v14)). Migrations 025-030 applied (020 intentionally excluded; next new migration = 031).
+- Evolution: Lv40 = 1 Lv15 sacrifice, Lv70 = 2 Lv40, Lv99 = 3 Lv70 (same level as the evolving unit). A used Evolution card goes to the graveyard (not removed from the game); it can be retrieved by any graveyard-retrieval effect whose wording allows it. SPL-006 only retrieves Lv.15 characters, so today no effect retrieves Evolution cards (owner rule 2026-11-25).
+- Story runs in the game (directional, multi-modifier). 29 rows: 8 baseline (untouched) + 21 owner-designed (8 positive / 8 negative / 5 mixed, `db/seed/story-21.sql`, applied). The Admin per-card Story form edits several modifiers (Positive/Negative/Mixed).
+- 39 Signature Spell/Trap cards (SPL-011..035, TRP-011..024): data-driven (`cards.support`), 300 Point, placeholder art (replace in the CMS). The CMS edits their config in a dropdown panel (`src/engine/support-registry.ts`, `PUT /api/cards/:id/support`, Draft only, audit-logged).
+- Rules as data: each new game snapshots LP, hand max, evolution sacrifice, element multipliers and the element matrix (`game_rules`, key `element_matrix`) into `g.cfg` (`src/engine/config.ts`); edits apply to new games only. Slot counts stay fixed (7 + 5).
+- All 109 cards are published (2026-11-25). Placeholder art is accepted for now; 18 original images (EVO-002..010, FUS-002..010) are still missing.
+- PvP anti-farming IS enforced: the same two profiles earn from at most 3 matches per Bangkok day. Still untested with a real PvP match.
+- Open: element advantage UI (green/red); friend's online-room join error needs the exact message; OG-1 backup decrypt test at Toon's home PC; test-game preview in the CMS; Phase H; branch `feature/hardening-1` has 1 commit not on main. Owner will try the Signature editor in production himself.
 
 ## Status (2026-11-19)
 Branch `feature/cms-effects-c` (NOT merged, NOT deployed): CMS Effect Registry + split editor (system config vs player text, limits/counters, warn-only consistency check, publish gate). Migration `019_effect_config` (adds `card_effects.config jsonb`) is written, NOT applied to production. Deploy order when Toon says "Deploy": apply 019 → deploy edge → merge → verify. Coordinate with `feature/hardening-1` (touches service.ts; migration 018 unapplied).
