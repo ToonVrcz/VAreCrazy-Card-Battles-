@@ -1,6 +1,6 @@
 // Simple opponent AI: picks one legal action at a time (call repeatedly until it returns { t: 'next' } twice in a row = turn over).
 import { legalActions, RULES, type Action, type Game, type Unit } from './game';
-const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def = (u: Unit) => Math.max(0, u.def + u.bonusDef);
+const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def = (u: Unit) => Math.max(0, u.def + u.bonusDef + (u.auraDef ?? 0));
 export function botPick(g: Game): Action {
   if (g.pending?.event === 'effect_target') {   // choose the ability's target: hit the strongest enemy, heal the most hurt ally, buff the strongest ally
     const p = g.pending, cs = p.info?.choices ?? [], kind = p.info?.kind;

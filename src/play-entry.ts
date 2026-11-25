@@ -7,8 +7,10 @@ import support from '../db/seed/support-cards.json' with { type: 'json' };
 import traps from '../db/seed/trap-cards.json' with { type: 'json' };
 import { parseEffect } from './engine/effects';
 import fusionPairs from '../db/seed/fusion-pairs.json' with { type: 'json' };
+import storyLinks from '../db/seed/story-links.json' with { type: 'json' };
 import spells from '../db/seed/spell-cards.json' with { type: 'json' };
 export const pairs: G.FusionPair[] = fusionPairs as any;
+export const story: G.StoryLink[] = storyLinks as any;
 export const engine = { ...G, botPick, viewEvents, formatEvent, createNotifier, squash };
 export const defs = [...toon, ...support, ...traps, ...spells].map((c: any) => ({
   id: c.character_id, name: c.name, type: c.card_type, level: c.level ?? null, chain: c.chain_key ?? null, chainName: c.chain_name ?? null,

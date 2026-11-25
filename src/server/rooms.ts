@@ -2,7 +2,7 @@
 // send actions. Polling transport: GET room every ~1.5s. Opponent hand/deck/face-down traps are never sent.
 import { randomBytes, randomUUID } from 'node:crypto';
 import { parseEffect, type Effect } from '../engine/effects.ts';
-import { createGame, act, EngineError, STATS_VERSION, type Action, type CardDef, type Game, type FusionPair } from '../engine/game.ts';
+import { createGame, act, EngineError, STATS_VERSION, type Action, type CardDef, type Game, type FusionPair, type StoryLink } from '../engine/game.ts';
 import { buildDeck, buildSet, viewFor, viewSpectator, validateDeck, validateEvoDeck, deckFromIds, EVO_RULES } from '../engine/deck-view.ts';
 import { Economy, ECONOMY } from './economy.ts';
 import { TIMING, TURN_RANGE, newMeta, tickRoom, needsTick, forfeit, turnLen, type RoomMeta } from '../engine/turn-timer.ts';
@@ -25,6 +25,19 @@ export class Rooms {
   constructor(private svc: CardService) { this.eco = new Economy(svc); }
   private get db() { return this.svc.db; }
 
+  /** Story links as engine rows. Row = one directional side (the card's chain gets the modifiers while the partner chain is on its field). Falls back to the single stat/amount columns if migration 028 is not applied yet. */
+  private async loadStory(): Promise<StoryLink[]> {
+    const q = async (cols: string) => (await this.db.query<any>(`SELECT a.key a, b.key b, l.name, l.stat, l.amount${cols} FROM card_story_links l JOIN cards c ON c.id=l.card_id JOIN evolution_chains a ON a.id=c.chain_id JOIN evolution_chains b ON b.id=l.partner_chain_id`)).rows;
+    let rows: any[];
+    try { rows = await q(', l.modifiers'); } catch (e: any) { if (e?.code !== '42703') throw e; rows = await q(''); }
+    const out: StoryLink[] = [];
+    for (const r of rows) {
+      const mods = (Array.isArray(r.modifiers) && r.modifiers.length ? r.modifiers : r.stat && Number.isInteger(r.amount) ? [{ stat: r.stat, amount: r.amount }] : [])
+        .filter((m: any) => ['hp', 'atk', 'def'].includes(m?.stat) && Number.isInteger(m?.amount) && m.amount !== 0);
+      if (mods.length) out.push({ a: r.a, b: r.b, name: r.name, mods });
+    }
+    return out;
+  }
   private async loadPool() {
     const rows = (await this.db.query<any>(`SELECT c.character_id id, c.name, c.card_type type, c.level, ch.key chain, c.hp, c.atk, c.def, el.key element
       FROM cards c LEFT JOIN evolution_chains ch ON ch.id=c.chain_id LEFT JOIN taxonomy_values el ON el.id=c.element_id WHERE c.status<>'archived'`)).rows;
@@ -35,7 +48,7 @@ export class Rooms {
     const pool: CardDef[] = rows.map(r => ({ id: r.id, name: r.name, type: r.type, level: r.level ?? null, chain: r.chain ?? null, hp: r.hp ?? null, atk: r.atk ?? null, def: r.def ?? 0, element: r.element ?? null, effects: fx.get(r.id) }));
     const fp = (await this.db.query<any>(`SELECT a.key a, b.key b, f.hp_bonus hp, f.atk_bonus atk, f.def_bonus def FROM card_fusion_partners f
       JOIN cards c ON c.id=f.card_id JOIN evolution_chains a ON a.id=c.chain_id JOIN evolution_chains b ON b.id=f.partner_chain_id`)).rows;
-    return { pool, pairs: fp as FusionPair[] };
+    return { pool, pairs: fp as FusionPair[], story: await this.loadStory() };
   }
 
   /** Checks the chosen decks (main: 40 ids, evo: <=15 owned forms). null = let the server pick. Returns the profile id (null = guest). */
@@ -108,7 +121,7 @@ export class Rooms {
   /** Host starts the game. Checked on the server: both seats taken, guest ready, both still connected, both decks still valid. */
   async start(code: string, token: string) {
     code = code.toUpperCase();
-    const { pool, pairs } = await this.loadPool(), byId = new Map(pool.map(c => [c.id, c]));
+    const { pool, pairs, story } = await this.loadPool(), byId = new Map(pool.map(c => [c.id, c]));
     return this.db.transaction(async (tx: Tx) => {
       const row = (await tx.query(`SELECT status, tokens, decks, profiles, ready, meta, turn_ms FROM play_rooms WHERE code=$1 FOR UPDATE`, [code])).rows[0];
       if (!row) throw new AppError(404, 'ไม่พบห้องนี้');
@@ -131,7 +144,7 @@ export class Rooms {
           sets.push({ main, extra: evoOk ? deckFromIds(sd.e!, byId) : auto(chains).map(c => ({ ...c })) });
         } else { const b = buildSet(pool, pairs, Math.random, auto); sets.push({ main: b.main, extra: evoOk ? deckFromIds(sd.e!, byId) : b.extra }); }
       }
-      const g = createGame([sets[0].main, sets[1].main], Date.now() % 1e9, first, { fusionPairs: pairs, interactive: true, extras: [sets[0].extra, sets[1].extra] });
+      const g = createGame([sets[0].main, sets[1].main], Date.now() % 1e9, first, { storyLinks: story, fusionPairs: pairs, interactive: true, extras: [sets[0].extra, sets[1].extra] });
       const meta = { ...newMeta(now, row.turn_ms ?? undefined), matchId: randomUUID(), startedAt: now, kicked: meta0.kicked ?? [] };
       await tx.query(`UPDATE play_rooms SET status='playing', state=$2::jsonb, meta=$3::jsonb, version=1, updated_at=now() WHERE code=$1`, [code, JSON.stringify(g), JSON.stringify(meta)]);
       return { ok: true };

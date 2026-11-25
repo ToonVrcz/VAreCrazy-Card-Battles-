@@ -12,12 +12,14 @@ export interface CardDef { id: string; name: string; type: CardType; level: numb
 export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, sacrificeSameLevel: true, poison: { dmg: 5, turns: 3 } };
 export class EngineError extends Error {}
 
+/** Story link: while a unit of chain `a` and a unit of chain `b` are on the SAME side's field, every unit of chain `a` gets the modifiers (directional: one row = one side of the story). Never stacked per duplicate copy of `b`. */
+export interface StoryLink { a: string; b: string; name?: string; mods: { stat: 'hp' | 'atk' | 'def'; amount: number }[] }
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
-export interface Unit { untargetableTurn?: number; tempAtk?: number; tempDef?: number; splTurn?: Record<string, number>; auraAtk?: number; auraHp?: number; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface Unit { untargetableTurn?: number; tempAtk?: number; tempDef?: number; splTurn?: Record<string, number>; auraAtk?: number; auraDef?: number; auraHp?: number; storyNames?: string[]; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
-export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; stats?: [PlayerStats, PlayerStats]; events?: GameEvent[]; evSeq?: number }
+export interface Game { interactive?: boolean; pending?: Pending; players: [Player, Player]; turn: number; active: 0 | 1; phase: 'main' | 'battle'; winner: 0 | 1 | null; log: string[]; seed: number; uid: number; fusion: { pairs: FusionPair[]; topPct: number; bottomPct: number }; story?: StoryLink[]; stats?: [PlayerStats, PlayerStats]; events?: GameEvent[]; evSeq?: number }
 /** Per-player counters of server-validated, state-changing actions (data collection only; never sent to clients, see viewFor). Absent on games created before this existed. */
 export interface PlayerStats {
   summon: number; evolve: number; fuse: number; set: number; cast: number;
@@ -55,16 +57,17 @@ export type Action =
 const rnd = (g: Game) => { let t = (g.seed += 0x6D2B79F5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const fail = (m: string): never => { throw new EngineError(m); };
 const other = (i: 0 | 1) => (1 - i) as 0 | 1;
-const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), effDef = (u: Unit) => Math.max(0, u.def + u.bonusDef);
+const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), effDef = (u: Unit) => Math.max(0, u.def + u.bonusDef + (u.auraDef ?? 0));
 const els = (u: Unit) => (u.card.element ?? 'neutral') as Element;
 const hit = (a: Unit, d: Unit) => Math.max(1, Math.floor(Math.max(1, effAtk(a) - effDef(d)) * elementMultiplier(els(a), els(d))));
 const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
-export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] } = {}): Game {
+export function createGame(decks: [CardDef[], CardDef[]], seed = 1, first: 0 | 1 = 0, opts: { storyLinks?: StoryLink[]; fusionPairs?: FusionPair[]; topPct?: number; bottomPct?: number; interactive?: boolean; extras?: [CardDef[], CardDef[]] } = {}): Game {
   // extras = each player's separate Evolution deck (Lv40/70/99 forms). Without it, forms live in the hand (legacy rules).
   const g: Game = { players: [0, 1].map(i => ({ lp: RULES.lp, deck: [...decks[i]], hand: [], field: Array(RULES.fieldSlots).fill(null), back: Array(RULES.backSlots).fill(null), grave: [], summoned: false, evolved: false, noAttackUntil: 0 })) as unknown as [Player, Player], turn: 1, active: first, phase: 'main', winner: null, log: [], seed, uid: 0, interactive: !!opts.interactive, fusion: { pairs: opts.fusionPairs ?? [], topPct: opts.topPct ?? 100, bottomPct: opts.bottomPct ?? 50 }, stats: [newStats(), newStats()] };
+  if (opts.storyLinks?.length) g.story = opts.storyLinks.map(l => ({ a: l.a, b: l.b, name: l.name, mods: l.mods.map(m => ({ ...m })) }));
   if (opts.extras) g.players.forEach((p, i) => { p.extra = [...opts.extras![i]]; });
   for (const p of g.players) { for (let i = p.deck.length - 1; i > 0; i--) { const j = Math.floor(rnd(g) * (i + 1)); [p.deck[i], p.deck[j]] = [p.deck[j], p.deck[i]]; } p.hand = p.deck.splice(0, RULES.startHand); }
   return g;
@@ -187,17 +190,27 @@ function runEffects(g: Game, pi: 0 | 1, u: Unit, trig: EffectTrigger, ctx: { tar
   });
 }
 /** Passive abilities ("while on the field") are recomputed after every action, so they vanish the moment their source leaves. */
-function refreshAuras(g: Game) {
+export function refreshAuras(g: Game) {
   for (const pi of [0, 1] as const) {
-    const us = g.players[pi].field.filter((x): x is Unit => !!x), atk = new Map<Unit, number>(), hp = new Map<Unit, number>();
+    const us = g.players[pi].field.filter((x): x is Unit => !!x), atk = new Map<Unit, number>(), hp = new Map<Unit, number>(), def = new Map<Unit, number>(), names = new Map<Unit, string[]>();
     for (const src of us) for (const e of src.card.effects ?? []) {
       if (e.trigger !== 'passive') continue;
       for (const t of e.target === 'self' ? [src] : us) { const m = e.kind === 'atk' ? atk : e.kind === 'maxhp' ? hp : null; if (m) m.set(t, (m.get(t) ?? 0) + e.amount); }
     }
+    // Story: recomputed from the current field every time, so it starts/stops the moment a partner arrives/leaves and can never accumulate.
+    const chains = (u: Unit) => [u.card.chain, ...(u.fused ?? []).map(c => c.chain)].filter((c): c is string => !!c);
+    if (g.story?.length) for (const l of g.story) {
+      if (!us.some(x => chains(x).includes(l.b))) continue;
+      for (const u of us) {
+        if (!chains(u).includes(l.a)) continue;
+        for (const m of l.mods) { const mm = m.stat === 'atk' ? atk : m.stat === 'hp' ? hp : def; mm.set(u, (mm.get(u) ?? 0) + m.amount); }
+        names.set(u, [...(names.get(u) ?? []), l.name ?? `${l.a}+${l.b}`]);
+      }
+    }
     for (const u of us) {
-      u.auraAtk = atk.get(u) ?? 0;
+      u.auraAtk = atk.get(u) ?? 0; u.auraDef = def.get(u) ?? 0; u.storyNames = names.get(u);
       const want = hp.get(u) ?? 0, d = want - (u.auraHp ?? 0);
-      if (d) { u.maxHp += d; u.hp = d > 0 ? u.hp + d : Math.min(u.hp, u.maxHp); u.auraHp = want; }
+      if (d) { u.maxHp += d; u.hp = d > 0 ? u.hp + d : Math.max(1, Math.min(u.hp, u.maxHp)); u.auraHp = want; }
     }
   }
 }

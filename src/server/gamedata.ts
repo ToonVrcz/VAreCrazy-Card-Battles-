@@ -103,7 +103,7 @@ export class GameData {
     need(u, 'read'); const c = await this.cardRow(ref);
     const g = (await this.db.query<any>(`SELECT v.key FROM cards c JOIN taxonomy_values v ON v.id=c.gender_id WHERE c.id=$1`, [c.id])).rows[0];
     const a = (await this.db.query<any>(`SELECT v.key,ca.reason FROM card_affiliations ca JOIN taxonomy_values v ON v.id=ca.value_id WHERE ca.card_id=$1 ORDER BY v.key`, [c.id])).rows;
-    const sl = (await this.db.query<any>(`SELECT ch.key partner,l.name,l.stat,l.amount,l.description FROM card_story_links l JOIN evolution_chains ch ON ch.id=l.partner_chain_id WHERE l.card_id=$1 ORDER BY ch.key`, [c.id])).rows;
+    const sl = (await this.db.query<any>(`SELECT ch.key partner,l.name,l.stat,l.amount,l.description,l.modifiers,l.story_type FROM card_story_links l JOIN evolution_chains ch ON ch.id=l.partner_chain_id WHERE l.card_id=$1 ORDER BY ch.key`, [c.id])).rows;
     const fp = (await this.db.query<any>(`SELECT ch.key partner,f.hp_bonus hp,f.atk_bonus atk,f.def_bonus def,f.note FROM card_fusion_partners f JOIN evolution_chains ch ON ch.id=f.partner_chain_id WHERE f.card_id=$1 ORDER BY ch.key`, [c.id])).rows;
     return { gender: g?.key ?? null, affiliations: a, story_links: sl, fusion_partners: fp };
   }
@@ -141,6 +141,18 @@ export class GameData {
         if (!x.name) bad('Story ต้องมีชื่อ');
         if (x.stat && !STATS.includes(x.stat)) bad('stat ต้องเป็น hp/atk/def');
         if (x.stat && !Number.isInteger(x.amount)) bad('amount ต้องเป็นจำนวนเต็ม');
+        if (x.modifiers != null) {
+          if (!Array.isArray(x.modifiers) || !x.modifiers.length || x.modifiers.length > 4) bad('modifiers ต้องเป็นรายการ 1-4 รายการ');
+          const used = new Set<string>();
+          for (const m of x.modifiers) {
+            if (!m || !STATS.includes(m.stat) || !Number.isInteger(m.amount) || m.amount === 0 || Math.abs(m.amount) > 100) bad('modifier ต้องมี stat (hp/atk/def) และ amount เป็นจำนวนเต็มไม่ใช่ 0');
+            if (used.has(m.stat)) bad(`modifier ${m.stat} ซ้ำ`); used.add(m.stat);
+          }
+          x.modifiers = x.modifiers.map((m: any) => ({ stat: m.stat, amount: m.amount }));
+          const pos = x.modifiers.some((m: any) => m.amount > 0), neg = x.modifiers.some((m: any) => m.amount < 0);
+          x.story_type = pos && neg ? 'mixed' : pos ? 'positive' : 'negative';
+          x.stat = x.modifiers[0].stat; x.amount = x.modifiers[0].amount;      // legacy columns mirror the first modifier
+        }
         sl.push({ ...x, cid: await chainOf(x.partner) });
       }
     }
@@ -161,8 +173,13 @@ export class GameData {
         for (const [vid, reason] of aff) await tx.query(`INSERT INTO card_affiliations(card_id,value_id,reason) VALUES ($1,$2,$3)`, [c.id, vid, reason]);
       }
       if (b.story_links) {
+        const old = new Map((await tx.query<any>(`SELECT partner_chain_id p, modifiers, story_type FROM card_story_links WHERE card_id=$1`, [c.id])).rows.map((r: any) => [r.p, r]));
         await tx.query(`DELETE FROM card_story_links WHERE card_id=$1`, [c.id]);
-        for (const x of sl) await tx.query(`INSERT INTO card_story_links VALUES ($1,$2,$3,$4,$5,$6)`, [c.id, x.cid, x.name, x.stat ?? null, x.amount ?? null, x.description ?? null]);
+        for (const x of sl) {
+          const keep = x.modifiers === undefined ? old.get(x.cid) : null;      // a client that does not know `modifiers` must not wipe them
+          await tx.query(`INSERT INTO card_story_links(card_id,partner_chain_id,name,stat,amount,description,modifiers,story_type) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)`,
+            [c.id, x.cid, x.name, x.stat ?? null, x.amount ?? null, x.description ?? null, x.modifiers != null ? JSON.stringify(x.modifiers) : keep?.modifiers != null ? JSON.stringify(keep.modifiers) : null, x.modifiers != null ? x.story_type : keep?.story_type ?? null]);
+        }
       }
       if (b.fusion_partners) {
         await tx.query(`DELETE FROM card_fusion_partners WHERE card_id=$1`, [c.id]);

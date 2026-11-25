@@ -158,3 +158,16 @@ describe('migration 006 rollback', () => {
     expect((await db.query<any>(`SELECT count(*)::int c FROM game_rules`)).rows[0].c).toBeGreaterThan(10);
   });
 });
+
+describe('story modifiers (Mixed Story)', () => {
+  it('saves several modifiers, derives the type, and a legacy client re-save keeps them', async () => {
+    await g.setCardMeta(ed, 'GUIDE-015', { story_links: [{ partner: 'ping', name: 'Mixed', modifiers: [{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }] }] });
+    expect((await g.cardMeta(viewer, 'GUIDE-015')).story_links[0]).toMatchObject({ story_type: 'mixed', stat: 'atk', amount: 10, modifiers: [{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }] });
+    await g.setCardMeta(ed, 'GUIDE-015', { story_links: [{ partner: 'ping', name: 'Renamed', stat: 'atk', amount: 10 }] });     // old client: no `modifiers` field
+    expect((await g.cardMeta(viewer, 'GUIDE-015')).story_links[0]).toMatchObject({ name: 'Renamed', story_type: 'mixed', modifiers: [{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }] });
+  });
+  it('rejects bad modifiers', async () => {
+    for (const modifiers of [[], [{ stat: 'speed', amount: 5 }], [{ stat: 'atk', amount: 0 }], [{ stat: 'atk', amount: 1.5 }], [{ stat: 'atk', amount: 5 }, { stat: 'atk', amount: 5 }], [{ stat: 'atk', amount: 500 }]])
+      await expect(g.setCardMeta(ed, 'GUIDE-015', { story_links: [{ partner: 'ping', name: 'x', modifiers }] })).rejects.toThrow();
+  });
+});
