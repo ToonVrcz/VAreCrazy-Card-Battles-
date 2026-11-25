@@ -173,3 +173,7 @@ describe('engine: fusion', () => {
     expect(botPick(g).t).toBe('fuse');
   });
 });
+
+describe('hand limit 10', () => {
+  it('RULES.handMax is 10 and starting hand stays 5', () => { expect(RULES.handMax).toBe(10); expect(RULES.startHand).toBe(5); });
+});
