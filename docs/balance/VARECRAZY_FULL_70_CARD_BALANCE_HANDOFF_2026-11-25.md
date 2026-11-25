@@ -163,7 +163,7 @@ Unless listed as a change below, keep the current effect exactly as stored. Do n
 | SPL-004 | ATK +15 to one ally until end of turn; rules text says once per character per turn | Keep +15. Enforce once-per-target-per-turn; repeated casts must not stack beyond +15 on same target in one turn. |
 | SPL-005 | Draw 2 | Keep; enforce normal hand limit and prevent drawing beyond allowed capacity |
 | SPL-006 | Return one Lv.15 character from own graveyard to hand | Keep; obey hand limit and only eligible character cards |
-| SPL-007 | Text says swap one own character with one enemy character; effect record says select two own characters | **Correct semantics to cross-side exchange:** select exactly one own and one opposing character, exchange controller/side and board position atomically; validate both slots and ownership. If current engine does not support control transfer, stop and report rather than silently changing the card into a same-side swap. |
+| SPL-007 | Effect: swap one of our characters with one enemy character | **Keep the cross-side swap exactly as intended.** Select one character controlled by us and one controlled by the opponent, then exchange their sides/ownership and corresponding board positions as one atomic action. Do not reinterpret this as swapping two characters on the same side. Validate both selected characters and both destination slots before applying either move. If a slot/ownership condition fails, the entire effect fails with no partial movement. |
 | SPL-008 | One enemy character cannot attack for 1 enemy turn | Keep; duration must expire at the end of the intended opponent turn |
 | SPL-009 | One enemy character takes 5 damage at start of each opponent turn for 3 turns | Keep; apply exactly 3 opponent-turn ticks, no extra tick on caster's turn |
 | SPL-010 | Destroy one face-down enemy trap | Keep; target only a valid face-down trap |
@@ -206,7 +206,7 @@ Current text: use with two hand characters marked as Fusion partners; stack in o
 6. Ensure graveyard triggers distinguish own vs opposing character and do not fire twice during nested destruction/evolution flows.
 7. Target protection on LORDNAM/LUCKY blocks targeted enemy effects only; clarify in UI and tests.
 8. Spell buff stacking: SPL-003 and SPL-004 once per target per turn, not one unrestricted application per cast.
-9. SPL-007 must be treated as a control-transfer operation, not a simple positional swap, because the card text says the selected characters change sides.
+9. SPL-007 is confirmed by the owner: swap one of our characters with one enemy character. It is a cross-side exchange, not a same-side positional swap. Keep this meaning consistent in card text, effect config, UI selection and engine behavior.
 10. TRP-005 must preserve the current card text's “no sacrifice” cancellation behavior unless Toon explicitly changes that rule.
 11. No change to LP, starting hand, 40-card Main Deck, seven character slots, one summon per turn, or any other core rules.
 
@@ -230,8 +230,94 @@ Current text: use with two hand characters marked as Fusion partners; stack in o
 
 ## 9. Owner decisions still required — do not guess
 - Evolution design conflict: face-up Evolution Deck cards on board vs current EVO-001 hand-spend text; exact consumption/retention lifecycle must be confirmed from approved GDD.
-- SPL-007: whether the existing engine supports cross-side control transfer; if not, it requires an owner-approved rule/engine decision.
+- SPL-007 meaning is confirmed: one friendly character exchanges sides with one enemy character. Claude only needs to verify/implement that exact behavior in the engine; do not ask the owner to redefine the effect. If the engine cannot support it safely, report the technical blocker.
 - Whether fusion and synergy bonus values remain frozen for this balancing pass (default instruction here is yes).
 - After implementation and QA, Toon reviews DEF/Effect diff before any merge or production release.
+
+
+## 10. Detailed analysis of the five balance concerns (owner-ready decisions)
+
+### 10.1 Effects with no explicit Use Limit
+**Finding:** `use_limit = none` does not automatically mean unlimited activations. A trigger such as `turn_start` or `turn_end` may naturally occur once per relevant turn, while `on_destroyed`, `to_graveyard`, `passive` or nested event triggers may fire multiple times or be re-entered.
+**Decision:** Do not mass-add `once_per_turn` to every `none` effect. Preserve the card's current intended trigger cadence. Claude must inspect the event dispatcher and prove whether each effect can resolve multiple times in one turn/event.
+**Specific checks:**
+- LALAPING-040 `turn_end` heal all allies 5: one resolution per owner's turn; each ally healed at most 5, capped at max HP. It is not “once per card per turn” if the trigger dispatcher already guarantees one turn-end event; add a guard only if repeated dispatch is possible.
+- NORMAN-040 `turn_start` self-heal 10: one resolution at the controller's turn start.
+- TEE-040 `turn_end` self-heal 10: one resolution at its controller's turn end.
+- THAI32-015 `on_destroyed` heal 20: once per actual destruction transition, not every state validation.
+- SATOSHI-040 `on_destroyed` heal 20: same one-time destruction-transition rule.
+- FOLLOW-YOU-070 `passive` ATK +5: apply once as a static modifier, never once per render/recalculation.
+- LALAPING-070 `passive` HP +10: apply once to max/current HP according to the existing passive-stat convention; do not repeatedly add +10 on recalculation. Do not alter printed base HP.
+- TEE-040 `on_evolve` ATK +20: only after a successful evolution and once per successful evolution event.
+- I-M-GRAPE-015: permanent ATK +5 at turn start with hard total cap +15; no extra stacks from duplicate event delivery.
+**Implementation rule:** use event identity / state-transition identity and stable per-card activation keys. Avoid arbitrary global limits that change intended design.
+
+### 10.2 Card draw and card advantage
+**Verified effect categories in current DB:**
+- On-summon once/game draw 1: CHAEM-015, FOLLOW-YOU-015, PK-015, THOMAS-015.
+- Discard 1 then draw 1 on summon: MON-015.
+- Draw on confirmed attack destruction once/turn: GOD-WA-015, JAOJAY-015, NONG-TAENGMO-015.
+- Draw on attack once/turn: WENDYWENDIE-015.
+- Spell draw 2: SPL-005.
+- Graveyard-trigger draw once per trap: TRP-010.
+**Decision:** Keep these values in this balance pass; no blanket reduction. The once-per-game draw is a one-time tempo/card replacement effect, while draw-on-kill requires winning combat and should reward a successful attack. WENDYWENDIE is the main repeatable draw risk because it does not require a kill.
+**Required safeguards:**
+1. WENDYWENDIE-015: at most one draw per card per controller turn; trigger only when a real attack is declared/resolved, not when an attack animation or retry event is re-fired. If it can draw even when the attack is cancelled, choose one consistent rule: recommended draw only after the attack has actually proceeded to damage/resolution.
+2. GOD-WA / JAOJAY / NONG-TAENGMO: draw only if the target transitions from alive/on-field to destroyed due to this attack; no draw if another effect destroyed it, it was returned to hand, or attack was cancelled.
+3. MON-015: must discard exactly one card before drawing one; if hand empty, the effect cannot resolve and does not draw.
+4. SPL-005: draw up to two subject to the game's hand capacity; no overflow exploit and no duplicate draw on retry.
+5. All draw effects respect one centralized hand-cap rule and deck-empty behavior; do not silently create cards when deck is empty.
+6. TRP-010: one draw per actual own-character graveyard transition while this trap is active, then consume the trap exactly once.
+**Balance conclusion:** no numerical changes to draw count recommended now. Revisit only if playtests show draw engines dominate; first fix trigger duplication and hand-limit semantics.
+
+### 10.3 Target protection — LORDNAM-015 and LUCKY-015
+**Decision:** Protection applies only to enemy effects that explicitly select that character as a target. It does not block:
+- ordinary combat attacks (attacks are governed by attack/defense rules, not targetable spell/effect selection);
+- non-targeting global effects affecting all characters or a class/group;
+- effects that target the controller/player, LP, a slot or a card zone rather than this character;
+- the owner's own effects.
+It does block a targeted enemy Spell/Trap/character effect whose target is that protected character.
+**Duration:** from successful summon until the end of that same turn, as the current card text states. It does not persist through later turns.
+**Interaction:** if a cross-side effect such as SPL-007 chooses the protected character as a target, the protection blocks the selection unless the effect is explicitly non-targeting. Once the protection expires, normal targeting applies.
+**Important:** this is a rules clarification, not an added permanent shield. Keep both effects and current durations; align UI tooltip and engine target validator. If existing engine uses a different meaning for “cannot be selected”, report the discrepancy and propose a minimal implementation.
+
+### 10.4 Evolution and TRP-005
+**Known specification conflict:** database EVO-001 text currently says spend an Evolution card from hand per step and sacrifice 1/2/3 face-up characters for Lv.40/70/99. The latest owner design stored in project context instead says Evolution Deck is separate and face-up Evolution cards are placed on the board; requirement is Lv.40 = 1 face-up Evolution card, Lv.70 = 2, Lv.99 = 3. The exact consumption/retention lifecycle has not been resolved in the approved text available here.
+**Decision:** do not guess whether face-up Evolution cards are consumed or remain. Claude must locate the latest approved GDD/rule spec and compare it with the current engine; if still ambiguous, mark the lifecycle as BLOCKED and do not implement a speculative change.
+**TRP-005 confirmed behavior from DB card text:** when opponent evolves, cancel that evolution; the Evolution card used is sent to graveyard; evolved form reverts to prior form; sacrifice materials are NOT required / NOT consumed. Preserve this behavior.
+**Atomic resolution sequence:**
+1. Validate opponent's evolution attempt and the active TRP-005.
+2. Snapshot pre-evolution form, evolution resource state, sacrifice material identities, field positions and controller.
+3. Cancel the evolution and restore the prior character form.
+4. Send only the Evolution card used to graveyard (as card text says).
+5. Restore/retain sacrifice materials; do not send them to graveyard.
+6. Consume TRP-005 once and close the event.
+7. If any step fails, roll back the whole transaction; never leave partial sacrifice or double forms.
+**Tests:** cancel Lv.40, Lv.70 and Lv.99 evolution; verify face-up Evolution resource handling under whichever owner-approved model is confirmed; verify no sacrifice material is lost; verify Evolution card is discarded; verify only one trap activation.
+
+### 10.5 Fusion and pair bonuses
+**Verified DB facts:** `card_fusion_partners` has partner-chain links for character pairs. Some pairs have +20 HP and +10 ATK bonuses; many have zero. The `def_bonus` is currently 0 in all returned rows. FUS-001 text says stack two linked hand characters in one slot: top contributes 100%, bottom contributes 50%, plus the pair bonus.
+**Decision:** keep the 100%/50% formula and all existing partner bonus values in this task. Do not change base HP/ATK or fusion HP/ATK bonus fields. Do not invent new bonuses.
+**Required calculation model:**
+- Calculate the upper card's current effective stats once at fusion resolution.
+- Calculate the lower card's current effective stats once, multiply only the lower contribution by 50% using the game's documented rounding rule.
+- Add the existing pair bonus exactly once.
+- Apply each external modifier (synergy, temporary buffs, equipment/other modifiers) at one documented stage only; do not apply the same modifier both before and after fusion.
+- Store or derive the fused result from source-card identities so repeated UI renders/stat refreshes cannot compound the 50% contribution or pair bonus.
+- Define which card is “top” from the player's selection/order and show that clearly before confirming Fusion.
+- Confirm what happens to both source cards when Fusion is destroyed, returned, or undone; preserve current rules unless owner-approved GDD states otherwise.
+**Synergy separation:** affiliation synergies and gender/story bonuses in DB are marked `proposed` in their descriptions/status context, not necessarily active engine rules. Do not assume they are live. Claude must check the runtime path and feature flags. If inactive, they must not be included in effective stats. If active, calculate them once and include them in the audit, but do not change their values here.
+**Balance risk:** Fusion may be disproportionately strong only for the subset with +20 HP/+10 ATK pair bonuses; however, the 50% lower-card contribution and existing bonus can offset or compound depending on implementation. Do not make numeric changes without simulation/playtests. First ensure the formula is deterministic and non-compounding.
+
+## 11. SPL-007 owner clarification (supersedes any earlier discrepancy note)
+Toon confirms: **Effect = swap one of our characters with one enemy character.**
+- It is not a same-side swap.
+- It is a cross-side exchange: one friendly character and one enemy character exchange sides/ownership and board positions.
+- Keep the card meaning unchanged. Only verify the implementation matches it.
+- Update the UI target picker to require one friendly target and one enemy target.
+- Resolve both movements atomically after validating both destinations.
+- If a selected character is invalid or the other side's destination cannot accept it, fail cleanly with no partial transfer.
+- Do not add any extra stat, damage, or control-duration bonus not stated in the card text.
+
 
 **End of handoff.**
