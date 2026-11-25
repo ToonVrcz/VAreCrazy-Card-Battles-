@@ -1,90 +1,341 @@
 [
- {
-  "a": "1goku",
-  "b": "dnman",
-  "name": "โดนกล่าวหา ว่าโกง ตอนเล่นเกม",
-  "mods": [
-   {
-    "stat": "hp",
-    "amount": -5
-   }
-  ]
- },
- {
-  "a": "baby",
-  "b": "bam",
-  "name": "เพื่อนรัก",
-  "mods": [
-   {
-    "stat": "atk",
-    "amount": 5
-   }
-  ]
- },
- {
-  "a": "backji",
-  "b": "nong-taengmo",
-  "name": "รันแกงซ์ FiveM",
-  "mods": [
-   {
-    "stat": "def",
-    "amount": 5
-   }
-  ]
- },
- {
-  "a": "badguy",
-  "b": "smile",
-  "name": "ความขัดแย้งในตลาด",
-  "mods": [
-   {
-    "stat": "atk",
-    "amount": -5
-   }
-  ]
- },
- {
-  "a": "bam",
-  "b": "satoshi",
-  "name": "เจอหน้ากันไม่ได้",
-  "mods": [
-   {
-    "stat": "def",
-    "amount": -5
-   }
-  ]
- },
- {
-  "a": "bammie",
-  "b": "jaojay",
-  "name": "คู่รัก",
-  "mods": [
-   {
-    "stat": "hp",
-    "amount": 10
-   }
-  ]
- },
- {
-  "a": "chaem",
-  "b": "tee",
-  "name": "แอบรักข้างเดียว",
-  "mods": [
-   {
-    "stat": "def",
-    "amount": -5
-   }
-  ]
- },
- {
-  "a": "nong-taengmo",
-  "b": "backji",
-  "name": "รันแกงซ์ FiveM",
-  "mods": [
-   {
-    "stat": "atk",
-    "amount": 5
-   }
-  ]
- }
+  {
+    "a": "1goku",
+    "b": "dnman",
+    "name": "โดนกล่าวหา ว่าโกง ตอนเล่นเกม",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "baby",
+    "b": "bam",
+    "name": "เพื่อนรัก",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "backji",
+    "b": "nong-taengmo",
+    "name": "รันแกงซ์ FiveM",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "badguy",
+    "b": "smile",
+    "name": "ความขัดแย้งในตลาด",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "bam",
+    "b": "satoshi",
+    "name": "เจอหน้ากันไม่ได้",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "bammie",
+    "b": "jaojay",
+    "name": "คู่รัก",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": 10
+      }
+    ]
+  },
+  {
+    "a": "chaem",
+    "b": "tee",
+    "name": "แอบรักข้างเดียว",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "nong-taengmo",
+    "b": "backji",
+    "name": "รันแกงซ์ FiveM",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "baby",
+    "b": "bammie",
+    "name": "เพื่อนเก่าที่กลับมา",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "lalaping",
+    "b": "thomas",
+    "name": "ผู้ช่วยชีวิต",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": 10
+      }
+    ]
+  },
+  {
+    "a": "lordnam",
+    "b": "lucky",
+    "name": "สัญญาแห่งโชคชะตา",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "bobo",
+    "b": "linlada",
+    "name": "คู่หูนักสู้",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "chaem",
+    "b": "pk",
+    "name": "นักวางแผน",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "god-wa",
+    "b": "jaojay",
+    "name": "คู่หูนักอัญเชิญ",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "leon-s-kennedy",
+    "b": "oufilling",
+    "name": "คู่หูผู้พิทักษ์",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "melon",
+    "b": "thai32",
+    "name": "สหายร่วมสนาม",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "a": "cutie",
+    "b": "pikachu",
+    "name": "ศึกจอมเวท",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "norman",
+    "b": "thai26",
+    "name": "ศึกนักรบต่างขั้ว",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "wendywendie",
+    "b": "nong-taengmo",
+    "name": "โจรแย่งผลงาน",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "pkxcy",
+    "b": "miki",
+    "name": "ศักดิ์ศรีนักสู้",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "follow-you",
+    "b": "god-wa",
+    "name": "นักอัญเชิญกับหัวขโมย",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "tan",
+    "b": "mon",
+    "name": "ธุรกิจที่ไม่ลงตัว",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "zeesky",
+    "b": "skymoon",
+    "name": "พายุเหนือโรงตีเหล็ก",
+    "mods": [
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "bobo",
+    "b": "bam",
+    "name": "ศึกชิงความเป็นหนึ่ง",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "badguy",
+    "b": "norman",
+    "name": "คู่หูสายบุก",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 10
+      },
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "cutie",
+    "b": "somyes",
+    "name": "เวทมนตร์และธนู",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      },
+      {
+        "stat": "hp",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "lalaping",
+    "b": "satoshi",
+    "name": "ผู้รักษาสองขั้ว",
+    "mods": [
+      {
+        "stat": "hp",
+        "amount": 10
+      },
+      {
+        "stat": "atk",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "backji",
+    "b": "god-wa",
+    "name": "คู่หูนักลอบโจมตี",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 10
+      },
+      {
+        "stat": "def",
+        "amount": -5
+      }
+    ]
+  },
+  {
+    "a": "thai26",
+    "b": "bammie",
+    "name": "นักดาบประสานพลัง",
+    "mods": [
+      {
+        "stat": "atk",
+        "amount": 5
+      },
+      {
+        "stat": "hp",
+        "amount": -5
+      }
+    ]
+  }
 ]
