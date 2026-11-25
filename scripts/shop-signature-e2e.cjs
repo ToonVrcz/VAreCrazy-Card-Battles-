@@ -15,6 +15,8 @@ const BASE = `http://127.0.0.1:${process.env.PORT || 8798}`; const out = []; con
     ok('Signature tab exists', (await p.locator('[data-l=sig]').count()) === 1);
     await p.click('[data-l=sig]'); await p.waitForTimeout(300);
     const n = await p.locator('[data-b]').count(); ok('Signature cards listed', n >= 39, 'buttons=' + n);
+    ok('Signature cards have an image', await p.locator('[data-pv]').first().evaluate(i => i.getAttribute('src') && i.naturalWidth > 0), 'src ok');
+    await p.locator('[data-pv]').first().click(); await p.waitForSelector('#cl'); ok('tapping a Signature card opens its detail with text', (await p.innerText('#md')).length > 20); await p.click('#cl'); await p.waitForSelector('[data-b]');
     ok('price 300', /300/.test(await p.locator('[data-b]').first().innerText()));
     await p.locator('[data-b]').first().click(); await p.waitForSelector('#sok');
     ok('confirm says Signature', /Signature/.test(await p.innerText('#md')));
