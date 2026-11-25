@@ -65,7 +65,7 @@ describe('Story data', () => {
   it('keeps all 8 original live rows unchanged and adds exactly 21 proposed rows', () => {
     const s = JSON.parse(readFileSync('db/seed/story-links.json', 'utf8'));
     const toon = JSON.parse(readFileSync('db/seed/toon-cards.json', 'utf8'));
-    const byId = new Map(toon.map((c: any) => [c.character_id, c.chain_key]));
+    const chains = new Set(toon.map((c: any) => c.chain_key));
     const baseline = [
       ['1goku', 'dnman', 'โดนกล่าวหา ว่าโกง ตอนเล่นเกม', 'hp', -5],
       ['baby', 'bam', 'เพื่อนรัก', 'atk', 5],
@@ -107,8 +107,8 @@ describe('Story data', () => {
     ];
     expect(added).toEqual(expected.map(([a, b, name, mods]: any) => ({ a, b, name, mods })));
     for (const row of added) {
-      expect(byId.has([...byId.entries()].find(([, chain]) => chain === row.a)?.[0])).toBe(true);
-      expect(byId.has([...byId.entries()].find(([, chain]) => chain === row.b)?.[0])).toBe(true);
+      expect(chains.has(row.a)).toBe(true);
+      expect(chains.has(row.b)).toBe(true);
     }
     const pairKeys = s.map((x: any) => x.a + '|' + x.b);
     expect(new Set(pairKeys).size).toBe(pairKeys.length);
