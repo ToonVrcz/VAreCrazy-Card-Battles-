@@ -272,11 +272,11 @@ const frameOf=d=>FR['card:'+d.id]||(d.type==='character'&&[40,70,99].includes(+d
 const STN={atk:'ATK',hp:'HP',def:'DEF'},ELN={fire:'ไฟ',water:'น้ำ',wind:'ลม',earth:'ดิน',lightning:'สายฟ้า',nature:'ธรรมชาติ',poison:'พิษ',holy:'แสง',dark:'มืด',alchemy:'เล่นแร่แปรธาตุ',neutral:'กลาง',physical:'กายภาพ'};
 const chName=k=>{const x=DEFS.find(c=>c.chain===k&&c.chainName);return x?x.chainName:k};
 /** Extra card facts for the detail view: element matchup, Story and Fusion partners (all text escaped). */
-function cardInfo(d){if(!d||d.type!=='character')return'';const o=[],el=d.element,en=k=>ELN[k]||k,EM=(BOTCFG&&BOTCFG.elements)||(RL()&&RL().elements)||{},adv=el&&EM[el]||[],weak=Object.keys(EM).filter(k=>(EM[k]||[]).includes(el));
- if(el)o.push(`<p>🔥 ธาตุ: <b>${esc(en(el))}</b>${adv.length?` · ได้เปรียบ: ${esc(adv.map(en).join(', '))}`:''}${weak.length?` · เสียเปรียบต่อ: ${esc(weak.map(en).join(', '))}`:''}</p>`);
- if(d.level===15)(VCZE.story||[]).filter(x=>x.a===d.chain).forEach(x=>{const m=(x.mods||[]).map(y=>`${STN[y.stat]||y.stat} ${y.amount>0?'+':''}${y.amount}`).join(', ');o.push(`<p>📖 Story: ${esc(x.name||'')} — เมื่อ ${esc(chName(x.b))} อยู่ในสนาม: ${esc(m)}</p>`)});
- const fp=PAIRS.filter(x=>x.a===d.chain||x.b===d.chain).map(x=>chName(x.a===d.chain?x.b:x.a));if(d.level===15&&fp.length)o.push(`<p>⛓ ฟิวชั่นกับ: ${esc(fp.join(', '))}</p>`);
- return o.join('')}
+function cardInfo(d){if(!d||d.type!=='character')return[];const o=[],el=d.element,en=k=>ELN[k]||k,EM=(BOTCFG&&BOTCFG.elements)||(RL()&&RL().elements)||{},adv=el&&EM[el]||[],weak=Object.keys(EM).filter(k=>(EM[k]||[]).includes(el));
+ if(el)o.push(`🔥 ธาตุ: ${en(el)}${adv.length?` · ได้เปรียบ: ${adv.map(en).join(', ')}`:''}${weak.length?` · เสียเปรียบต่อ: ${weak.map(en).join(', ')}`:''}`);
+ if(d.level===15)(VCZE.story||[]).filter(x=>x.a===d.chain).forEach(x=>{const m=(x.mods||[]).map(y=>`${STN[y.stat]||y.stat} ${y.amount>0?'+':''}${y.amount}`).join(', ');o.push(`📖 Story: ${x.name||''} — เมื่อ ${chName(x.b)} อยู่ในสนาม: ${m}`)});
+ const fp=PAIRS.filter(x=>x.a===d.chain||x.b===d.chain).map(x=>chName(x.a===d.chain?x.b:x.a));if(d.level===15&&fp.length)o.push(`⛓ ฟิวชั่นกับ: ${fp.join(', ')}`);
+ return o}
 function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
  const me=(z==='shop'||z==='col')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&!(ON&&ON.spec)&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
@@ -286,7 +286,7 @@ function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=fra
  if(can&&z==='f'){if(main){const u=me.field[i],nx={15:40,40:70,70:99}[u.card.level],e=me.hand.findIndex(x=>x.type==='evolution'),f=(me.extra||me.hand).findIndex(x=>x.type==='character'&&x.chain===u.card.chain&&x.level===nx);
    if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:RL().sacrifice[nx],sac:[]};closeM();render()}])}
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
- $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${esc(d.name)}</b> ${d.type!=='character'?'· '+esc(d.type):''}</p><p>${esc(d.text||'')}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${esc(u.fused.map(x=>x.name).join(' + '))}</p>`:''})():''}${cardInfo(d)}${(d.fx||[]).map(x=>`<p>• ${esc(x.t)}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${esc(d.flavor)}</i></p>`:''}
+ $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${esc(d.name)}</b> ${d.type!=='character'?'· '+esc(d.type):''}</p><p>${esc(d.text||'')}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${esc(u.fused.map(x=>x.name).join(' + '))}</p>`:''})():''}${cardInfo(d).map(t=>`<p>${esc(t)}</p>`).join('')}${(d.fx||[]).map(x=>`<p>• ${esc(x.t)}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${esc(d.flavor)}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${esc(x[0])}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
  $('#cl').onclick=z==='shop'?()=>shop(d.level>15?d.level:'sig'):z==='col'?()=>collection():z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
 const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
