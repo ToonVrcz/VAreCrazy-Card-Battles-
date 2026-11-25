@@ -62,10 +62,56 @@ describe('Story runtime', () => {
 });
 
 describe('Story data', () => {
-  it('seed holds exactly the 8 live baseline rows (both BACKJI/NONG directions)', () => {
+  it('keeps all 8 original live rows unchanged and adds exactly 21 proposed rows', () => {
     const s = JSON.parse(readFileSync('db/seed/story-links.json', 'utf8'));
-    expect(s.length).toBe(8);
-    expect(s.filter((x: any) => (x.a === 'backji' && x.b === 'nong-taengmo') || (x.a === 'nong-taengmo' && x.b === 'backji')).map((x: any) => x.mods[0])).toEqual([{ stat: 'def', amount: 5 }, { stat: 'atk', amount: 5 }]);
+    const toon = JSON.parse(readFileSync('db/seed/toon-cards.json', 'utf8'));
+    const chains = new Set(toon.map((c: any) => c.chain_key));
+    const baseline = [
+      ['1goku', 'dnman', 'โดนกล่าวหา ว่าโกง ตอนเล่นเกม', 'hp', -5],
+      ['baby', 'bam', 'เพื่อนรัก', 'atk', 5],
+      ['backji', 'nong-taengmo', 'รันแกงซ์ FiveM', 'def', 5],
+      ['badguy', 'smile', 'ความขัดแย้งในตลาด', 'atk', -5],
+      ['bam', 'satoshi', 'เจอหน้ากันไม่ได้', 'def', -5],
+      ['bammie', 'jaojay', 'คู่รัก', 'hp', 10],
+      ['chaem', 'tee', 'แอบรักข้างเดียว', 'def', -5],
+      ['nong-taengmo', 'backji', 'รันแกงซ์ FiveM', 'atk', 5]
+    ];
+    expect(s).toHaveLength(29);
+    for (const [a, b, name, stat, amount] of baseline) {
+      expect(s).toContainEqual({ a, b, name, mods: [{ stat, amount }] });
+    }
+    const added = s.slice(8);
+    expect(added).toHaveLength(21);
+    const expected = [
+      ['baby', 'bammie', 'เพื่อนเก่าที่กลับมา', [{ stat: 'atk', amount: 5 }]],
+      ['lalaping', 'thomas', 'ผู้ช่วยชีวิต', [{ stat: 'hp', amount: 10 }]],
+      ['lordnam', 'lucky', 'สัญญาแห่งโชคชะตา', [{ stat: 'def', amount: 5 }]],
+      ['bobo', 'linlada', 'คู่หูนักสู้', [{ stat: 'atk', amount: 5 }]],
+      ['chaem', 'pk', 'นักวางแผน', [{ stat: 'hp', amount: 5 }]],
+      ['god-wa', 'jaojay', 'คู่หูนักอัญเชิญ', [{ stat: 'atk', amount: 5 }]],
+      ['leon-s-kennedy', 'oufilling', 'คู่หูผู้พิทักษ์', [{ stat: 'def', amount: 5 }]],
+      ['melon', 'thai32', 'สหายร่วมสนาม', [{ stat: 'hp', amount: 5 }]],
+      ['cutie', 'pikachu', 'ศึกจอมเวท', [{ stat: 'atk', amount: -5 }]],
+      ['norman', 'thai26', 'ศึกนักรบต่างขั้ว', [{ stat: 'def', amount: -5 }]],
+      ['wendywendie', 'nong-taengmo', 'โจรแย่งผลงาน', [{ stat: 'atk', amount: -5 }]],
+      ['pkxcy', 'miki', 'ศักดิ์ศรีนักสู้', [{ stat: 'def', amount: -5 }]],
+      ['follow-you', 'god-wa', 'นักอัญเชิญกับหัวขโมย', [{ stat: 'atk', amount: -5 }]],
+      ['tan', 'mon', 'ธุรกิจที่ไม่ลงตัว', [{ stat: 'hp', amount: -5 }]],
+      ['zeesky', 'skymoon', 'พายุเหนือโรงตีเหล็ก', [{ stat: 'def', amount: -5 }]],
+      ['bobo', 'bam', 'ศึกชิงความเป็นหนึ่ง', [{ stat: 'atk', amount: -5 }]],
+      ['badguy', 'norman', 'คู่หูสายบุก', [{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }]],
+      ['cutie', 'somyes', 'เวทมนตร์และธนู', [{ stat: 'atk', amount: 5 }, { stat: 'hp', amount: -5 }]],
+      ['lalaping', 'satoshi', 'ผู้รักษาสองขั้ว', [{ stat: 'hp', amount: 10 }, { stat: 'atk', amount: -5 }]],
+      ['backji', 'god-wa', 'คู่หูนักลอบโจมตี', [{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }]],
+      ['thai26', 'bammie', 'นักดาบประสานพลัง', [{ stat: 'atk', amount: 5 }, { stat: 'hp', amount: -5 }]]
+    ];
+    expect(added).toEqual(expected.map(([a, b, name, mods]: any) => ({ a, b, name, mods })));
+    for (const row of added) {
+      expect(chains.has(row.a)).toBe(true);
+      expect(chains.has(row.b)).toBe(true);
+    }
+    const pairKeys = s.map((x: any) => x.a + '|' + x.b);
+    expect(new Set(pairKeys).size).toBe(pairKeys.length);
   });
   it('migration 028 is additive: legacy rows keep stat/amount and modifiers stays NULL', async () => {
     const db = new PGlite(); await migrateUp(db);
@@ -79,4 +125,20 @@ describe('Story data', () => {
     expect(r).toMatchObject({ stat: 'def', amount: 5, description: 'x', modifiers: null, story_type: null });
     await expect(db.query(`UPDATE card_story_links SET story_type='weird'`)).rejects.toThrow();
   }, 60000);
+});
+
+describe('story-21 SQL seed (db/seed/story-21.sql)', () => {
+  it('inserts exactly the 21 new rows, leaves the 8 originals, is idempotent, and loadStory sees mixed modifiers', async () => {
+    const { PGlite } = await import('@electric-sql/pglite'), { readFileSync } = await import('node:fs'), { migrateUp } = await import('../db/migrate');
+    const { CardService } = await import('../src/server/service'), { Rooms } = await import('../src/server/rooms');
+    const db = new PGlite(); await migrateUp(db); const svc = new CardService(db, '/tmp/vcz-test-storage');
+    await svc.createUser('a@x.com', 'password123', 'super_admin'); const u = (await svc.login('a@x.com', 'password123')).user;
+    for (const f of ['toon-cards.json', 'support-cards.json', 'spell-cards.json', 'trap-cards.json']) await svc.importCards(u, JSON.parse(readFileSync(`db/seed/${f}`, 'utf8')));
+    const n = async () => (await db.query<any>(`SELECT count(*)::int n FROM card_story_links`)).rows[0].n, before = await n();
+    await db.exec(readFileSync('db/seed/story-21.sql', 'utf8')); expect((await n()) - before).toBe(21);
+    await db.exec(readFileSync('db/seed/story-21.sql', 'utf8')); expect((await n()) - before).toBe(21);
+    expect((await db.query<any>(`SELECT story_type, count(*)::int n FROM card_story_links WHERE story_type IS NOT NULL GROUP BY 1 ORDER BY 1`)).rows).toEqual([{ story_type: 'mixed', n: 5 }, { story_type: 'negative', n: 8 }, { story_type: 'positive', n: 8 }]);
+    const story = await (new Rooms(svc) as any).loadStory(); expect(story.length).toBe(before + 21);
+    expect(story.find((s: any) => s.a === 'badguy' && s.b === 'norman').mods).toEqual([{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }]);
+  });
 });
