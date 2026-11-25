@@ -7,6 +7,7 @@
   "rules_text": "ต้องมี 1GOKU Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-011.jpg",
   "support": {
    "kind": "spell",
    "link": "1goku",
@@ -29,6 +30,7 @@
   "rules_text": "ต้องมี BABY Lv.15 ในสนาม: เลือกตัวละครฝั่งเรา 1 ตัว (รวม BABY) ฟื้น HP 15",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-012.jpg",
   "support": {
    "kind": "spell",
    "link": "baby",
@@ -49,6 +51,7 @@
   "rules_text": "เมื่อ BACKJI ถูกเลือกเป็นเป้าโจมตี: ATK +10 จนจบการต่อสู้นั้น",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-011.jpg",
   "support": {
    "kind": "trap",
    "link": "backji",
@@ -72,6 +75,7 @@
   "rules_text": "เมื่อ BADGUY ถูกโจมตี: ATK ผู้โจมตี -10 จนจบการต่อสู้นั้น",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-012.jpg",
   "support": {
    "kind": "trap",
    "link": "badguy",
@@ -95,6 +99,7 @@
   "rules_text": "ต้องมี BAM Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-013.jpg",
   "support": {
    "kind": "spell",
    "link": "bam",
@@ -117,6 +122,7 @@
   "rules_text": "เมื่อตัวละครฝั่งเราจะได้รับความเสียหายจากการต่อสู้: ลดลง 10 (ต้องมี BAMMIE ในสนาม)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-013.jpg",
   "support": {
    "kind": "trap",
    "link": "bammie",
@@ -137,6 +143,7 @@
   "rules_text": "ต้องมี BOBO Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-014.jpg",
   "support": {
    "kind": "spell",
    "link": "bobo",
@@ -159,6 +166,7 @@
   "rules_text": "ต้องมี CHAEM Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +5 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-015.jpg",
   "support": {
    "kind": "spell",
    "link": "chaem",
@@ -181,6 +189,7 @@
   "rules_text": "ต้องมี CUTIE Lv.15 ในสนาม: เลือกตัวละครศัตรู 1 ตัว ATK -10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-016.jpg",
   "support": {
    "kind": "spell",
    "link": "cutie",
@@ -203,6 +212,7 @@
   "rules_text": "ต้องมี DNMAN Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-017.jpg",
   "support": {
    "kind": "spell",
    "link": "dnman",
@@ -225,6 +235,7 @@
   "rules_text": "ต้องมี FOLLOW-YOU Lv.15 ในสนาม: ตัวละครฝั่งเราตัวอื่น 1 ตัว ATK +5 และ DEF +5 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-018.jpg",
   "support": {
    "kind": "spell",
    "link": "follow-you",
@@ -254,6 +265,7 @@
   "rules_text": "เมื่อ GOD-WA ทำลายตัวละครศัตรูด้วยการโจมตี: GOD-WA ฟื้น HP 10",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-014.jpg",
   "support": {
    "kind": "trap",
    "link": "god-wa",
@@ -275,6 +287,7 @@
   "rules_text": "ต้องมี I-M-GRAPE Lv.15 ในสนาม: DEF +5 จนจบเทิร์นถัดไปของคู่ต่อสู้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-019.jpg",
   "support": {
    "kind": "spell",
    "link": "i-m-grape",
@@ -297,6 +310,7 @@
   "rules_text": "เมื่อ JAOJAY ถูกเลือกเป็นเป้าโจมตี: ATK ผู้โจมตี -10 จนจบการต่อสู้นั้น",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-015.jpg",
   "support": {
    "kind": "trap",
    "link": "jaojay",
@@ -320,6 +334,7 @@
   "rules_text": "ต้องมี LALAPING Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัวฟื้น HP 20",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-020.jpg",
   "support": {
    "kind": "spell",
    "link": "lalaping",
@@ -340,6 +355,7 @@
   "rules_text": "เมื่อตัวละครฝั่งเราตัวอื่นลงสุสาน: LEON DEF +5 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-016.jpg",
   "support": {
    "kind": "trap",
    "link": "leon-s-kennedy",
@@ -363,6 +379,7 @@
   "rules_text": "ต้องมี LINLADA Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-021.jpg",
   "support": {
    "kind": "spell",
    "link": "linlada",
@@ -385,6 +402,7 @@
   "rules_text": "เมื่อเอฟเฟกต์ของศัตรูเลือก LORDNAM เป็นเป้าหมาย: ยกเลิกผลต่อ LORDNAM (ไม่ยกเลิกเอฟเฟกต์ที่ไม่เลือกเป้าหมายหรือการโจมตี)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-017.jpg",
   "support": {
    "kind": "trap",
    "link": "lordnam",
@@ -404,6 +422,7 @@
   "rules_text": "เมื่อ LUCKY ถูกเลือกเป็นเป้าโจมตี: ผู้โจมตีต้องเลือกเป้าหมายอื่นถ้ามี ถ้าไม่มีการโจมตีดำเนินต่อตามปกติ",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-018.jpg",
   "support": {
    "kind": "trap",
    "link": "lucky",
@@ -423,6 +442,7 @@
   "rules_text": "ต้องมี MELON Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-022.jpg",
   "support": {
    "kind": "spell",
    "link": "melon",
@@ -445,6 +465,7 @@
   "rules_text": "ต้องมี MIKI Lv.15 ในสนาม: ATK +5 และ DEF +5 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-023.jpg",
   "support": {
    "kind": "spell",
    "link": "miki",
@@ -474,6 +495,7 @@
   "rules_text": "เมื่อเวทมนตร์ของศัตรูเลือก MON เป็นเป้าหมาย: ลดตัวเลขความเสียหาย/การลดค่าสถานะต่อ MON ลง 5 (ถ้าไม่มีตัวเลข กับดักไม่มีผล)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-019.jpg",
   "support": {
    "kind": "trap",
    "link": "mon",
@@ -483,7 +505,8 @@
      "amount": 5
     }
    ],
-   "trigger": "enemy_target"
+   "trigger": "enemy_target",
+   "source": "spell"
   }
  },
  {
@@ -494,6 +517,7 @@
   "rules_text": "ต้องมี NONG-TAENGMO Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-024.jpg",
   "support": {
    "kind": "spell",
    "link": "nong-taengmo",
@@ -516,6 +540,7 @@
   "rules_text": "ต้องมี NORMAN Lv.15 ในสนาม: DEF +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-025.jpg",
   "support": {
    "kind": "spell",
    "link": "norman",
@@ -538,6 +563,7 @@
   "rules_text": "เมื่อตัวละครฝั่งเราตัวอื่นลงสุสาน: OUFILLING ฟื้น HP 10",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-020.jpg",
   "support": {
    "kind": "trap",
    "link": "oufilling",
@@ -559,6 +585,7 @@
   "rules_text": "ต้องมี PIKACHU Lv.15 ในสนาม: ทำความเสียหาย 10 ใส่ตัวละครศัตรู 1 ตัว",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-026.jpg",
   "support": {
    "kind": "spell",
    "link": "pikachu",
@@ -579,6 +606,7 @@
   "rules_text": "ต้องมี PK Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +5 จนจบเทิร์นถัดไปของคู่ต่อสู้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-027.jpg",
   "support": {
    "kind": "spell",
    "link": "pk",
@@ -601,6 +629,7 @@
   "rules_text": "ต้องมี PKXCY Lv.15 ในสนาม: ATK +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-028.jpg",
   "support": {
    "kind": "spell",
    "link": "pkxcy",
@@ -623,6 +652,7 @@
   "rules_text": "ต้องมี SATOSHI Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัวฟื้น HP 15",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-029.jpg",
   "support": {
    "kind": "spell",
    "link": "satoshi",
@@ -643,6 +673,7 @@
   "rules_text": "ต้องมี SKYMOON Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว DEF +10 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-030.jpg",
   "support": {
    "kind": "spell",
    "link": "skymoon",
@@ -665,6 +696,7 @@
   "rules_text": "เมื่อตัวละครฝั่งเราจะถูกทำลายด้วยเอฟเฟกต์ของศัตรู: ป้องกันการทำลาย 1 ครั้ง เหลือ HP 1 (ไม่ป้องกันการทำลายจากการต่อสู้)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-021.jpg",
   "support": {
    "kind": "trap",
    "link": "smile",
@@ -684,6 +716,7 @@
   "rules_text": "เมื่อตัวละครศัตรูประกาศโจมตี: ATK ของมัน -5 จนจบการต่อสู้นั้น (ต้องมี SOMYES ในสนาม)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-022.jpg",
   "support": {
    "kind": "trap",
    "link": "somyes",
@@ -707,6 +740,7 @@
   "rules_text": "ต้องมี TAN Lv.15 ในสนาม: ดูการ์ด 3 ใบบนสุดของเด็ค เปิดการ์ดอีโวลูชั่นที่เจอ เลือก 1 ใบขึ้นมือ ที่เหลือวางใต้เด็คตามเดิม",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-031.jpg",
   "support": {
    "kind": "spell",
    "link": "tan",
@@ -725,6 +759,7 @@
   "rules_text": "ต้องมี TEE Lv.15 ในสนาม: ATK +15 จนจบเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-032.jpg",
   "support": {
    "kind": "spell",
    "link": "tee",
@@ -747,6 +782,7 @@
   "rules_text": "ต้องมี THAI26 Lv.15 ในสนาม: ATK +10 สำหรับการโจมตีครั้งถัดไปของเทิร์นนี้",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-033.jpg",
   "support": {
    "kind": "spell",
    "link": "thai26",
@@ -769,6 +805,7 @@
   "rules_text": "เมื่อ THAI32 ถูกทำลายและลงสุสาน: ตัวละครฝั่งเราตัวอื่น 1 ตัวฟื้น HP 10",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-023.jpg",
   "support": {
    "kind": "trap",
    "link": "thai32",
@@ -790,6 +827,7 @@
   "rules_text": "ต้องมี THOMAS Lv.15 ในสนาม: ตัวละครฝั่งเรา 1 ตัว ATK +5 จนจบเทิร์นนี้ แล้วจั่ว 1 ใบ (ไม่จั่วถ้ามือเต็ม)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-034.jpg",
   "support": {
    "kind": "spell",
    "link": "thomas",
@@ -816,6 +854,7 @@
   "rules_text": "เมื่อ WENDYWENDIE ประกาศโจมตี: ATK +5 สำหรับการโจมตีนั้น (ไม่จั่วการ์ด)",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/TRP-024.jpg",
   "support": {
    "kind": "trap",
    "link": "wendywendie",
@@ -839,6 +878,7 @@
   "rules_text": "ต้องมี ZEESKY Lv.15 ในสนาม: ทำความเสียหาย 10 ใส่ตัวละครศัตรู 1 ตัว",
   "shop_price_points": 300,
   "status": "draft",
+  "image_path": "assets/cards/SPL-035.jpg",
   "support": {
    "kind": "spell",
    "link": "zeesky",

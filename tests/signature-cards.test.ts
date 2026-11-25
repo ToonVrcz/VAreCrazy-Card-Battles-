@@ -156,3 +156,12 @@ describe('signature defensive traps', () => {
     expect(r.players[0].field[0]).toBeNull(); expect(r.players[0].back[0]).not.toBeNull();
   });
 });
+
+describe('MON answers spells only', () => {
+  it('does not fire on a character ability that targets it', () => {
+    const { g } = duel('MON-015'); g.phase = 'main'; g.active = 1;
+    const atk = g.players[1].field[0]!; atk.card = { ...atk.card, effects: [{ kind: 'damage', target: 'enemy1', amount: 20, trigger: 'on_attack', text: 'x' } as any] };
+    g.phase = 'battle'; const r = act(g, { t: 'attack', from: 0, to: 0 }) as Game;
+    expect(r.players[0].back[0]).not.toBeNull();
+  });
+});

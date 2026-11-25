@@ -54,20 +54,23 @@ C = [
  ('ZEESKY-015','zeesky','คลื่นพลังสะท้านฟ้า',S,None,[op('damage','enemy',amount=10)],'ต้องมี ZEESKY Lv.15 ในสนาม: ทำความเสียหาย 10 ใส่ตัวละครศัตรู 1 ตัว'),
 ]
 assert len(C) == 39 and len({c[0] for c in C}) == 39
+cid_is_mon = lambda ch: ch == 'MON-015'
 cards, sp, tr = [], 10, 10
 for ch, key, name, typ, trig, ops, txt in C:
     if typ == S: sp += 1; cid = f'SPL-{sp:03d}'
     else: tr += 1; cid = f'TRP-{tr:03d}'
     sup = {'kind': typ, 'link': key, 'ops': ops}
     if trig: sup['trigger'] = trig
-    cards.append({'character_id': cid, 'name': name, 'card_type': typ, 'linked_character': ch, 'rules_text': txt, 'shop_price_points': 300, 'status': 'draft', 'support': sup})
+    if cid_is_mon(ch): sup['source'] = 'spell'
+    cards.append({'character_id': cid, 'name': name, 'card_type': typ, 'linked_character': ch, 'rules_text': txt, 'shop_price_points': 300, 'status': 'draft', 'image_path': f'assets/cards/{cid}.jpg', 'support': sup})
 assert sp == 35 and tr == 24
 json.dump(cards, open('db/seed/signature-cards.json', 'w'), ensure_ascii=False, indent=1)
 q = lambda x: "'" + x.replace("'", "''") + "'"
 hdr = "-- 39 Lv.15 Signature Spell/Trap cards (DRAFT, 300 Point). Run AFTER migration 029. Idempotent. NOT APPLIED to production (owner \"Deploy\" required); publish separately."
 ins = [hdr]
 for c in cards:
-    ins.append(f"INSERT INTO cards(character_id,name,card_type,rules_text,shop_price_points,status,support) VALUES ({q(c['character_id'])},{q(c['name'])},{q(c['card_type'])},{q(c['rules_text'])},300,'draft',{q(json.dumps(c['support'], ensure_ascii=False))}::jsonb) ON CONFLICT (character_id) DO NOTHING;")
+    ins.append(f"INSERT INTO media_assets(storage_path,mime) VALUES ({q(c['image_path'])},'image/jpeg') ON CONFLICT (storage_path) DO NOTHING;")
+    ins.append(f"INSERT INTO cards(character_id,name,card_type,rules_text,shop_price_points,status,support,media_id) VALUES ({q(c['character_id'])},{q(c['name'])},{q(c['card_type'])},{q(c['rules_text'])},300,'draft',{q(json.dumps(c['support'], ensure_ascii=False))}::jsonb,(SELECT id FROM media_assets WHERE storage_path={q(c['image_path'])})) ON CONFLICT (character_id) DO NOTHING;")
 open('db/seed/signature-cards.sql', 'w', encoding='utf8').write('\n'.join(ins) + '\n')
 up = ["-- Signature Spell/Trap cards: `cards.support` holds the engine config (data-driven). Schema only, ADDITIVE. The 39 draft cards are loaded from db/seed/signature-cards.sql at deploy time.",
       "-- NOT APPLIED to production (owner \"Deploy\" required).",

@@ -42,3 +42,17 @@ describe('migration 029 + seed + shop', () => {
     expect((await db.query<any>(`SELECT column_name FROM information_schema.columns WHERE table_name='cards' AND column_name='support'`)).rows.length).toBe(0);
   });
 });
+
+describe('CMS editing of Signature cards', () => {
+  it('seed has art + media rows; renaming and swapping the image keeps the engine config', async () => {
+    const { db, svc } = await world(); await svc.createUser('b@x.com', 'password123', 'super_admin');
+    const admin = (await svc.login('b@x.com', 'password123')).user;
+    expect((await db.query<any>(`SELECT count(*)::int n FROM cards WHERE support IS NOT NULL AND media_id IS NOT NULL`)).rows[0].n).toBe(39);
+    const row = (await db.query<any>(`SELECT id FROM cards WHERE character_id='SPL-011'`)).rows[0];
+    const cur: any = await svc.getCard(admin, row.id);
+    const m = (await db.query<any>(`INSERT INTO media_assets(storage_path,mime) VALUES ('media/new.jpg','image/jpeg') RETURNING id`)).rows[0].id;
+    await svc.saveCard(admin, { ...cur, name: 'ชื่อใหม่', media_id: m }, row.id);
+    const after = (await db.query<any>(`SELECT name, media_id, support, shop_price_points FROM cards WHERE id=$1`, [row.id])).rows[0];
+    expect(after.name).toBe('ชื่อใหม่'); expect(after.media_id).toBe(m); expect(after.support.ops.length).toBeGreaterThan(0); expect(after.shop_price_points).toBe(300);
+  });
+});
