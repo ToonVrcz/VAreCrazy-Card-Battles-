@@ -9,7 +9,7 @@ export function buildDeck(pool: CardDef[], pairs: FusionPair[], r: () => number 
   const pc = new Set(pairs.flatMap(p => [p.a, p.b]));
   const chains = all.sort(() => r() - 0.5).sort((x, y) => (pc.has(y) ? 1 : 0) - (pc.has(x) ? 1 : 0)).slice(0, 7), d: CardDef[] = [];
   for (const k of chains) { const f = (lv: number) => chars.find(x => x.chain === k && x.level === lv); const a = f(15); if (a) d.push(a, a); for (const lv of [40, 70]) { const x = f(lv); if (x) d.push(x); } }
-  const add = (t: string, n: number) => { const p = pool.filter(c => c.type === t); if (p.length) for (let i = 0; i < n; i++) d.push(pick(p)); };
+  const add = (t: string, n: number) => { const p = pool.filter(c => c.type === t && !c.support); if (p.length) for (let i = 0; i < n; i++) d.push(pick(p)); };
   const evo = pool.filter(c => c.id === 'EVO-001'); if (evo.length) for (let i = 0; i < 3; i++) d.push(evo[0]);
   add('spell', 4); add('trap', 3);
   const fus = pool.filter(c => c.id === 'FUS-001'); if (pairs.length && fus.length) d.push(fus[0], fus[0]);
