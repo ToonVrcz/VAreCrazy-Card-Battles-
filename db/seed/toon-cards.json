@@ -41,7 +41,7 @@
     "atk": 55,
     "atk_icon": "potion_mortar",
     "image_path": "assets/cards/1GOKU-040.jpg",
-    "def": 3,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_attack",
@@ -112,7 +112,7 @@
     "atk": 24,
     "atk_icon": "water",
     "image_path": "assets/cards/BACKJI-015.jpg",
-    "def": 3,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -142,7 +142,7 @@
     "atk": 15,
     "atk_icon": "drop_green",
     "image_path": "assets/cards/BADGUY-015.jpg",
-    "def": 1,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -173,7 +173,7 @@
     "atk": 60,
     "atk_icon": "drop_green",
     "image_path": "assets/cards/BADGUY-040.jpg",
-    "def": 1,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -214,7 +214,7 @@
     "atk": 25,
     "atk_icon": "fire",
     "image_path": "assets/cards/BAM-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -244,7 +244,7 @@
     "atk": 25,
     "atk_icon": "water",
     "image_path": "assets/cards/BAMMIE-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -274,7 +274,7 @@
     "atk": 30,
     "atk_icon": "water",
     "image_path": "assets/cards/BOBO-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -304,7 +304,7 @@
     "atk": 24,
     "atk_icon": "coin",
     "image_path": "assets/cards/CHAEM-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -364,7 +364,7 @@
     "atk": 40,
     "atk_icon": "lightning",
     "image_path": "assets/cards/DNMAN-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -425,7 +425,7 @@
     "atk": 50,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/FOLLOW-YOU-040.jpg",
-    "def": 2,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_attack",
@@ -456,7 +456,7 @@
     "atk": 100,
     "atk_icon": "purple_flame",
     "image_path": "assets/cards/FOLLOW-YOU-070.jpg",
-    "def": 2,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_evolve",
@@ -497,7 +497,7 @@
     "atk": 30,
     "atk_icon": "drop_green",
     "image_path": "assets/cards/GOD-WA-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -527,7 +527,7 @@
     "atk": 21,
     "atk_icon": "fire",
     "image_path": "assets/cards/I-M-GRAPE-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "turn_start",
@@ -622,8 +622,8 @@
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเราทุกใบ",
-        "action_text": "ฟื้น HP 10",
+        "description": "จบเทิร์น ฟื้น HP 5 ให้ตัวละครฝ่ายเราทุกใบ",
+        "action_text": "ฟื้น HP 5",
         "target_text": "ตัวละครฝ่ายเราทุกใบ",
         "condition_text": null,
         "cost_text": null,
@@ -653,8 +653,8 @@
     "effects": [
       {
         "trigger": "on_evolve",
-        "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ฟื้น HP เต็มให้ตัวละครฝ่ายเรา 1 ใบ",
-        "action_text": "ฟื้น HP เต็ม",
+        "description": "เมื่อวิวัฒนาการเป็นร่างนี้ ฟื้น HP 50ให้ตัวละครฝ่ายเรา 1 ใบ",
+        "action_text": "ฟื้น HP 50",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -720,7 +720,7 @@
     "atk": 35,
     "atk_icon": "fire_mp",
     "image_path": "assets/cards/LINLADA-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -780,7 +780,7 @@
     "atk": 24,
     "atk_icon": "water",
     "image_path": "assets/cards/LUCKY-015.jpg",
-    "def": 4,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_summon",
@@ -810,7 +810,7 @@
     "atk": 35,
     "atk_icon": "rock_mp",
     "image_path": "assets/cards/MELON-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -840,7 +840,7 @@
     "atk": 24,
     "atk_icon": "swords",
     "image_path": "assets/cards/MIKI-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -900,7 +900,7 @@
     "atk": 30,
     "atk_icon": "leaf",
     "image_path": "assets/cards/NONG-TAENGMO-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "on_attack",
@@ -930,7 +930,7 @@
     "atk": 18,
     "atk_icon": "swords",
     "image_path": "assets/cards/NORMAN-015.jpg",
-    "def": 3,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_attack",
@@ -961,7 +961,7 @@
     "atk": 50,
     "atk_icon": "swords",
     "image_path": "assets/cards/NORMAN-040.jpg",
-    "def": 3,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_attack",
@@ -1062,7 +1062,7 @@
     "atk": 25,
     "atk_icon": "coin",
     "image_path": "assets/cards/PK-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -1092,7 +1092,7 @@
     "atk": 24,
     "atk_icon": "swords",
     "image_path": "assets/cards/PKXCY-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -1126,8 +1126,8 @@
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 15",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1157,8 +1157,8 @@
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 15 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 15",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1194,7 +1194,7 @@
     "atk": 18,
     "atk_icon": "leaf",
     "image_path": "assets/cards/SKYMOON-015.jpg",
-    "def": 0,
+    "def": 3,
     "effects": [
       {
         "trigger": "on_summon",
@@ -1224,12 +1224,12 @@
     "atk": 35,
     "atk_icon": "mp_blue",
     "image_path": "assets/cards/SMILE-015.jpg",
-    "def": 0,
+    "def": 1,
     "effects": [
       {
         "trigger": "turn_end",
-        "description": "จบเทิร์น ฟื้น HP 5 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
-        "action_text": "ฟื้น HP 5",
+        "description": "จบเทิร์น ฟื้น HP 10 ให้ตัวละครฝ่ายเรา 1 ใบ (1 ครั้ง/เทิร์น)",
+        "action_text": "ฟื้น HP 10",
         "target_text": "ตัวละครฝ่ายเรา 1 ใบ",
         "condition_text": null,
         "cost_text": null,
@@ -1254,7 +1254,7 @@
     "atk": 25,
     "atk_icon": "lightning",
     "image_path": "assets/cards/SOMYES-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -1386,7 +1386,7 @@
     "atk": 24,
     "atk_icon": "swords",
     "image_path": "assets/cards/THAI26-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_attack",
@@ -1416,7 +1416,7 @@
     "atk": 18,
     "atk_icon": "demon",
     "image_path": "assets/cards/THAI32-015.jpg",
-    "def": 3,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_destroyed",
@@ -1446,7 +1446,7 @@
     "atk": 25,
     "atk_icon": "fire",
     "image_path": "assets/cards/THOMAS-015.jpg",
-    "def": 0,
+    "def": 2,
     "effects": [
       {
         "trigger": "on_summon",
@@ -1476,7 +1476,7 @@
     "atk": 10,
     "atk_icon": "potion_purple",
     "image_path": "assets/cards/WENDYWENDIE-015.jpg",
-    "def": 5,
+    "def": 4,
     "effects": [
       {
         "trigger": "on_attack",
