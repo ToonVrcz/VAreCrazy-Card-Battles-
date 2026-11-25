@@ -69,8 +69,8 @@ async function playBot(page, tag, maxMs = 240000) {
 }
 
 (async () => {
-  const srv = spawn('npx', ['tsx', 'scripts/playtest-server.ts'], { env: { ...process.env, PORT }, stdio: ['ignore', 'pipe', 'inherit'] });
-  await new Promise((res, rej) => { srv.stdout.on('data', d => /READY/.test(String(d)) && res()); srv.on('exit', c => rej(new Error('server exited ' + c))); setTimeout(() => rej(new Error('server start timeout')), 90000); });
+  const srv = process.env.E2E_NOSPAWN ? { kill() {} } : spawn('npx', ['tsx', 'scripts/playtest-server.ts'], { env: { ...process.env, PORT }, stdio: ['ignore', 'pipe', 'inherit'] });   // E2E_NOSPAWN=1: use a server you started yourself on PORT
+  if (!process.env.E2E_NOSPAWN) await new Promise((res, rej) => { srv.stdout.on('data', d => /READY/.test(String(d)) && res()); srv.on('exit', c => rej(new Error('server exited ' + c))); setTimeout(() => rej(new Error('server start timeout')), 90000); });
   const browser = await chromium.launch();
   { const nc = browser.newContext.bind(browser); browser.newContext = async o => { const c = await nc(o); await c.addInitScript(() => { try { localStorage.setItem('vcz_guide', '1'); } catch (e) {} }); return c; }; }   // first-time tutorial would cover the lobby buttons
   try {
