@@ -30,6 +30,8 @@ async function bulkMeta() {
   const f = { q: '', status: 'draft', type: '', level: '' };
   const sel = new Set(), open = new Set();
   const editable = c => w && c.status === 'draft';
+  const NEXT = new Map([['draft', 'in_review'], ['in_review', 'approved'], ['approved', 'published']]);
+  const selectable = c => editable(c) || (can('publish') && NEXT.has(c.status));
   const kinds = id => KINDS.filter(k => SIG[k](curS.get(id)) !== SIG[k](orig.get(id)));
   const shown = () => cards.filter(c => (!f.status || c.status === f.status) && (!f.type || c.card_type === f.type) && (!f.level || String(c.level) === f.level) &&
     (!f.q || (c.name + ' ' + c.character_id).toLowerCase().includes(f.q.toLowerCase())));
@@ -46,7 +48,7 @@ async function bulkMeta() {
     const slBody = s.sl.map((x, i) => `<div>${esc(nameOf(chs, x.partner))} · ${esc(x.name)} ${x.stat ? esc(String(x.stat).toUpperCase() + ' ' + x.amount) : ''} ${ed ? `<button class="warn" data-c="${id}" data-a="sldel" data-i="${esc(i)}">✕</button>` : ''}</div>`).join('') + addSel('sladd', '+ เพิ่มคู่ Story');
     const fpBody = s.fp.map((x, i) => `<div>${esc(nameOf(chs, x.partner))} · HP${esc(x.hp ?? 0)} ATK${esc(x.atk ?? 0)} DEF${esc(x.def ?? 0)} ${ed ? `<button class="warn" data-c="${id}" data-a="fpdel" data-i="${esc(i)}">✕</button>` : ''}</div>`).join('') + addSel('fpadd', '+ เพิ่มคู่ Fusion');
     const affNames = [...s.aff.keys()].map(k => nameOf(af, k));
-    return `<tr data-row="${id}" style="${d ? 'background:#3a2f12' : ''}"><td><input type="checkbox" data-c="${id}" data-a="sel" ${sel.has(c.id) ? 'checked' : ''} ${ed ? '' : 'disabled="disabled"'}></td>
+    return `<tr data-row="${id}" style="${d ? 'background:#3a2f12' : ''}"><td><input type="checkbox" data-c="${id}" data-a="sel" ${sel.has(c.id) ? 'checked' : ''} ${selectable(c) ? '' : 'disabled="disabled"'}></td>
  <td><b>${esc(c.name)}</b><div class="s">${esc(c.character_id)} · Lv.${esc(c.level ?? '-')} · ${esc(c.card_type)} <span class="badge ${esc(c.status)}">${esc(c.status)}</span></div></td>
  <td>${g}</td><td><details data-o="${id}:aff" ${open.has(c.id + ':aff') ? 'open' : ''}><summary>${esc(affNames.length ? short(affNames, 26) : '— ไม่ระบุ —')}</summary>${affBody}</details></td>
  <td><details data-o="${id}:sl" ${open.has(c.id + ':sl') ? 'open' : ''}><summary>${esc(s.sl.length + ' Story')}</summary>${slBody}</details></td><td><details data-o="${id}:fp" ${open.has(c.id + ':fp') ? 'open' : ''}><summary>${esc(s.fp.length + ' Fusion')}</summary>${fpBody}</details></td></tr>`;
@@ -56,7 +58,7 @@ async function bulkMeta() {
  <select id="bst"><option value="">ทุกสถานะ</option>${['draft', 'in_review', 'approved', 'published', 'archived'].map(s => `<option ${f.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
  <select id="bty"><option value="">ทุกประเภท</option>${FT.map(([k, n]) => `<option value="${esc(k)}" ${f.type === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
  <select id="blv"><option value="">ทุกเลเวล</option>${['15', '40', '70', '99'].map(l => `<option ${f.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
- ${w ? `<div class="card" style="cursor:default;display:block"><div class="row" style="align-items:center"><b id="bn">เลือก 0 ใบ</b><button data-b="all">เลือกทั้งหมดที่แสดง (Draft)</button><button data-b="none">ล้างที่เลือก</button></div>
+ ${w ? `<div class="card" style="cursor:default;display:block"><div class="row" style="align-items:center"><b id="bn">เลือก 0 ใบ</b><button data-b="all">เลือกทั้งหมดที่แสดง</button><button data-b="none">ล้างที่เลือก</button></div>
  <div class="s">ตั้งค่าให้การ์ดที่เลือกพร้อมกัน — ยังไม่บันทึกจนกว่าจะกด "บันทึกที่เปลี่ยน"</div>
  <div class="row"><select id="bg"><option value="">— เลือกเพศ —</option><option value="__none">ไม่ระบุ</option>${gs.map(x => `<option value="${esc(x.key)}">${esc(x.name)}</option>`).join('')}</select><button data-b="gset">ตั้งเพศ</button>
   <input id="gn" placeholder="เพิ่มเพศใหม่ (ชื่อ)"><button data-b="gnew">+ เพิ่มเพศ</button></div>
@@ -65,7 +67,7 @@ async function bulkMeta() {
  <div class="row"><select id="bs">${opts(chs, '— ตัวละครคู่ Story —')}</select><input id="bsn" placeholder="ชื่อ Story (จำเป็น)"><select id="bss"><option value="">ไม่มี (ข้อความอย่างเดียว)</option><option>atk</option><option>hp</option><option>def</option></select><input id="bsa" type="number" placeholder="ค่า +/−" style="width:80px"><input id="bsd" placeholder="คำอธิบาย"><button data-b="sadd">+ เพิ่ม Story ให้ที่เลือก</button></div>
  <div class="row"><select id="bf">${opts(chs, '— ตัวละครคู่ Fusion —')}</select><input id="bfh" type="number" placeholder="HP" value="0" style="width:70px"><input id="bfa" type="number" placeholder="ATK" value="0" style="width:70px"><input id="bfd" type="number" placeholder="DEF" value="0" style="width:70px"><button data-b="fadd">+ เพิ่ม Fusion ให้ที่เลือก</button></div>
  <div class="s">ใช้ช่องในแต่ละแถวเพื่อเพิ่มคู่ Story/Fusion ทีละใบ โดยใช้ชื่อ/ค่าจากแถบนี้</div>
- <div class="row"><button class="pri" data-b="save" id="bsave">บันทึกที่เปลี่ยน (0)</button></div></div>` : '<p class="s">บัญชีนี้ดูได้อย่างเดียว</p>'}<pre id="br" hidden></pre>`;
+ <div class="row"><button class="pri" data-b="save" id="bsave">บันทึกที่เปลี่ยน (0)</button>${can('publish') ? '<button class="pri" data-b="pub">🚀 เผยแพร่ที่เลือก (ส่งตรวจ → อนุมัติ → เผยแพร่)</button>' : ''}</div><div class="s">เผยแพร่: ทำทีละขั้นผ่านระบบเดิม (มีประวัติเวอร์ชันและตัวตรวจครบ) ใบที่ไม่ผ่านจะแสดงเหตุผลด้านล่าง ไม่กระทบใบอื่น</div></div>` : '<p class="s">บัญชีนี้ดูได้อย่างเดียว</p>'}<pre id="br" hidden></pre>`;
 
   const drawCount = () => { const n = $('#bn'); if (n) n.textContent = 'เลือก ' + sel.size + ' ใบ'; const b = $('#bsave'); if (b) b.textContent = 'บันทึกที่เปลี่ยน (' + dirty().length + ')'; };
   const drawTable = () => { $('#bkt').innerHTML = `<tr><th></th><th>การ์ด</th><th>เพศ</th><th>เกมที่เคยเล่นด้วยกัน</th><th>Story</th><th>Fusion</th></tr>` + shown().map(row).join('') || ''; drawCount(); };
@@ -129,7 +131,7 @@ async function bulkMeta() {
       if (!b) return;
       const each = fn => { const ss = selected(); if (!ss.length) { toast('ยังไม่ได้เลือกการ์ด (ติ๊กที่หน้าแถว)'); return null; } let n = 0; ss.forEach(c => { if (fn(curS.get(c.id), c)) n++; }); drawTable(); toast(`ตั้งค่าให้ ${n} จาก ${ss.length} ใบ (ยังไม่บันทึก)`, true); return n; };
       try {
-        if (b === 'all') { shown().filter(editable).forEach(c => sel.add(c.id)); return drawTable(); }
+        if (b === 'all') { shown().filter(selectable).forEach(c => sel.add(c.id)); return drawTable(); }
         if (b === 'none') { sel.clear(); return drawTable(); }
         if (b === 'gset') { const v = $('#bg').value; if (!v) return toast('เลือกเพศก่อน'); return each(s => { s.gender = v === '__none' ? null : v; return true; }); }
         if (b === 'aadd') { const k = $('#ba').value; if (!k) return toast('เลือกเกมก่อน'); return each(s => { s.aff.set(k, s.aff.get(k) ?? null); return true; }); }
@@ -138,6 +140,28 @@ async function bulkMeta() {
         if (b === 'fadd') { const p = $('#bf').value; if (!p) return toast('เลือกตัวละครคู่ Fusion ก่อน'); const x = fusionFromBar(p); if (!x) return; return each((s, c) => addFusion(s, c.chain_key, { ...x })); }
         if (b === 'gnew') { const n = $('#gn').value.trim(); if (!n) return; const k = 'g-' + Date.now().toString(36); await api('/genders', J('POST', { key: k, name: n })); gs.push({ key: k, name: n }); $('#bkb').innerHTML = bar(); drawTable(); return toast('เพิ่มเพศแล้ว', true); }
         if (b === 'anew') { const k = $('#an').value.trim().toLowerCase(); if (!k) return; await api('/affiliations', J('POST', { key: k, name: k })); af.push({ key: k, name: k }); $('#bkb').innerHTML = bar(); drawTable(); return toast('เพิ่มเกมแล้ว', true); }
+        if (b === 'pub') {
+          const ids = [...sel].map(id => cards.find(x => x.id === id)).filter(c => c && selectable(c));
+          if (!ids.length) return toast('ยังไม่ได้เลือกการ์ดที่เผยแพร่ได้ (ติ๊กที่หน้าแถว)');
+          const unsaved = ids.filter(c => kinds(c.id).length);
+          if (unsaved.length) return toast('มี ' + unsaved.length + ' ใบที่ตั้งค่ายังไม่บันทึก กด "บันทึกที่เปลี่ยน" ก่อน');
+          if (!confirm('เผยแพร่การ์ด ' + ids.length + ' ใบ? ผู้เล่นจะเห็นทันที และการ์ดที่เผยแพร่แล้วจะแก้เพศ/เกม/Story/Fusion ไม่ได้ (ต้องถอนเป็นร่างก่อน)')) return;
+          t.disabled = true; let ok = 0; const errs = [];
+          try {
+            for (const c of ids) {
+              try {
+                while (c.status !== 'published') {
+                  const to = NEXT.get(c.status); if (!to) throw new Error('สถานะ ' + c.status + ' เผยแพร่ต่อไม่ได้');
+                  const r = await api('/cards/' + c.id + '/status', J('POST', { to })); c.status = r.status;
+                }
+                ok++; sel.delete(c.id);
+              } catch (e) { errs.push(c.character_id + ' (ค้างที่ ' + c.status + '): ' + e.message); }
+            }
+          } finally { t.disabled = false; }
+          const r = $('#br'); r.hidden = !errs.length; r.textContent = errs.join('\n');
+          toast(errs.length ? `เผยแพร่แล้ว ${ok} ใบ, ไม่ผ่าน ${errs.length} ใบ (ดูรายการด้านล่าง)` : `เผยแพร่แล้ว ${ok} ใบ`, !errs.length);
+          return drawTable();
+        }
         if (b === 'save') { t.disabled = true; try { await save(); } finally { t.disabled = false; } }
       } catch (err) { toast(err.message); }
     });
