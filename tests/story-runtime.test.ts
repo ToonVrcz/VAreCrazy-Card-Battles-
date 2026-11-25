@@ -126,3 +126,19 @@ describe('Story data', () => {
     await expect(db.query(`UPDATE card_story_links SET story_type='weird'`)).rejects.toThrow();
   }, 60000);
 });
+
+describe('story-21 SQL seed (db/seed/story-21.sql)', () => {
+  it('inserts exactly the 21 new rows, leaves the 8 originals, is idempotent, and loadStory sees mixed modifiers', async () => {
+    const { PGlite } = await import('@electric-sql/pglite'), { readFileSync } = await import('node:fs'), { migrateUp } = await import('../db/migrate');
+    const { CardService } = await import('../src/server/service'), { Rooms } = await import('../src/server/rooms');
+    const db = new PGlite(); await migrateUp(db); const svc = new CardService(db, '/tmp/vcz-test-storage');
+    await svc.createUser('a@x.com', 'password123', 'super_admin'); const u = (await svc.login('a@x.com', 'password123')).user;
+    for (const f of ['toon-cards.json', 'support-cards.json', 'spell-cards.json', 'trap-cards.json']) await svc.importCards(u, JSON.parse(readFileSync(`db/seed/${f}`, 'utf8')));
+    const n = async () => (await db.query<any>(`SELECT count(*)::int n FROM card_story_links`)).rows[0].n, before = await n();
+    await db.exec(readFileSync('db/seed/story-21.sql', 'utf8')); expect((await n()) - before).toBe(21);
+    await db.exec(readFileSync('db/seed/story-21.sql', 'utf8')); expect((await n()) - before).toBe(21);
+    expect((await db.query<any>(`SELECT story_type, count(*)::int n FROM card_story_links WHERE story_type IS NOT NULL GROUP BY 1 ORDER BY 1`)).rows).toEqual([{ story_type: 'mixed', n: 5 }, { story_type: 'negative', n: 8 }, { story_type: 'positive', n: 8 }]);
+    const story = await (new Rooms(svc) as any).loadStory(); expect(story.length).toBe(before + 21);
+    expect(story.find((s: any) => s.a === 'badguy' && s.b === 'norman').mods).toEqual([{ stat: 'atk', amount: 10 }, { stat: 'def', amount: -5 }]);
+  });
+});
