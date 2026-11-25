@@ -15,7 +15,7 @@ const BASE = `http://127.0.0.1:${process.env.PORT || 8798}`; const out = []; con
     let seen = { el: 0, story: 0, fusion: 0 };
     for (const id of ids) {
       await p.click(`[data-cd="${id}"]`); await p.waitForSelector('#cl');
-      const t = await p.innerText('#md'); if (/ธาตุ:/.test(t)) seen.el++; if (/Story:/.test(t)) seen.story++; if (/ฟิวชั่นกับ:/.test(t)) seen.fusion++;
+      const t = await p.innerText('#md'); if (/ธาตุ:/.test(t)) seen.el++; if (/Story:/.test(t)) seen.story++; if (/ฟิวชั่นกับสาย:/.test(t)) seen.fusion++; if (/วิวัฒนาการ/.test(t)) seen.evo = (seen.evo||0)+1;
       await p.click('#cl'); await p.waitForSelector('.cgrid'); await p.click('[data-cat=c15]'); await p.waitForSelector('[data-cd]');
     }
     ok('Lv.15 cards listed', ids.length > 0, ids.length + ' cards');
