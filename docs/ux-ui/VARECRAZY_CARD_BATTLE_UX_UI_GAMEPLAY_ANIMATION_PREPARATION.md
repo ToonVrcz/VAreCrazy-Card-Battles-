@@ -238,3 +238,59 @@ Do not begin implementation until the owner reviews and approves the UX/UI speci
 **Document owner:** VAreCrazy project owner  
 **Planning assistant:** ChatGPT (Ball) — UX/UI and Gameplay Experience planning  
 **Implementation handoff:** Claude — only after owner approval  
+
+
+## 11. Owner-confirmed visual reference — Battle Arena
+
+The owner confirmed that the **first supplied Battle Arena image** is already an acceptable visual direction and should remain the primary visual reference. Do not replace it with a substantially different concept merely to add more decoration.
+
+Core composition to preserve:
+- The card battlefield remains the central focal point.
+- The VAreCrazy team characters appear in the background as spectators watching the players compete.
+- The spectator area belongs behind/above the battlefield, visually separated from interactive card zones.
+- Keep the established purple / black / gold Dark Fantasy atmosphere, ornate framing, glowing card zones, player LP panels, phase information, hand cards, and action controls.
+- The characters are not player avatars and are not combat units. They are part of the arena audience / VAreCrazy world presentation.
+
+### Spectator presentation
+
+The intended scene is an arena match with VAreCrazy characters seated and watching the two players compete. Treat the first supplied image as the accepted starting reference for the overall look and composition.
+
+Possible future presentation details (design proposals, not yet individually approved):
+- A dedicated spectator balcony / seating row behind the arena.
+- Each team character has a recognizable seated pose and a clear silhouette.
+- Small, restrained reactions to major match events (watching attentively, leaning forward, cheering, surprise, disappointment).
+- Reactions must remain secondary to the game board and must never obscure cards, stats, LP, prompts, or controls.
+- Character reactions are cosmetic and must not communicate hidden information or imply an outcome before the server confirms it.
+
+Do not invent or permanently assign character personalities, dialogue, or unique behavior without owner-provided character references / approval.
+
+## 12. Web-game delivery constraints — owner-confirmed
+
+The owner explicitly clarified that VAreCrazy Card Battle is a **web game**. All visual and interaction design must be evaluated as a browser-based game, not as a native PC game or a full 3D game.
+
+Principles:
+1. Preserve the current web client and Vanilla JavaScript direction unless the owner approves a change.
+2. Prefer layered 2D artwork, HTML/DOM, CSS, and lightweight JavaScript for the arena, cards, HUD, spectator layer, and transitions.
+3. Use CSS transforms / transitions for depth and movement where practical; do not assume a real-time 3D scene is required.
+4. Do not add Three.js, GSAP, React, a new renderer, or another framework without a separate technical evaluation and explicit owner approval.
+5. Any proposed asset or animation must consider download size, first-load time, memory, CPU/GPU use, browser compatibility, and lower-powered mobile devices.
+6. Optimize and serve character art and arena backgrounds as appropriately compressed assets; avoid loading unnecessary high-resolution or off-screen assets.
+7. Support desktop and laptop as primary wide layouts while defining usable tablet and mobile adaptations. Mobile must be intentionally rearranged, not merely scaled down until text and cards become unreadable.
+8. Provide reduced-motion / low-effects behavior and avoid continuous decorative animation that wastes resources.
+9. Animation remains presentation-only. The server-authoritative engine remains the sole authority for game state, legal actions, and outcomes.
+10. The spectator layer must not block pointer/touch interaction with the actual game UI.
+
+## 13. Updated design principles and decision log
+
+| ID | Decision / principle | Status |
+|---|---|---|
+| D-UX-008 | Use the owner's first supplied Battle Arena image as the primary visual reference; retain its overall composition and visual direction | Owner confirmed |
+| D-UX-009 | VAreCrazy team characters are spectators watching the players compete, not player avatars or battle units | Owner confirmed |
+| D-UX-010 | Keep the spectator characters in the background / audience area so the battlefield remains the primary focus | Owner-confirmed intent; exact layout to be specified |
+| D-UX-011 | This is a browser-based web game; design for browser performance and responsive behavior | Owner confirmed |
+| D-UX-012 | Prefer lightweight layered 2D + HTML/DOM/CSS/Vanilla JavaScript over a full 3D implementation | Design/technical direction; evaluate against current source before implementation |
+| D-UX-013 | Character idle/reaction animation may be explored, but must be subtle, cosmetic, performance-aware, and must not reveal hidden game information | Proposed constraint |
+
+### Scope reminder
+
+This update is documentation only. It does not authorize changes to the player UI, Game Engine, server, API, CMS, database, dependencies, or deployment. The existing UX-01 / UX-03 research task remains subject to re-checking the latest implementation before detailed layout specifications are finalized.
