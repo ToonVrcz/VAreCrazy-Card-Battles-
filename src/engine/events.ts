@@ -5,7 +5,7 @@ import type { Game } from './game';
 export type EventType =
   | 'turn_start' | 'phase_battle' | 'turn_timeout' | 'draw' | 'summon' | 'fuse' | 'set_trap' | 'cast' | 'trap_fired'
   | 'attack' | 'attack_cancelled' | 'attack_returned' | 'dmg' | 'lp' | 'destroyed' | 'swap' | 'buff' | 'heal' | 'poison' | 'noattack'
-  | 'trap_destroyed' | 'revive' | 'protect' | 'search_evo' | 'discard' | 'evolve' | 'evolve_cancelled' | 'game_over';
+  | 'trap_destroyed' | 'revive' | 'protect' | 'search_evo' | 'discard' | 'evolve' | 'evolve_cancelled' | 'hit_detail' | 'game_over';
 export type Level = 'normal' | 'important' | 'special';
 /** `p` = the player the event is about (actor, or owner of the thing that was hit). Numbers are real seats in the engine, viewer-relative after viewEvents. */
 export interface GameEvent { id: number; turn: number; t: EventType; p: 0 | 1; card?: string; to?: string | null; v?: number; stat?: string; src?: string; why?: string }
@@ -30,9 +30,9 @@ export function viewEvents(events: GameEvent[] | undefined, seat: 0 | 1): GameEv
 export const LEVEL: Record<EventType, Level> = {
   turn_start: 'normal', phase_battle: 'normal', turn_timeout: 'normal', draw: 'normal', summon: 'normal', set_trap: 'normal', attack: 'normal', dmg: 'normal', poison: 'normal', noattack: 'normal', trap_destroyed: 'normal', revive: 'normal',
   cast: 'important', trap_fired: 'important', attack_cancelled: 'important', attack_returned: 'important', lp: 'important', destroyed: 'important', swap: 'important', buff: 'important', heal: 'important', protect: 'important', search_evo: 'important', discard: 'important', evolve_cancelled: 'important',
-  fuse: 'special', evolve: 'special', game_over: 'special',
+  fuse: 'special', evolve: 'special', game_over: 'special', hit_detail: 'important',
 };
-const ICON: Record<EventType, string> = { turn_start: '⏳', phase_battle: '⚔️', turn_timeout: '⏱', draw: '🃏', summon: '✨', fuse: '🔮', set_trap: '🪤', cast: '📜', trap_fired: '⚡', attack: '🗡️', attack_cancelled: '🛡️', attack_returned: '↩️', dmg: '💥', lp: '💔', destroyed: '☠️', swap: '🔄', buff: '⬆️', heal: '💚', poison: '☣️', noattack: '⛔', trap_destroyed: '💨', revive: '🕯️', protect: '🛡️', search_evo: '🔎', discard: '🗑️', evolve: '🌟', evolve_cancelled: '✖️', game_over: '🏆' };
+const ICON: Record<EventType, string> = { hit_detail: '🔎', turn_start: '⏳', phase_battle: '⚔️', turn_timeout: '⏱', draw: '🃏', summon: '✨', fuse: '🔮', set_trap: '🪤', cast: '📜', trap_fired: '⚡', attack: '🗡️', attack_cancelled: '🛡️', attack_returned: '↩️', dmg: '💥', lp: '💔', destroyed: '☠️', swap: '🔄', buff: '⬆️', heal: '💚', poison: '☣️', noattack: '⛔', trap_destroyed: '💨', revive: '🕯️', protect: '🛡️', search_evo: '🔎', discard: '🗑️', evolve: '🌟', evolve_cancelled: '✖️', game_over: '🏆' };
 
 /** Viewer-relative text. Only states what the event says: numbers and names come straight from the engine; a missing name is left out, never guessed. */
 export function formatEvent(e: GameEvent): { text: string; level: Level; icon: string } {
@@ -66,6 +66,7 @@ export function formatEvent(e: GameEvent): { text: string; level: Level; icon: s
     case 'search_evo': text = e.to ? `${ch(e.card)} ${of}ค้นหาการ์ด ${e.to} ขึ้นมือ` : `${ch(e.card)} ${of}ค้นหาการ์ดวิวัฒนาการขึ้นมือ`; break;
     case 'discard': text = `${ch(e.card)} ${of}: ทิ้งการ์ด${e.to ? ` ${e.to}` : ''}`; break;
     case 'evolve': text = `${ch(e.card)} ${of}วิวัฒนาการเป็น ${e.to}`; break;
+    case 'hit_detail': text = e.why ?? ''; break;
     case 'evolve_cancelled': text = `การวิวัฒนาการของ${ch(e.card)} ${of}ถูกยกเลิก`; break;
     case 'game_over': text = me ? `🎉 คุณชนะ! ${({ lp: `LP ของฝ่ายตรงข้ามหมด`, deck: `ฝ่ายตรงข้ามจั่วการ์ดไม่ได้`, timeout: `ฝ่ายตรงข้ามหมดเวลาหลายครั้ง`, absent: `ฝ่ายตรงข้ามหลุดจากห้อง`, left: `ฝ่ายตรงข้ามยอมแพ้` } as Record<string, string>)[e.why ?? ''] ?? ''}`.trim() : `💀 คุณแพ้ ${({ lp: `LP ของคุณหมด`, deck: `คุณจั่วการ์ดไม่ได้`, timeout: `คุณหมดเวลาหลายครั้ง`, absent: `คุณหลุดจากห้อง`, left: `คุณยอมแพ้` } as Record<string, string>)[e.why ?? ''] ?? ''}`.trim(); break;
   }

@@ -76,6 +76,10 @@ const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), 
 const els = (u: Unit) => (u.card.element ?? 'neutral') as Element;
 const hit = (a: Unit, d: Unit) => Math.max(1, Math.floor(Math.max(1, effAtk(a) - effDef(d)) * elementMultiplier(els(a), els(d))));
 const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
+/** Combat-log breakdown (display only): where an attack number came from, so a big hit can be explained. */
+const atkParts = (u: Unit) => `ATK ${effAtk(u)} (ฐาน ${u.atk}${u.bonusAtk ? ` ${u.bonusAtk > 0 ? '+' : '−'} บัฟ ${Math.abs(u.bonusAtk)}` : ''}${u.auraAtk ? ` ${u.auraAtk > 0 ? '+' : '−'} Story ${Math.abs(u.auraAtk)}` : ''})`;
+const defParts = (u: Unit) => `DEF ${effDef(u)} (ฐาน ${u.def}${u.bonusDef ? ` ${u.bonusDef > 0 ? '+' : '−'} บัฟ ${Math.abs(u.bonusDef)}` : ''}${u.auraDef ? ` ${u.auraDef > 0 ? '+' : '−'} Story ${Math.abs(u.auraDef)}` : ''})`;
+const hitDetail = (a: Unit, d: Unit, dealt: number) => `  ↳ ${atkParts(a)} − ${defParts(d)} × ธาตุ ${elementMultiplier(els(a), els(d))} = ${dealt}`;
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
 
@@ -472,10 +476,10 @@ function step(g: Game, a: Action): Game {
       }
       const bd = (side: 0 | 1, n: number) => { if (n > 0 && fire(g, side, 'ally_battle_damage') && FIRED) return Math.max(0, n - (runOps(g, side, FIRED, {}, mods).dmgCut ?? 0)); return n; };
       runEffects(g, pi, u, 'on_attack', { target: tgt ?? undefined });
-      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp, false, 'สะท้อนความเสียหาย'); log(g, `${u.card.name} โจมตีตรง`); return done(); }
-      const d1 = bd(opp, hit(u, tgt!)); if (d1 > 0) damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`);
+      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp, false, 'สะท้อนความเสียหาย'); log(g, `${u.card.name} โจมตีตรง`); { const w = `${atkParts(u)} ตรงเข้า LP = ${t === 'TRP-003' ? Math.floor(d / 2) : d}`; log(g, `  ↳ ${w}`); emit(g, { t: 'hit_detail', p: pi, card: u.card.name, v: t === 'TRP-003' ? Math.floor(d / 2) : d, why: `↳ ${w}` }); } return done(); }
+      const d1 = bd(opp, hit(u, tgt!)); if (d1 > 0) damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`); log(g, hitDetail(u, tgt!, d1)); emit(g, { t: 'hit_detail', p: pi, card: u.card.name, to: tgt!.card.name, v: d1, why: hitDetail(u, tgt!, d1).trim() });
       if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp, false, 'สะท้อนความเสียหาย');
-      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) { const dc = bd(pi, hit(tgt!, u)); if (dc > 0) damageUnit(g, pi, a.from, dc, opp, false, 'สวนกลับ'); }
+      if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) { const dc = bd(pi, hit(tgt!, u)); if (dc > 0) { damageUnit(g, pi, a.from, dc, opp, false, 'สวนกลับ'); log(g, `สวนกลับ${hitDetail(tgt!, u, dc)}`); emit(g, { t: 'hit_detail', p: opp, card: tgt!.card.name, to: u.card.name, v: dc, why: `สวนกลับ ${hitDetail(tgt!, u, dc).trim()}` }); } }
       if (me.field[a.from] === u && en.field[a.to as number] !== tgt && fire(g, pi, 'kill_by_attack', u) && FIRED) runOps(g, pi, FIRED, { unit: u }, mods);
       if (me.field[a.from] === u && en.field[a.to as number] !== tgt) runEffects(g, pi, u, 'on_attack', { after: true });
       return done();
