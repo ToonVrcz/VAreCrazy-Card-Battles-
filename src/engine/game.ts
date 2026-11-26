@@ -15,7 +15,7 @@ export type SupportWho = 'link' | 'ally' | 'other_ally' | 'enemy' | 'attacker' |
 export interface SupportOp { op: 'buff' | 'heal' | 'damage' | 'draw' | 'search_evo_top3' | 'negate_target' | 'reduce_numeric' | 'redirect_attack' | 'survive_at_1' | 'reduce_battle_damage'; who?: SupportWho; stat?: 'atk' | 'def'; amount?: number; until?: 'turn' | 'opp_turn' | 'battle' | 'next_attack' }
 export interface SupportDef { kind: 'spell' | 'trap'; link: string; trigger?: TrapTrigger; source?: 'spell'; ops: SupportOp[] }
 export interface CardDef { support?: SupportDef; id: string; name: string; type: CardType; level: number | null; chain: string | null; hp: number | null; atk: number | null; def: number; element: string | null; effects?: Effect[] }
-export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, sacrificeSameLevel: true, poison: { dmg: 5, turns: 3 } };
+export const RULES = { lp: 100, handMax: 10, startHand: 5, fieldSlots: 7, backSlots: 5, sacrifice: { 40: 1, 70: 2, 99: 3 } as Record<number, number>, sacrificeSameLevel: true, directCap: 60, poison: { dmg: 5, turns: 3 } };
 /** Run `fn` with this game's rules snapshot active (RULES + element matrix are module state; the engine is synchronous so this is safe). */
 let CFG_ON = false;
 function withCfg<T>(cfg: GameConfig | undefined, fn: () => T): T {
@@ -476,7 +476,7 @@ function step(g: Game, a: Action): Game {
       }
       const bd = (side: 0 | 1, n: number) => { if (n > 0 && fire(g, side, 'ally_battle_damage') && FIRED) return Math.max(0, n - (runOps(g, side, FIRED, {}, mods).dmgCut ?? 0)); return n; };
       runEffects(g, pi, u, 'on_attack', { target: tgt ?? undefined });
-      if (direct) { const d = effAtk(u); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp, false, 'สะท้อนความเสียหาย'); log(g, `${u.card.name} โจมตีตรง`); { const w = `${atkParts(u)} ตรงเข้า LP = ${t === 'TRP-003' ? Math.floor(d / 2) : d}`; log(g, `  ↳ ${w}`); emit(g, { t: 'hit_detail', p: pi, card: u.card.name, v: t === 'TRP-003' ? Math.floor(d / 2) : d, why: `↳ ${w}` }); } return done(); }
+      if (direct) { const d = Math.min(effAtk(u), RULES.directCap); dealLp(g, opp, t === 'TRP-003' ? Math.floor(d / 2) : d, pi); if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d / 2), opp, false, 'สะท้อนความเสียหาย'); log(g, `${u.card.name} โจมตีตรง`); { const w = `${atkParts(u)} ตรงเข้า LP = ${t === 'TRP-003' ? Math.floor(d / 2) : d}${effAtk(u) > d ? ' (เพดานโจมตีตรง ' + RULES.directCap + ')' : ''}`; log(g, `  ↳ ${w}`); emit(g, { t: 'hit_detail', p: pi, card: u.card.name, v: t === 'TRP-003' ? Math.floor(d / 2) : d, why: `↳ ${w}` }); } return done(); }
       const d1 = bd(opp, hit(u, tgt!)); if (d1 > 0) damageUnit(g, opp, a.to as number, d1, pi); log(g, `${u.card.name} โจมตี ${tgt!.card.name} ${d1}`); log(g, hitDetail(u, tgt!, d1)); emit(g, { t: 'hit_detail', p: pi, card: u.card.name, to: tgt!.card.name, v: d1, why: hitDetail(u, tgt!, d1).trim() });
       if (t === 'TRP-002') damageUnit(g, pi, a.from, Math.floor(d1 / 2), opp, false, 'สะท้อนความเสียหาย');
       if (en.field[a.to as number] === tgt && tgt!.hp > 0 && me.field[a.from] === u) { const dc = bd(pi, hit(tgt!, u)); if (dc > 0) { damageUnit(g, pi, a.from, dc, opp, false, 'สวนกลับ'); log(g, `สวนกลับ${hitDetail(tgt!, u, dc)}`); emit(g, { t: 'hit_detail', p: opp, card: tgt!.card.name, to: u.card.name, v: dc, why: `สวนกลับ ${hitDetail(tgt!, u, dc).trim()}` }); } }

@@ -32,9 +32,10 @@ describe('engine records real events (values come from the engine)', () => {
   it('lp loss reports the real amount and game_over carries the winner', () => {
     let g = start(); g.players[0].hand = [ch('A-15', 15, { atk: 150 })];
     g = run(g, { t: 'summon', hand: 0, slot: 0 }, { t: 'next' }, { t: 'next' }, { t: 'next' }, { t: 'next' }, { t: 'next' });
+    g.players[1].lp = 50;   // direct attacks are capped at 60 LP (balance B3), so start low enough for one hit to finish
     g = act(g, { t: 'attack', from: 0, to: 'player' });
     const lp = g.events!.find(e => e.t === 'lp')!, over = g.events!.find(e => e.t === 'game_over')!;
-    expect(lp).toMatchObject({ p: 1, v: 100 }); expect(over).toMatchObject({ p: 0, why: 'lp' }); expect(g.winner).toBe(0);
+    expect(lp).toMatchObject({ p: 1, v: 50 }); expect(over).toMatchObject({ p: 0, why: 'lp' }); expect(g.winner).toBe(0);
   });
   it('no event for actions that fail', () => {
     const g = start(); const before = g.evSeq ?? 0;

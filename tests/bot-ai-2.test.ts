@@ -64,3 +64,14 @@ describe('Combat log breakdown', () => {
     const ev = (g2.events ?? []).filter(e => e.t === 'hit_detail'); expect(ev[0].why).toContain('LP = 40');
   });
 });
+
+describe('Direct attack cap (balance B3, owner-approved 2026-11-26)', () => {
+  it('a direct attack removes at most 60 LP even when ATK is higher', () => {
+    const g = base(); put(g, 0, 0, ch('BIG', { level: 70, hp: 300, atk: 105 }), { bonusAtk: 15 });
+    const g2 = act(g, { t: 'attack', from: 0, to: 'player' }); expect(g2.players[1].lp).toBe(40);
+    expect((g2.events ?? []).find(e => e.t === 'hit_detail')?.v).toBe(60);
+  });
+  it('below the cap damage is unchanged', () => {
+    const g = base(); put(g, 0, 0, ch('A', { atk: 45 })); expect(act(g, { t: 'attack', from: 0, to: 'player' }).players[1].lp).toBe(55);
+  });
+});
