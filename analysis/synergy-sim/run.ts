@@ -36,11 +36,15 @@ const CTL_OUT = new Set(['SPL-010', 'SPL-007', 'TRP-004', 'TRP-005']);
 // TASK 2 (sim-only, in memory): CDEF / CATK raise DEF / ATK of the Control archetype's Lv15 characters by cloning them inside the Control deck only (other decks, Random and the real card data are untouched).
 const CDEF = +(process.env.CDEF ?? 0), CATK = +(process.env.CATK ?? 0), CTLCH = new Set(['skymoon', 'zeesky', 'lucky', 'lordnam', 'chaem', 'pk', 'thomas']);
 const CLONES = new Map<string, CardDef>();
+// Sim-only, same idea for Tank (clones live inside the Tank deck only): TDEF / TATK.
+const TDEF = +(process.env.TDEF ?? 0), TATK = +(process.env.TATK ?? 0), TKCH = new Set(['thai32', 'skymoon', 'norman', 'oufilling', 'tee', 'lalaping', 'baby']), TCL = new Map<string, CardDef>();
+function tankClone(c: CardDef): CardDef { if (!(c.type === 'character' && c.level === 15 && TKCH.has(c.chain ?? ''))) return c; let k = TCL.get(c.id); if (!k) { k = { ...c, atk: (c.atk ?? 0) + TATK, def: (c.def ?? 0) + TDEF }; TCL.set(c.id, k); } return k; }
 export const ctlBefore = (c: CardDef) => ({ id: c.id, name: c.name, atk: c.atk, def: c.def, atk2: (c.atk ?? 0) + CATK, def2: (c.def ?? 0) + CDEF });
 function ctlClone(c: CardDef): CardDef { if (!(c.type === 'character' && c.level === 15 && CTLCH.has(c.chain ?? ''))) return c; let k = CLONES.get(c.id); if (!k) { k = { ...c, atk: (c.atk ?? 0) + CATK, def: (c.def ?? 0) + CDEF }; CLONES.set(c.id, k); } return k; }
 function build(name: string): { main: CardDef[]; extra: CardDef[] } {
   const d = build0(name);
   if (name === 'Control' && (CDEF || CATK)) d.main = d.main.map(ctlClone);
+  if (name === 'Tank' && (TDEF || TATK)) d.main = d.main.map(tankClone);
   if (process.env.CTL === 'on' && name === 'Control') { d.main = d.main.filter(c => !CTL_OUT.has(c.id)); for (const [c, k] of (process.env.CTL_V === '3' ? CTL_KIT3 : process.env.CTL_V === '2' ? CTL_KIT2 : CTL_KIT)) for (let i = 0; i < k; i++) d.main.push(c); while (d.main.length < 40) d.main.push(L15('skymoon')); d.main = d.main.slice(0, 40); }
   const DK = +(process.env.DECK ?? 40); if (DK < 40) d.main = d.main.slice(0, DK);
   return d;

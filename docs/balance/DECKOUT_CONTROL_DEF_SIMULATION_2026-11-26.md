@@ -175,3 +175,19 @@ Open points for the owner: (a) whether any DEF change to real Lv15 cards is acce
 Caveats: Bot-vs-Bot only (a real-player test is still required); one hand-built deck recipe per archetype; 30-game pairs have ≈ ±5.7 pt error; "effect draws" is approximate (cards drained minus one per turn).
 
 Reproduce: `analysis/synergy-sim/run-t123.sh`, `run-t2b.sh`, `inventory.ts`, `report.py`; env `TUNE`, `CDEF`, `CATK`, `N`; outputs in `analysis/synergy-sim/out/`.
+
+---
+## Addendum: Control vs Tank (owner delegated the choice, 2026-11-26 19:23)
+Owner decisions: DEF changes to real Lv15 cards allowed in principle; ~2× longer games accepted; damage floor / extra damage source NOT now. Nothing has been applied to production.
+Sim-only, N=60 (~600 games/archetype), DEF 12/10 tier + Control DEF +3, plus a small delta on the Tank deck's Lv15 (thai32, skymoon, norman, oufilling, tee, lalaping, baby; clones inside the Tank deck only):
+
+| Config | Aggro | Tank | Heal | Combo | Control | Random | In band | Control v Tank |
+|---|---|---|---|---|---|---|---|---|
+| Control DEF+3 only | 53.5 | 39.1 | 46.2 | 59.5 | 53.8 | 47.5 | 4/6 | 75.0 |
+| **+ Tank DEF +1** | 50.3 | 51.5 | 44.3 | 57.2 | 51.2 | 45.2 | 4/6 | 61.7 |
+| + Tank DEF +2 | 48.5 | 65.8 | 42.5 | 55.3 | 43.8 | 43.5 | 1/6 | 25.0 |
+| + Tank ATK +2 | 48.2 | 70.0 | 40.8 | 55.2 | 41.8 | 43.8 | 1/6 | 15.0 |
+| Control DEF+2/ATK+1, Tank DEF+1 | 48.5 | 51.7 | 44.0 | 56.3 | 53.8 | 45.3 | 4/6 | 60.8 |
+
+**Choice: Control DEF +3, Tank Lv15 DEF +1 (on top of DEF 12/10).** Control v Tank drops 75 → 62; Tank, Control, Combo in band. Misses: Aggro 50.3 (band 55–65) and Heal 44.3 / Random 45.2 (≈1 pt under). Tank +2 over-corrects (Control collapses to 25%). Aggro now needs a separate look (its ATK-tier DEF bonus is the likely lever). Skymoon is shared by Tank and Control, so its DEF would differ per deck in the sim; in real data one value applies to both (to be resolved before any data change).
+Files: `analysis/synergy-sim/run.ts` (TDEF/TATK), `run-tank.sh`, `out/t4-*.json`.
