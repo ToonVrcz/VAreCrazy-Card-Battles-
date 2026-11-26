@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10091b">
+<title>VAreCrazy — Battle Arena Prototype</title>
+<link rel="stylesheet" href="arena.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="VAreCrazy Card Battle"><span class="brand-mark">V</span><span>VARECRAZY <small>CARD BATTLE</small></span></a>
+    <div class="match-meta"><span class="live-dot"></span><span>FRIENDLY MATCH</span><b>ROOM · VCZ-2048</b></div>
+    <div class="top-actions"><button class="icon-btn" aria-label="เปิดบันทึกการแข่งขัน" id="logToggle">☷ <span>บันทึก</span></button><button class="icon-btn" aria-label="ตั้งค่า">⚙</button><button class="leave-btn">ออกจากสนาม</button></div>
+  </header>
+
+  <main class="arena">
+    <section class="player-strip opponent">
+      <div class="player-id"><div class="player-avatar rival">R</div><div><strong>RAVEN</strong><small>ฝ่ายตรงข้าม · PLAYER 02</small></div></div>
+      <div class="lp-block"><span>LIFE POINTS</span><strong id="oppLP">100</strong><div class="lp-track"><i style="width:100%"></i></div></div>
+      <div class="piles"><div class="pile"><b>▧</b><span>DECK <strong>32</strong></span></div><div class="pile"><b>✧</b><span>GRAVE <strong>03</strong></span></div></div>
+    </section>
+
+    <section class="field-zone enemy-zone" aria-label="สนามฝ่ายตรงข้าม">
+      <div class="zone-label"><span>OPPONENT FIELD</span><i>BACK ROW · 5</i></div>
+      <div class="back-row" id="enemyBack"></div>
+      <div class="monster-row" id="enemyField"></div>
+    </section>
+
+    <section class="spectator-stage" aria-label="อัฒจันทร์ผู้ชม VAreCrazy">
+      <div class="stage-ornament left"></div><div class="stage-ornament right"></div>
+      <div class="stage-heading"><span>THE GRAND ARENA</span><i></i><small>VARECRAZY UNIVERSE</small></div>
+      <div class="spectators">
+        <article class="spectator toon"><div class="seat"><div class="head red-hair"><span>◉</span></div><div class="body"><b>T</b></div></div><strong>TOON</strong><small>HOST</small></article>
+        <article class="spectator add"><div class="seat"><div class="head gold-hair"><span>◉</span></div><div class="body"><b>A</b></div></div><strong>ADD</strong><small>CHEER</small></article>
+        <article class="spectator nu"><div class="seat"><div class="head blue-hair"><span>◉</span></div><div class="body"><b>N</b></div></div><strong>NU</strong><small>WATCHING</small></article>
+        <article class="spectator ball"><div class="seat"><div class="head violet-hair"><span>◉</span></div><div class="body"><b>B</b></div></div><strong>BALL</strong><small>ANALYST</small></article>
+      </div>
+      <div class="stage-rail"><span>✦</span><span>✧</span><span>✦</span></div>
+    </section>
+
+    <section class="field-zone player-zone" aria-label="สนามของคุณ">
+      <div class="zone-label"><span>YOUR FIELD</span><i>MONSTER ZONE · 7</i></div>
+      <div class="monster-row" id="playerField"></div>
+      <div class="back-row" id="playerBack"></div>
+    </section>
+
+    <section class="player-strip you">
+      <div class="player-id"><div class="player-avatar self">T</div><div><strong>TOON VRCZ</strong><small>คุณ · PLAYER 01</small></div></div>
+      <div class="lp-block"><span>LIFE POINTS</span><strong id="myLP">100</strong><div class="lp-track"><i style="width:100%"></i></div></div>
+      <div class="piles"><div class="pile"><b>▧</b><span>DECK <strong>28</strong></span></div><div class="pile"><b>✧</b><span>GRAVE <strong>02</strong></span></div><div class="pile"><b>◇</b><span>EVO <strong>04</strong></span></div></div>
+    </section>
+
+    <section class="hand-dock">
+      <div class="hand-heading"><div><span>YOUR HAND</span><small>การ์ดในมือ · 5 ใบ</small></div><div class="hand-hint">เลือกการ์ดเพื่อดูรายละเอียด</div></div>
+      <div class="hand-cards" id="hand"></div>
+    </section>
+    <footer class="control-dock">
+      <div class="phase"><span class="phase-dot"></span><div><small>TURN 04 · YOUR TURN</small><strong id="phaseText">MAIN PHASE</strong></div></div>
+      <div class="turn-progress"><i></i><i></i><b></b><i></i><span>MAIN</span><span>BATTLE</span></div>
+      <div class="controls"><button class="secondary" id="detailBtn">รายละเอียดการ์ด</button><button class="primary" id="phaseBtn">เข้าสู่ Battle Phase <span>→</span></button></div>
+    </footer>
+  </main>
+</div>
+<aside class="toast" id="toast" role="status" aria-live="polite"></aside>
+<dialog id="cardDialog"><button class="close" id="closeDialog" aria-label="ปิด">×</button><div id="dialogContent"></div></dialog>
+<aside class="log-panel" id="logPanel"><div class="log-head"><b>BATTLE LOG</b><button id="closeLog">×</button></div><p>เทิร์น 04 · เริ่ม Main Phase</p><p>RAVEN อัญเชิญ Shadow Knight</p><p>TOON จั่วการ์ด 1 ใบ</p><p class="muted">ข้อมูลตัวอย่างสำหรับแสดงผลเท่านั้น</p></aside>
+<script src="arena.js"></script>
+</body></html>
