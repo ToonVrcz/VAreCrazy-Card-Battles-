@@ -35,6 +35,9 @@ function randomDeck(seed: number): { main: CardDef[]; extra: CardDef[] } {
   return { main, extra: TIER === 'adv' ? CHARS.filter(c => c.level! > 15 && chains.includes(c.chain!)).sort((a, b) => a.level! - b.level!).slice(0, 15) : [] };
 }
 const names = [...Object.keys(R), 'Random'];
+// Owner rule 2026-11-26: shop cards (Lv40/70/99 characters and the 39 priced Signature spells/traps) never take part in balance runs. Enforced here for TIER=starter.
+const isShop = (c: CardDef) => (c.type === 'character' && (c.level ?? 15) > 15) || (/^(SPL|TRP)-\d+$/.test(c.id) && Number(c.id.slice(4)) >= 11);
+if (TIER === 'starter') { for (const n of names.filter(x => R[x])) { const d = build(n); if (d.main.some(isShop) || d.extra.length) throw new Error('shop card in Starter deck ' + n); } console.log('check: no shop cards in Starter decks'); }
 const W: Record<string, Record<string, { w: number; l: number; t: number; turns: number; lpWin: number; dmg: number; lp: number; deaths: number; direct: number; boosted: number; unitAct: number }>> = {};
 const dmgLog = { directHits: 0, directDmg: 0, maxDirect: 0, firstBlood: 0, lethalTurn: [] as number[] };
 for (const a of names) { W[a] = {}; for (const b of names) W[a][b] = { w: 0, l: 0, t: 0, turns: 0, lpWin: 0, dmg: 0, lp: 0, deaths: 0, direct: 0, boosted: 0, unitAct: 0 }; }
