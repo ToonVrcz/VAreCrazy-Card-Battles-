@@ -33,8 +33,14 @@ const CTL_KIT3: [CardDef, number][] = [
   [CTL_KIT[0][0], 2],
 ];
 const CTL_OUT = new Set(['SPL-010', 'SPL-007', 'TRP-004', 'TRP-005']);
+// TASK 2 (sim-only, in memory): CDEF / CATK raise DEF / ATK of the Control archetype's Lv15 characters by cloning them inside the Control deck only (other decks, Random and the real card data are untouched).
+const CDEF = +(process.env.CDEF ?? 0), CATK = +(process.env.CATK ?? 0), CTLCH = new Set(['skymoon', 'zeesky', 'lucky', 'lordnam', 'chaem', 'pk', 'thomas']);
+const CLONES = new Map<string, CardDef>();
+export const ctlBefore = (c: CardDef) => ({ id: c.id, name: c.name, atk: c.atk, def: c.def, atk2: (c.atk ?? 0) + CATK, def2: (c.def ?? 0) + CDEF });
+function ctlClone(c: CardDef): CardDef { if (!(c.type === 'character' && c.level === 15 && CTLCH.has(c.chain ?? ''))) return c; let k = CLONES.get(c.id); if (!k) { k = { ...c, atk: (c.atk ?? 0) + CATK, def: (c.def ?? 0) + CDEF }; CLONES.set(c.id, k); } return k; }
 function build(name: string): { main: CardDef[]; extra: CardDef[] } {
   const d = build0(name);
+  if (name === 'Control' && (CDEF || CATK)) d.main = d.main.map(ctlClone);
   if (process.env.CTL === 'on' && name === 'Control') { d.main = d.main.filter(c => !CTL_OUT.has(c.id)); for (const [c, k] of (process.env.CTL_V === '3' ? CTL_KIT3 : process.env.CTL_V === '2' ? CTL_KIT2 : CTL_KIT)) for (let i = 0; i < k; i++) d.main.push(c); while (d.main.length < 40) d.main.push(L15('skymoon')); d.main = d.main.slice(0, 40); }
   const DK = +(process.env.DECK ?? 40); if (DK < 40) d.main = d.main.slice(0, DK);
   return d;
@@ -61,27 +67,29 @@ const names = [...Object.keys(R), 'Random'];
 // Owner rule 2026-11-26: shop cards (Lv40/70/99 characters and the 39 priced Signature spells/traps) never take part in balance runs. Enforced here for TIER=starter.
 const isShop = (c: CardDef) => (c.type === 'character' && (c.level ?? 15) > 15) || (/^(SPL|TRP)-\d+$/.test(c.id) && Number(c.id.slice(4)) >= 11);
 if (TIER === 'starter') { for (const n of names.filter(x => R[x])) { const d = build(n); if (d.main.some(isShop) || d.extra.length) throw new Error('shop card in Starter deck ' + n); } console.log('check: no shop cards in Starter decks'); }
-const W: Record<string, Record<string, { w: number; l: number; t: number; turns: number; lpWin: number; dmg: number; lp: number; deaths: number; direct: number; boosted: number; unitAct: number }>> = {};
+const W: Record<string, Record<string, { w: number; l: number; t: number; turns: number; lpWin: number; dmg: number; lp: number; deaths: number; direct: number; boosted: number; unitAct: number; endDeck: number; endLp: number; effDraws: number; noProg: number; deckTurnSum: number; deckTurnN: number; deckStart: number; drawsTurn: number; stallLong: number; games: number; drawnX: number; startHand: number }>> = {};
 const dmgLog = { directHits: 0, directDmg: 0, maxDirect: 0, firstBlood: 0, lethalTurn: [] as number[] };
-for (const a of names) { W[a] = {}; for (const b of names) W[a][b] = { w: 0, l: 0, t: 0, turns: 0, lpWin: 0, dmg: 0, lp: 0, deaths: 0, direct: 0, boosted: 0, unitAct: 0 }; }
+for (const a of names) { W[a] = {}; for (const b of names) W[a][b] = { w: 0, l: 0, t: 0, turns: 0, lpWin: 0, dmg: 0, lp: 0, deaths: 0, direct: 0, boosted: 0, unitAct: 0, endDeck: 0, endLp: 0, effDraws: 0, noProg: 0, deckTurnSum: 0, deckTurnN: 0, deckStart: 0, drawsTurn: 0, stallLong: 0, games: 0, drawnX: 0, startHand: 0 }; }
 for (const a of names) for (const b of names) {
   if (a === b) continue;
   for (let n = 1; n <= N; n++) {
     const da = a === 'Random' ? randomDeck(500 + n) : build(a), db = b === 'Random' ? randomDeck(900 + n) : build(b), first = (n % 2) as 0 | 1;
     let g: Game = createGame([da.main, db.main], 7000 + n, first, { storyLinks: STORYON ? STORY : [], fusionPairs: FUSIONON ? (PAIRS as any) : [], interactive: false, extras: [da.extra, db.extra] });
-    const ss: SynStats = { unitActions: 0, boostedActions: 0, maxHpGranted: 0, defGranted: 0 }, act = makeAct(SYN, ss), rec = W[a][b]; let seen = 0;
+    const ss: SynStats = { unitActions: 0, boostedActions: 0, maxHpGranted: 0, defGranted: 0 }, act = makeAct(SYN, ss), rec = W[a][b]; let seen = 0; const prog = new Set<number>(); let why = '', maxGap = 0, lastProg = 1, deck0 = g.players[0].deck.length + g.players[1].deck.length, hand0 = g.players[0].hand.length + g.players[1].hand.length;
     let st = 0; while (g.winner === null && st++ < 5000) {
       g = act(g, botPick(g));
-      for (const e of g.events ?? []) if (e.id > seen) { if (e.t === 'dmg') rec.dmg += e.v ?? 0; else if (e.t === 'lp') { rec.lp += e.v ?? 0; rec.direct++; } else if (e.t === 'destroyed') rec.deaths++; }
+      for (const e of g.events ?? []) if (e.id > seen) { if (e.t === 'dmg') rec.dmg += e.v ?? 0; else if (e.t === 'lp') { rec.lp += e.v ?? 0; rec.direct++; } else if (e.t === 'destroyed') rec.deaths++; if (e.t === 'dmg' || e.t === 'lp' || e.t === 'destroyed') { prog.add(g.turn); maxGap = Math.max(maxGap, g.turn - lastProg); lastProg = g.turn; } if (e.t === 'draw') rec.effDraws += e.v ?? 0; if (e.t === 'game_over') why = (e as any).why ?? ''; }
       seen = g.evSeq ?? seen;
     }
     if (g.winner === 0) rec.w++; else if (g.winner === 1) rec.l++; else rec.t++; rec.turns += g.turn; rec.boosted += ss.boostedActions; rec.unitAct += ss.unitActions;
     if (g.winner !== null && g.players[1 - g.winner as 0 | 1].lp <= 0) rec.lpWin++;
+    rec.games++; if (why === 'deck') { rec.endDeck++; rec.deckTurnSum += g.turn; rec.deckTurnN++; } else if (why === 'lp') rec.endLp++; rec.noProg += Math.max(0, g.turn - prog.size); rec.deckStart += deck0 + hand0; rec.stallLong += maxGap >= 6 ? 1 : 0; rec.drawnX += deck0 - (g.players[0].deck.length + g.players[1].deck.length) - g.turn; rec.startHand += hand0;
   }
 }
 // aggregate: for ordered pair (a seat0, b seat1) the seats alternate first-player, so (a,b) and (b,a) both describe a-vs-b; combine
 const M: any = {}; for (const a of names) { M[a] = {}; for (const b of names) if (a !== b) { const x = W[a][b], y = W[b][a]; const wins = x.w + y.l, games = x.w + x.l + x.t + y.w + y.l + y.t; M[a][b] = { winPct: +(100 * wins / Math.max(1, games)).toFixed(1), games, avgTurns: +((x.turns + y.turns) / Math.max(1, games)).toFixed(1), lpWinPct: +(100 * (x.lpWin + y.lpWin) / Math.max(1, games)).toFixed(0) }; } }
 const overall: any = {}; for (const a of names) { let w = 0, gms = 0, tr = 0; for (const b of names) if (a !== b) { w += M[a][b].winPct * M[a][b].games / 100; gms += M[a][b].games; tr += M[a][b].avgTurns * M[a][b].games; } const rs = names.filter(b => b !== a).flatMap(b => [W[a][b], W[b][a]]), s = (k: 'turns' | 'dmg' | 'lp' | 'deaths' | 'direct' | 'lpWin' | 'boosted' | 'unitAct') => rs.reduce((q, r) => q + r[k], 0), gm = rs.reduce((q, r) => q + r.w + r.l + r.t, 0);
   overall[a] = { winPct: +(100 * w / gms).toFixed(1), games: gms, avgTurns: +(tr / gms).toFixed(1), dmgPerTurn: +((s('dmg') + s('lp')) / s('turns')).toFixed(2), unitDmgPerTurn: +(s('dmg') / s('turns')).toFixed(2), directPerGame: +(s('direct') / gm).toFixed(2), deathsPerGame: +(s('deaths') / gm).toFixed(2), lpWinPct: +(100 * s('lpWin') / gm).toFixed(0), synCoveragePct: +(100 * s('boosted') / Math.max(1, s('unitAct'))).toFixed(0) }; }
-const out = { tag: TAG, syn: SYNNAME, fusion: FUSIONON, N, tier: TIER, story: STORYON, lp: RULES.lp, cap: RULES.directCap, decks: Object.fromEntries(names.filter(x => R[x]).map(x => [x, build(x).main.length + '+' + build(x).extra.length])), overall, M };
+const diag: any = {}; for (const a of names) { const rs = names.filter(b => b !== a).flatMap(b => [W[a][b], W[b][a]]), s = (k: keyof (typeof rs)[0]) => rs.reduce((q, r) => q + (r[k] as number), 0), gm = s('games'); diag[a] = { games: gm, deckEndPct: +(100 * s('endDeck') / gm).toFixed(1), lpEndPct: +(100 * s('endLp') / gm).toFixed(1), effDrawsPerGame: +(s('effDraws') / gm).toFixed(2), effDrawsExactPerGame: +(s('drawnX') / gm).toFixed(2), startHandBoth: +(s('startHand') / gm).toFixed(1), perPlayerTurns: +(s('turns') / gm / 2).toFixed(1), noProgressTurnPct: +(100 * s('noProg') / s('turns')).toFixed(1), avgTurnAtDeckOut: +(s('deckTurnSum') / Math.max(1, s('deckTurnN'))).toFixed(1), gamesWithGap6Pct: +(100 * s('stallLong') / gm).toFixed(1) }; }
+const out = { diag, tag: TAG, syn: SYNNAME, fusion: FUSIONON, N, tier: TIER, story: STORYON, lp: RULES.lp, cap: RULES.directCap, decks: Object.fromEntries(names.filter(x => R[x]).map(x => [x, build(x).main.length + '+' + build(x).extra.length])), overall, M };
 writeFileSync(new URL(`./out/${TAG}.json`, import.meta.url), JSON.stringify(out, null, 1)); console.log(TAG, JSON.stringify(overall));

@@ -1,0 +1,20 @@
+Lv15 characters with a Draw effect (9/39):
+  CHAEM-015 chaem [{"trigger":"on_summon","amount":1,"limit":"game"}]
+  FOLLOW-YOU-015 follow-you [{"trigger":"on_summon","amount":1,"limit":"game"}]
+  GOD-WA-015 god-wa [{"trigger":"on_attack","amount":1,"limit":"turn"}]
+  JAOJAY-015 jaojay [{"trigger":"on_attack","amount":1,"limit":"turn"}]
+  MON-015 mon [{"trigger":"on_summon","amount":1,"limit":"game","cost":"discard1"}]
+  NONG-TAENGMO-015 nong-taengmo [{"trigger":"on_attack","amount":1,"limit":"turn"}]
+  PK-015 pk [{"trigger":"on_summon","amount":1,"limit":"game"}]
+  THOMAS-015 thomas [{"trigger":"on_summon","amount":1,"limit":"game","cost":"discard1"}]
+  WENDYWENDIE-015 wendywendie [{"trigger":"on_attack","amount":1,"limit":"turn","cost":"discard1"}]
+Spells/traps in the basic pool that draw:
+  SPL-005 จั่วปริศนา
+Control Lv15 (raw seed ATK/DEF; DEF12/10 tier bonus: ATK<=20 +12, 21-30 +10):
+  SKYMOON-015 HP 100 ATK 18 DEF 3 | with tier DEF: 15 | D: 18/15  A+3: 18/18  A+6: 18/21  B+5: 23/15  B+10: 28/15  C+3/+5: 23/18  C+6/+10: 28/21
+  ZEESKY-015 HP 78 ATK 23 DEF 3 | with tier DEF: 13 | D: 23/13  A+3: 23/16  A+6: 23/19  B+5: 28/13  B+10: 33/13  C+3/+5: 28/16  C+6/+10: 33/19
+  LUCKY-015 HP 76 ATK 24 DEF 3 | with tier DEF: 13 | D: 24/13  A+3: 24/16  A+6: 24/19  B+5: 29/13  B+10: 34/13  C+3/+5: 29/16  C+6/+10: 34/19
+  LORDNAM-015 HP 85 ATK 25 DEF 2 | with tier DEF: 12 | D: 25/12  A+3: 25/15  A+6: 25/18  B+5: 30/12  B+10: 35/12  C+3/+5: 30/15  C+6/+10: 35/18
+  CHAEM-015 HP 85 ATK 24 DEF 2 | with tier DEF: 12 | D: 24/12  A+3: 24/15  A+6: 24/18  B+5: 29/12  B+10: 34/12  C+3/+5: 29/15  C+6/+10: 34/18
+  PK-015 HP 85 ATK 25 DEF 2 | with tier DEF: 12 | D: 25/12  A+3: 25/15  A+6: 25/18  B+5: 30/12  B+10: 35/12  C+3/+5: 30/15  C+6/+10: 35/18
+  THOMAS-015 HP 95 ATK 25 DEF 2 | with tier DEF: 12 | D: 25/12  A+3: 25/15  A+6: 25/18  B+5: 30/12  B+10: 35/12  C+3/+5: 30/15  C+6/+10: 35/18
