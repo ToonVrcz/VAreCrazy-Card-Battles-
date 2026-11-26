@@ -1,0 +1,18 @@
+{
+ "starterWins": {
+  "adv_evo": 56,
+  "adv_evo_sig": 80
+ },
+ "games": {
+  "adv_evo": 240,
+  "adv_evo_sig": 240
+ },
+ "turns": 14669,
+ "sets": 12,
+ "withForms": 7,
+ "starterWinPct": {
+  "adv_evo": 23.3,
+  "adv_evo_sig": 33.3
+ },
+ "avgTurns": 30.6
+}
