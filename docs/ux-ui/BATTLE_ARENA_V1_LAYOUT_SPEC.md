@@ -219,3 +219,74 @@ Not allowed without separate owner approval:
 Build the Arena as a presentation layer around the existing player-relative game view. Start with the wide desktop composition and the approved spectator balcony. Use mock data first. Integrate only after a separate owner approval and after confirming the current response shape. Preserve the existing engine and server-authoritative architecture.
 
 **Owner approval required before any implementation or merge.**
+
+
+## 12. Owner-approved update — Hybrid 3D direction (2026-11-26)
+
+This section supersedes any earlier proposal in this document that preferred a 2D-only arena or prohibited adding a 3D renderer. The owner explicitly selected **Option B — Hybrid 3D Arena**.
+
+### 12.1 Locked concept
+
+- Preserve the owner's first supplied Battle Arena reference image as the primary art-direction anchor. Extend its composition; do not replace it with an unrelated arena.
+- **3D environment:** arena architecture, battlefield platform/environment, spectator balcony/seating, environmental depth, lighting, shadows, and decorative atmosphere.
+- **3D spectators:** Toon, Add, Nu, and Ball are seated behind/above the battlefield and watching the two players compete. They are spectators only, never combat units or player avatars.
+- **2D gameplay layer:** all cards, card frames, field slots, LP, player information, deck/grave/evolution controls, hand, prompts, action buttons, turn/phase indicators, and battle log remain HTML/CSS/DOM UI.
+- **Web-game delivery:** this remains a browser game. The 3D scene must be a contained presentation layer, not a rewrite of the game client or engine.
+- **Technical direction:** evaluate Three.js for the isolated 3D scene only. No other new renderer, framework, animation library, or dependency is implicitly approved.
+- The battlefield and cards remain the primary visual focus; spectator art must stay secondary and must never cover cards, LP, prompts, or controls.
+
+### 12.2 Layering model
+
+1. Environment layer: 3D arena architecture, platform, balcony, lighting, and atmospheric background.
+2. Spectator layer: 3D seated characters with restrained idle/reaction animation.
+3. Gameplay plane: 2D HTML/CSS card slots and cards, aligned to a stable arena camera/composition.
+4. HUD layer: 2D player panels, LP, turn/phase, hand, prompts, log, and actions.
+
+The 2D gameplay and HUD layers must remain crisp, selectable, accessible, and responsive. The spectator/environment layers must not intercept pointer or touch input.
+
+### 12.3 Camera and composition
+
+- Use a controlled perspective view from slightly above the arena, retaining clear visibility of both players' rows.
+- Keep the spectator balcony behind/above the central battlefield, visually integrated into the environment.
+- Avoid camera movement that changes card hit targets or makes the board difficult to read.
+- Prefer a fixed or tightly constrained camera for the first prototype; any orbit/zoom is decorative and must not interfere with gameplay.
+- Use the original approved reference for relative proportions, placement, mood, and focal hierarchy.
+
+### 12.4 Performance and responsive requirements
+
+- Prototype Three.js in isolation and measure it before considering integration.
+- Optimize geometry, draw calls, textures, shadows, lighting, and asset sizes; avoid expensive real-time effects where baked/static lighting is sufficient.
+- Provide a fallback/static scene or reduced-effects mode for devices that cannot sustain the 3D scene.
+- Respect reduced-motion settings; spectator reactions and ambient motion must be subtle and optional.
+- Desktop/laptop is the initial visual target. Tablet and mobile must receive deliberate camera/composition adjustments and preserve card readability rather than simply shrinking the desktop scene.
+- Test browser compatibility, first-load cost, memory, CPU/GPU use, and low-end mobile behavior before integration.
+
+### 12.5 Strict implementation boundaries
+
+The owner's approval covers a **visual-only Hybrid 3D prototype**, not production integration. The prototype may add Three.js only within its isolated prototype scope and may use mock data. It must not:
+
+- Modify engine/server code, game rules, HP/ATK/DEF, card data, reward/economy, matchmaking, or turn/action logic.
+- Change API contracts, database schema, CMS, authentication, or server-authoritative behavior.
+- Expose hidden opponent hand/deck/face-down trap information.
+- Alter the existing 7 character slots or 5 back-row slots per player.
+- Deploy to production or merge into main without a separate owner decision.
+
+### 12.6 Prototype acceptance criteria
+
+- [ ] The scene clearly reads as a 3D dark-fantasy competition arena consistent with the approved first reference.
+- [ ] Toon, Add, Nu, and Ball are visibly seated as spectators behind/above the battlefield.
+- [ ] The battlefield remains the focal point and retains exactly 7 character slots and 5 back-row slots per player in the 2D gameplay plane.
+- [ ] Cards and all gameplay UI remain 2D HTML/CSS and are readable and interactive.
+- [ ] Spectator/environment layers do not intercept gameplay input.
+- [ ] Responsive compositions are defined for desktop, tablet, and mobile.
+- [ ] Reduced-motion and low-effects/static fallback are available.
+- [ ] Prototype uses mock data only and is isolated from production game state.
+- [ ] No engine, rules, card stats, API, DB, CMS, reward, or production deployment changes.
+
+### 12.7 Next work sequence
+
+1. Record this decision in the UX/UI master documentation and Arena specification.
+2. Create an isolated Hybrid 3D visual prototype branch based on the existing prototype branch, not main directly.
+3. Build the 3D environment and seated spectator composition first; retain the existing 2D card/HUD model.
+4. Test visual quality and performance at desktop/tablet/mobile sizes.
+5. Present the prototype for owner review before any live integration or merge.
