@@ -38,11 +38,14 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Rollback: Vercel dashboard rollback for web; for the edge function rebuild the bundle from an older commit and redeploy.
 
 ## Game design (decided by Toon)
-2 players; LP 100; hand max 5; 7 field slots + 5 back-row slots (spell/trap); main deck 40 cards (max 3 copies, at least 3 Lv.15 characters); phases main → battle → end; first player cannot attack on turn 1; damage = ATK − DEF (min 1) with counter-attack, **direct attack on the player is capped at 60 LP per hit (owner decision 2026-11-26, `RULES.directCap`; branch `feature/bot-ai-log-2026-11-26`, not deployed)**, element multiplier 1.5 / 0.75; Lv.15 summon is free (1 per turn); evolution 1 per turn needs 1 Evolution card + sacrifice (Lv40: 1, Lv70: 2, Lv99: 3), keeps damage taken; Fusion stacks two cards in one slot.
+2 players; LP 100; hand max 5; 7 field slots + 5 back-row slots (spell/trap); main deck 40 cards (max 3 copies, at least 3 Lv.15 characters); phases main → battle → end; first player cannot attack on turn 1; damage = ATK − DEF (min 1) with counter-attack, **direct attack on the player is capped at 60 LP per hit (owner decision 2026-11-26, `RULES.directCap`; deployed 2026-11-26)**, element multiplier 1.5 / 0.75; Lv.15 summon is free (1 per turn); evolution 1 per turn needs 1 Evolution card + sacrifice (Lv40: 1, Lv70: 2, Lv99: 3), keeps damage taken; Fusion stacks two cards in one slot.
 - **Evolution deck** (separate, max 15): holds Lv.40/70/99 forms, which cannot be in the main deck. The form is chosen from it when using the Evolution card.
 - Economy: guest profile (secret key in the browser, hashed in DB), starter 500 points; PvP match (≥ 6 turns) = 200 points; every 10th match = +10 Vrcoin; shop: Lv.40 = 500 points, Lv.70 = 100 Vrcoin (Lv.99 price not set); max 3 copies per card. Prices editable in Admin.
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
+
+## Status (2026-11-26)
+Deployed: main = see git log (Bot AI round 2: element-aware, focus-fire, lethal by value, Signature spells; `hit_detail` combat-log event; direct attack cap 60). Edge function `api` v18 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s4` (commit 2279022); rollback references, do not delete: `tmp-edge-bundle-s3` (v17). No migrations. Balance B1/B2/B4/B6 not done (owner chose B3 only). Simulation report: `docs/balance/BOT_AI_COMBO_SIMULATION_RESULTS_2026-11-26.md` (audit branch).
 
 ## Status (2026-11-25, evening)
 Deployed (main = 872a81e, edge function `api` v17 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s3`; rollback references, do not delete: `tmp-edge-bundle-s2` (v16), `s1` (v15), `r1` (v14)). Migrations 025-030 applied (020 intentionally excluded; next new migration = 031).
