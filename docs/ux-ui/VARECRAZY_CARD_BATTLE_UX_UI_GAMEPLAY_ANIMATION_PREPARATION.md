@@ -294,3 +294,26 @@ Principles:
 ### Scope reminder
 
 This update is documentation only. It does not authorize changes to the player UI, Game Engine, server, API, CMS, database, dependencies, or deployment. The existing UX-01 / UX-03 research task remains subject to re-checking the latest implementation before detailed layout specifications are finalized.
+
+
+## 14. Owner-approved Hybrid 3D decision — 2026-11-26
+
+**Decision: Option B — Hybrid 3D Arena.** This is the current approved direction and supersedes D-UX-012 above wherever it conflicts. The older 2D-first recommendation is retained as historical context only; it is no longer the selected Arena direction.
+
+- Preserve the first supplied Battle Arena image as the primary visual reference.
+- Use 3D for the arena environment, platform depth, architecture, spectator balcony, lighting/shadows, and seated spectator presentation.
+- Toon, Add, Nu, and Ball sit behind/above the battlefield watching the two players compete. They remain spectators, not avatars or combat units.
+- Keep cards, card slots, player information, LP, deck/grave/evolution controls, hand, prompts, action buttons, turn/phase indicators, and battle log as 2D HTML/CSS/DOM.
+- Evaluate Three.js only for the isolated 3D scene. The owner has approved its use in a visual-only prototype; no additional framework or animation dependency is approved by this decision.
+- This remains a browser-based web game. Desktop first, with deliberate tablet/mobile layouts, reduced-motion and low-effects/static fallback, and performance testing for load time, memory, CPU/GPU, frame stability, and low-end devices.
+- The approval is for an isolated prototype using mock data only. It does not authorize live engine integration, production deployment, or merge to main.
+- No changes to engine/server code, rules, HP/ATK/DEF, card data, rewards, API, database, CMS, authentication, hidden-information handling, or server-authoritative behavior.
+- Preserve exactly 7 character slots and 5 back-row slots per player.
+
+The detailed concept and acceptance criteria are recorded in docs/ux-ui/BATTLE_ARENA_HYBRID_3D_CONCEPT_V1.md and the updated Battle Arena layout spec.
+
+| ID | Decision / principle | Status |
+|---|---|---|
+| D-UX-014 | Adopt Hybrid 3D: 3D arena environment and seated spectators; 2D HTML/CSS gameplay and HUD | Owner confirmed |
+| D-UX-015 | Use Three.js only in an isolated visual prototype, subject to performance gates | Owner confirmed for prototype only |
+| D-UX-016 | Prototype must not change production engine, rules, card stats, API, DB, CMS, rewards, or deploy/merge to main | Owner confirmed |
