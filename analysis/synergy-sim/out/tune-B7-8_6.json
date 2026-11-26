@@ -1,0 +1,279 @@
+{
+ "tag": "tune-B7-8_6",
+ "syn": "B7",
+ "fusion": true,
+ "N": 30,
+ "tier": "starter",
+ "story": true,
+ "lp": 100,
+ "cap": 60,
+ "decks": {
+  "Aggro": "40+0",
+  "Tank": "40+0",
+  "Heal": "40+0",
+  "Combo": "40+0",
+  "Control": "40+0"
+ },
+ "overall": {
+  "Aggro": {
+   "winPct": 77,
+   "games": 300,
+   "avgTurns": 23.6,
+   "dmgPerTurn": 62.13,
+   "unitDmgPerTurn": 57.94,
+   "directPerGame": 3.51,
+   "deathsPerGame": 13.23,
+   "lpWinPct": 98,
+   "synCoveragePct": 89
+  },
+  "Tank": {
+   "winPct": 40.3,
+   "games": 300,
+   "avgTurns": 43.4,
+   "dmgPerTurn": 58.31,
+   "unitDmgPerTurn": 56.93,
+   "directPerGame": 2.65,
+   "deathsPerGame": 19.59,
+   "lpWinPct": 57,
+   "synCoveragePct": 97
+  },
+  "Heal": {
+   "winPct": 45,
+   "games": 300,
+   "avgTurns": 41.2,
+   "dmgPerTurn": 63.35,
+   "unitDmgPerTurn": 61.96,
+   "directPerGame": 2.62,
+   "deathsPerGame": 19.14,
+   "lpWinPct": 56,
+   "synCoveragePct": 98
+  },
+  "Combo": {
+   "winPct": 62,
+   "games": 300,
+   "avgTurns": 28.8,
+   "dmgPerTurn": 60.63,
+   "unitDmgPerTurn": 57.53,
+   "directPerGame": 3.64,
+   "deathsPerGame": 15.49,
+   "lpWinPct": 87,
+   "synCoveragePct": 94
+  },
+  "Control": {
+   "winPct": 18.7,
+   "games": 300,
+   "avgTurns": 38.2,
+   "dmgPerTurn": 57.53,
+   "unitDmgPerTurn": 55.73,
+   "directPerGame": 2.95,
+   "deathsPerGame": 19.14,
+   "lpWinPct": 66,
+   "synCoveragePct": 97
+  },
+  "Random": {
+   "winPct": 57,
+   "games": 300,
+   "avgTurns": 35.1,
+   "dmgPerTurn": 61.02,
+   "unitDmgPerTurn": 58.83,
+   "directPerGame": 3.28,
+   "deathsPerGame": 17.78,
+   "lpWinPct": 75,
+   "synCoveragePct": 95
+  }
+ },
+ "M": {
+  "Aggro": {
+   "Tank": {
+    "winPct": 88.3,
+    "games": 60,
+    "avgTurns": 28.5,
+    "lpWinPct": 93
+   },
+   "Heal": {
+    "winPct": 75,
+    "games": 60,
+    "avgTurns": 23.5,
+    "lpWinPct": 97
+   },
+   "Combo": {
+    "winPct": 63.3,
+    "games": 60,
+    "avgTurns": 19,
+    "lpWinPct": 100
+   },
+   "Control": {
+    "winPct": 88.3,
+    "games": 60,
+    "avgTurns": 24.7,
+    "lpWinPct": 98
+   },
+   "Random": {
+    "winPct": 70,
+    "games": 60,
+    "avgTurns": 22.2,
+    "lpWinPct": 100
+   }
+  },
+  "Tank": {
+   "Aggro": {
+    "winPct": 11.7,
+    "games": 60,
+    "avgTurns": 28.5,
+    "lpWinPct": 93
+   },
+   "Heal": {
+    "winPct": 58.3,
+    "games": 60,
+    "avgTurns": 56.6,
+    "lpWinPct": 20
+   },
+   "Combo": {
+    "winPct": 20,
+    "games": 60,
+    "avgTurns": 34.5,
+    "lpWinPct": 82
+   },
+   "Control": {
+    "winPct": 78.3,
+    "games": 60,
+    "avgTurns": 53,
+    "lpWinPct": 25
+   },
+   "Random": {
+    "winPct": 33.3,
+    "games": 60,
+    "avgTurns": 44.3,
+    "lpWinPct": 63
+   }
+  },
+  "Heal": {
+   "Aggro": {
+    "winPct": 25,
+    "games": 60,
+    "avgTurns": 23.5,
+    "lpWinPct": 97
+   },
+   "Tank": {
+    "winPct": 41.7,
+    "games": 60,
+    "avgTurns": 56.6,
+    "lpWinPct": 20
+   },
+   "Combo": {
+    "winPct": 28.3,
+    "games": 60,
+    "avgTurns": 32.7,
+    "lpWinPct": 78
+   },
+   "Control": {
+    "winPct": 86.7,
+    "games": 60,
+    "avgTurns": 47.2,
+    "lpWinPct": 43
+   },
+   "Random": {
+    "winPct": 43.3,
+    "games": 60,
+    "avgTurns": 46.2,
+    "lpWinPct": 42
+   }
+  },
+  "Combo": {
+   "Aggro": {
+    "winPct": 36.7,
+    "games": 60,
+    "avgTurns": 19,
+    "lpWinPct": 100
+   },
+   "Tank": {
+    "winPct": 80,
+    "games": 60,
+    "avgTurns": 34.5,
+    "lpWinPct": 82
+   },
+   "Heal": {
+    "winPct": 71.7,
+    "games": 60,
+    "avgTurns": 32.7,
+    "lpWinPct": 78
+   },
+   "Control": {
+    "winPct": 71.7,
+    "games": 60,
+    "avgTurns": 30.5,
+    "lpWinPct": 85
+   },
+   "Random": {
+    "winPct": 50,
+    "games": 60,
+    "avgTurns": 27.3,
+    "lpWinPct": 92
+   }
+  },
+  "Control": {
+   "Aggro": {
+    "winPct": 11.7,
+    "games": 60,
+    "avgTurns": 24.7,
+    "lpWinPct": 98
+   },
+   "Tank": {
+    "winPct": 21.7,
+    "games": 60,
+    "avgTurns": 53,
+    "lpWinPct": 25
+   },
+   "Heal": {
+    "winPct": 13.3,
+    "games": 60,
+    "avgTurns": 47.2,
+    "lpWinPct": 43
+   },
+   "Combo": {
+    "winPct": 28.3,
+    "games": 60,
+    "avgTurns": 30.5,
+    "lpWinPct": 85
+   },
+   "Random": {
+    "winPct": 18.3,
+    "games": 60,
+    "avgTurns": 35.5,
+    "lpWinPct": 80
+   }
+  },
+  "Random": {
+   "Aggro": {
+    "winPct": 30,
+    "games": 60,
+    "avgTurns": 22.2,
+    "lpWinPct": 100
+   },
+   "Tank": {
+    "winPct": 66.7,
+    "games": 60,
+    "avgTurns": 44.3,
+    "lpWinPct": 63
+   },
+   "Heal": {
+    "winPct": 56.7,
+    "games": 60,
+    "avgTurns": 46.2,
+    "lpWinPct": 42
+   },
+   "Combo": {
+    "winPct": 50,
+    "games": 60,
+    "avgTurns": 27.3,
+    "lpWinPct": 92
+   },
+   "Control": {
+    "winPct": 81.7,
+    "games": 60,
+    "avgTurns": 35.5,
+    "lpWinPct": 80
+   }
+  }
+ }
+}
