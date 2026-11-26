@@ -72,3 +72,8 @@ Win% ของ**แถว** vs **คอลัมน์** (Starter):
 | P5 | ของป้องกันสำหรับ Tank/Heal (Spell/Trap/Effect ใหม่) | seed + effects | กลาง | รันตาราง archetype ซ้ำ ต้อง Aggro ≤ 70%, Tank ≥ 30% |
 ขอบเขตที่ต้องรันซ้ำก่อนลงมือ: (a) การทดลองคุมตัวแปร Starter vs Advanced, (b) hit_detail log จากเกมจริงที่ได้ "armor 11", (c) ตรวจ spell/trap production vs seed, (d) ชุดสุ่มเด็คจริงของผู้เล่น
 **หลักการ Pay for Progression, not Pay to Win:** Starter Aggro ชนะ 91% ได้เพราะ Bot/Spell ไม่ใช่ของเสียเงิน → เร่งแก้ Tank/Heal/Control ให้แข่งได้ก่อน ค่อย nerf เพดาน Advanced
+
+## Addendum (2026-11-26, after P1 verification)
+- **Duplicate Story rows:** ตารางข้อ 3 และผล Starter/Advanced ในรายงานนี้รันด้วย Story 50 แถว (seed บน 9b5adfd มี 29 แถวอยู่แล้ว ฮาร์เนสของผมบวกซ้ำอีก 21) → Story ถูกนับซ้ำสองเท่า ตัวเลขที่ถูกต้อง (29 แถว, Starter, 30 เกม/คู่): Aggro 92.3 · Combo 58.7 · Random 59.7 · Heal 48.7 · Control 29.3 · Tank 11.4 · Story ปิด: Combo 50.3. ลำดับเด็คและข้อสรุปหลักไม่เปลี่ยน
+- **ผล P1** (`fix/fusion-self-story-p1`): Combo 58.7 → 57.7 (≈ noise), เด็คอื่นเท่าเดิม ⇒ Fusion self-fire **ไม่ใช่ตัวการหลัก**ของ Combo ที่สูงขึ้นจาก Story (+7 pt ยังอยู่); Advanced ไม่เปลี่ยน
+- Before ของ Fusion 37 คู่ (ATK/DEF) มาจากการรันบนฐานเก่าที่ Story/Fusion เหมือนกัน ไม่ได้รันซ้ำบน 9b5adfd
