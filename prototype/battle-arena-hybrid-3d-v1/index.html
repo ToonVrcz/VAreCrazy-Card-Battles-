@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VAreCrazy — Hybrid 3D Battle Arena Prototype</title>
+<link rel="stylesheet" href="./arena.css">
+</head>
+<body>
+<main class="app">
+  <div class="scene-wrap" aria-hidden="true"><canvas id="arena3d"></canvas><div class="vignette"></div><div class="scene-fallback" id="fallback">3D scene unavailable — showing lightweight arena fallback.</div></div>
+  <header class="topbar"><div class="brand"><span class="sigil">V</span><span>VARECRAZY <small>CARD BATTLE</small></span></div><div class="match"><i></i> FRIENDLY MATCH <b>·</b> ROUND 04 <b>·</b> MAIN PHASE</div><button class="utility" id="motionToggle" type="button">LOW EFFECTS: OFF</button></header>
+  <section class="board" aria-label="Battle arena mock interface">
+    <div class="playerbar opponent"><div class="avatar">R</div><div class="identity"><small>OPPONENT</small><strong>RIVAL PLAYER</strong></div><div class="lp"><small>LIFE POINTS</small><strong>8,500</strong><span><i style="width:85%"></i></span></div><div class="piles"><span>DECK <b>32</b></span><span>GRAVE <b>04</b></span></div></div>
+    <div class="field enemy">
+      <div class="row-label"><span>OPPONENT FIELD</span><small>BACK ROW · 5 SLOTS</small></div><div class="slots back five"><div class="slot backslot"></div><div class="slot backslot"><b class="cardback">✦</b></div><div class="slot backslot"></div><div class="slot backslot"></div><div class="slot backslot"></div></div>
+      <div class="slots monsters seven"><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"><div class="mockcard enemycard"><b>♜</b><small>SHADOW KNIGHT</small></div></div><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"></div></div>
+    </div>
+    <div class="spectator-label"><span>THE VARECRAZY GRAND ARENA</span><small>THE CREW IS WATCHING</small></div>
+    <div class="field player">
+      <div class="slots monsters seven"><div class="slot monster"></div><div class="slot monster"><div class="mockcard"><b>✧</b><small>ARCANE GUARDIAN</small></div></div><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"></div><div class="slot monster"></div></div>
+      <div class="slots back five"><div class="slot backslot"></div><div class="slot backslot"></div><div class="slot backslot"></div><div class="slot backslot"><b class="cardback">✦</b></div><div class="slot backslot"></div></div><div class="row-label"><span>YOUR FIELD</span><small>BACK ROW · 5 SLOTS</small></div>
+    </div>
+    <div class="playerbar you"><div class="avatar toon">T</div><div class="identity"><small>YOU</small><strong>TOON VRCZ</strong></div><div class="lp"><small>LIFE POINTS</small><strong>9,200</strong><span><i style="width:92%"></i></span></div><div class="piles"><span>DECK <b>28</b></span><span>GRAVE <b>06</b></span><span>EVO <b>02</b></span></div></div>
+    <div class="hand"><div class="hand-head"><span>YOUR HAND</span><small>5 CARDS · MOCK DATA</small></div><div class="handcards"><button class="handcard" type="button" data-name="EMBER WITCH"><b>♨</b><small>EMBER WITCH</small></button><button class="handcard" type="button" data-name="MOON PALADIN"><b>♜</b><small>MOON PALADIN</small></button><button class="handcard" type="button" data-name="ARCANE SEAL"><b>✧</b><small>ARCANE SEAL</small></button><button class="handcard" type="button" data-name="VOID TRAP"><b>◈</b><small>VOID TRAP</small></button><button class="handcard" type="button" data-name="STORM WYRM"><b>♢</b><small>STORM WYRM</small></button></div></div>
+    <div class="actions"><div><small>TURN 04</small><strong>MAIN PHASE</strong></div><div class="phase"><i class="active"></i><i></i><i></i><i></i><span>MAIN → BATTLE → END</span></div><button type="button" id="logBtn">BATTLE LOG</button><button type="button" class="endturn">END TURN</button></div>
+  </section>
+  <aside class="log" id="log"><button type="button" id="closeLog">×</button><b>BATTLE LOG</b><p>Turn 04 — Main Phase started</p><p>Arcane Guardian was summoned</p><p>Opponent set a card</p><small>DISPLAY-ONLY PROTOTYPE</small></aside>
+  <dialog id="cardDialog"><button class="dialogClose" type="button">×</button><b id="dialogTitle"></b><p>Mock card preview. No game action is connected.</p></dialog>
+  <footer>HYBRID 3D PROTOTYPE · MOCK DATA ONLY · NOT CONNECTED TO GAME ENGINE</footer>
+</main>
+<script type="module" src="./arena.js"></script>
+</body></html>
