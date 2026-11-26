@@ -16,6 +16,8 @@ export const SIG: CardDef[] = R('signature-cards.json').map((c: any): CardDef =>
 export const CHARS = BASE.filter(c => c.type === 'character');
 // SIM-ONLY balance lever (in-memory, never written anywhere): TUNE="a,b[,c]" raises DEF of FREE Lv15 characters by role (shop cards Lv40+ are never touched): base ATK <= 20 -> +a, 21..30 -> +b, >= 31 -> +c. HP and ATK are never touched.
 if (process.env.TUNE) { const [a, b, hi = 0] = process.env.TUNE.split(',').map(Number); for (const c of CHARS.filter(x => x.level === 15)) { const k = c.atk ?? 0; if (k <= 20) c.def = (c.def ?? 0) + a; else if (k <= 30) c.def = (c.def ?? 0) + b; else c.def = (c.def ?? 0) + hi; } }
+// SIM-ONLY (in memory): DEFADD="chain:delta,chain:delta" adds DEF to Lv15 characters of that chain GLOBALLY (every deck that uses the card sees the same value, like real card data would).
+if (process.env.DEFADD) { const m = new Map(process.env.DEFADD.split(',').filter(Boolean).map(s => s.split(':') as [string, string])); for (const c of CHARS.filter(x => x.level === 15 && m.has(x.chain ?? ''))) c.def = (c.def ?? 0) + Number(m.get(c.chain!)); }
 export const units = (g: Game, s: 0 | 1) => g.players[s].field.filter((x): x is Unit => !!x);
 export const effAtk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0));
 export const effDef = (u: Unit) => Math.max(0, u.def + u.bonusDef + (u.auraDef ?? 0));

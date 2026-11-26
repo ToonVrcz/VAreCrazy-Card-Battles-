@@ -191,3 +191,65 @@ Sim-only, N=60 (~600 games/archetype), DEF 12/10 tier + Control DEF +3, plus a s
 
 **Choice: Control DEF +3, Tank Lv15 DEF +1 (on top of DEF 12/10).** Control v Tank drops 75 → 62; Tank, Control, Combo in band. Misses: Aggro 50.3 (band 55–65) and Heal 44.3 / Random 45.2 (≈1 pt under). Tank +2 over-corrects (Control collapses to 25%). Aggro now needs a separate look (its ATK-tier DEF bonus is the likely lever). Skymoon is shared by Tank and Control, so its DEF would differ per deck in the sim; in real data one value applies to both (to be resolved before any data change).
 Files: `analysis/synergy-sim/run.ts` (TDEF/TATK), `run-tank.sh`, `out/t4-*.json`.
+
+
+---
+## Addendum 2: Final real-data-consistent table and migration candidate (2026-11-26 evening)
+Owner: "ทำทั้งหมด" → (1) tune Aggro, (2) prepare migration on a separate branch. Earlier sims used per-deck clones; this round applies one DEF per card **globally** (like real data; shared cards such as skymoon/zeesky/baby/thai32/lalaping affect every deck using them). Sim base stats were verified identical to production `cards` (39/39 Lv15, SELECT only).
+
+Table = DEF 12/10 tier + Control chains +3 (skymoon, zeesky, lucky, lordnam, chaem, pk, thomas) + Tank-only/shared chains +1 (norman, oufilling, tee, thai32, lalaping, baby) + Aggro-only chains Δ (dnman, mon, pikachu, cutie, melon, linlada). N=60 (~600 games/archetype), Game Synergy B7.
+
+| Aggro-only Δ | Aggro | Tank | Heal | Combo | Control | Random | In band | Tank turns | Aggro turns |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | 46.3 | 47.3 | 53.3 | 53.5 | 47.8 | 48.7 | 5/6 | 72.0 | 28.6 |
+| +1 | 53.7 | 43.5 | 52.5 | 52.7 | 47.8 | 46.8 | 5/6 | 71.6 | 28.3 |
+| **+2** | **62.8** | **40.2** | **49.8** | **52.5** | **46.3** | **45.3** | **6/6** | 71.7 | 28.1 |
+| +3 | 70.0 | 37.3 | 49.3 | 50.8 | 44.2 | 45.3 | 3/6 | 71.1 | 27.9 |
+
+**Final candidate = Aggro Δ +2 (6/6 in band).** Tank (40.2) and Control (46.3) and Random (45.3) sit near the lower band edge; CI ≈ ±4 pt. Game length with globally applied DEF is longer than the per-deck test: Tank ≈ 72 total turns (≈ 36 own), i.e. ≈ 2.6× the current 28 — above the "about 2×" the owner accepted; flagged for confirmation.
+
+Per-card DEF (HP and ATK unchanged; Lv40/70/99 and Signature untouched):
+
+| Card | ATK | DEF before | DEF after | Tier | Chain delta |
+|---|---|---|---|---|---|
+| 1GOKU-015 | 20 | 3 | 15 | +12 | +0 |
+| BABY-015 | 10 | 5 | 18 | +12 | +1 |
+| BACKJI-015 | 24 | 2 | 12 | +10 | +0 |
+| BADGUY-015 | 15 | 2 | 14 | +12 | +0 |
+| BAM-015 | 25 | 1 | 11 | +10 | +0 |
+| BAMMIE-015 | 25 | 1 | 11 | +10 | +0 |
+| BOBO-015 | 30 | 1 | 11 | +10 | +0 |
+| CHAEM-015 | 24 | 2 | 15 | +10 | +3 |
+| CUTIE-015 | 35 | 0 | 2 | +0 | +2 |
+| DNMAN-015 | 40 | 1 | 3 | +0 | +2 |
+| FOLLOW-YOU-015 | 20 | 2 | 14 | +12 | +0 |
+| GOD-WA-015 | 30 | 1 | 11 | +10 | +0 |
+| I-M-GRAPE-015 | 21 | 2 | 12 | +10 | +0 |
+| JAOJAY-015 | 40 | 0 | 0 | +0 | +0 |
+| LALAPING-015 | 20 | 4 | 17 | +12 | +1 |
+| LEON-S-KENNEDY-015 | 25 | 3 | 13 | +10 | +0 |
+| LINLADA-015 | 35 | 1 | 3 | +0 | +2 |
+| LORDNAM-015 | 25 | 2 | 15 | +10 | +3 |
+| LUCKY-015 | 24 | 3 | 16 | +10 | +3 |
+| MELON-015 | 35 | 1 | 3 | +0 | +2 |
+| MIKI-015 | 24 | 2 | 12 | +10 | +0 |
+| MON-015 | 40 | 0 | 2 | +0 | +2 |
+| NONG-TAENGMO-015 | 30 | 1 | 11 | +10 | +0 |
+| NORMAN-015 | 18 | 4 | 17 | +12 | +1 |
+| OUFILLING-015 | 20 | 4 | 17 | +12 | +1 |
+| PIKACHU-015 | 40 | 0 | 2 | +0 | +2 |
+| PK-015 | 25 | 2 | 15 | +10 | +3 |
+| PKXCY-015 | 24 | 2 | 12 | +10 | +0 |
+| SATOSHI-015 | 20 | 5 | 17 | +12 | +0 |
+| SKYMOON-015 | 18 | 3 | 18 | +12 | +3 |
+| SMILE-015 | 35 | 1 | 1 | +0 | +0 |
+| SOMYES-015 | 25 | 2 | 12 | +10 | +0 |
+| TAN-015 | 20 | 3 | 15 | +12 | +0 |
+| TEE-015 | 18 | 4 | 17 | +12 | +1 |
+| THAI26-015 | 24 | 2 | 12 | +10 | +0 |
+| THAI32-015 | 18 | 4 | 17 | +12 | +1 |
+| THOMAS-015 | 25 | 2 | 15 | +10 | +3 |
+| WENDYWENDIE-015 | 10 | 4 | 16 | +12 | +0 |
+| ZEESKY-015 | 23 | 3 | 16 | +10 | +3 |
+
+Migration candidate: branch `balance/lv15-def-rebalance-2026-11-26` (from `origin/main`), `db/migrations/031_lv15_def_rebalance.up/down.sql` + `tests/lv15-def-rebalance-migration.test.ts`. Guarded by old values; **NOT applied**; apply only on "Deploy". Verified: the table equals the sim values (0 mismatches). Caveat: Bot-vs-Bot only; needs real-player testing.
