@@ -16,7 +16,30 @@ const R: Record<string, { chains: string[]; cards: [string, number][] }> = {
   Control: { chains: ['skymoon', 'zeesky', 'lucky', 'lordnam', 'chaem', 'pk', 'thomas'], cards: [['SPL-008', 3], ['SPL-009', 3], ['SPL-010', 2], ['SPL-007', 1], ['SPL-001', 2], ['TRP-001', 3], ['TRP-004', 3], ['TRP-005', 1], ['TRP-009', 2], ['TRP-007', 1]] },
 };
 const lcg = (s: number) => () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
+// SIM-ONLY Control kit (CTL=on): replaces the 7 situational Control cards (SPL-010 x2, SPL-007, TRP-004 x3, TRP-005) with always-live tools built ONLY from ops the engine already supports.
+// Each card is linked to one Control chain (engine rule for `support` cards). These are design hypotheses, not real cards; nothing is written to the DB.
+const mkSup = (id: string, name: string, support: any): CardDef => ({ id, name, type: support.kind, level: null, chain: null, hp: null, atk: null, def: 0, element: null, support, effects: [] } as any);
+const CTL_KIT: [CardDef, number][] = [
+  [mkSup('CTL-T1', 'กำแพงเหล็ก', { kind: 'trap', link: 'skymoon', trigger: 'enemy_attack', ops: [{ op: 'buff', who: 'attacker', stat: 'atk', amount: -12, until: 'battle' }] }), 2],
+  [mkSup('CTL-T2', 'โล่สะท้อน', { kind: 'trap', link: 'zeesky', trigger: 'ally_battle_damage', ops: [{ op: 'reduce_battle_damage', amount: 15 }] }), 2],
+  [mkSup('CTL-T3', 'ลมหายใจที่สอง', { kind: 'trap', link: 'chaem', trigger: 'enemy_attack', ops: [{ op: 'heal', who: 'link', amount: 15 }] }), 1],
+  [mkSup('CTL-S1', 'ฟื้นฟูสนาม', { kind: 'spell', link: 'thomas', ops: [{ op: 'heal', who: 'ally', amount: 25 }] }), 1],
+  [mkSup('CTL-S2', 'ปัญญาผู้คุมเกม', { kind: 'spell', link: 'pk', ops: [{ op: 'draw', amount: 2 }] }), 1],
+];
+const CTL_KIT2: [CardDef, number][] = [[CTL_KIT[0][0], 3], [CTL_KIT[1][0], 2], [CTL_KIT[2][0], 1], [CTL_KIT[3][0], 1]];
+const CTL_KIT3: [CardDef, number][] = [
+  [mkSup('CTL-S3', 'ฟ้าผ่าสนาม', { kind: 'spell', link: 'skymoon', ops: [{ op: 'damage', who: 'enemy', amount: 25 }] }), 3],
+  [mkSup('CTL-S4', 'พลังผู้คุมเกม', { kind: 'spell', link: 'zeesky', ops: [{ op: 'buff', who: 'ally', stat: 'atk', amount: 15, until: 'turn' }] }), 2],
+  [CTL_KIT[0][0], 2],
+];
+const CTL_OUT = new Set(['SPL-010', 'SPL-007', 'TRP-004', 'TRP-005']);
 function build(name: string): { main: CardDef[]; extra: CardDef[] } {
+  const d = build0(name);
+  if (process.env.CTL === 'on' && name === 'Control') { d.main = d.main.filter(c => !CTL_OUT.has(c.id)); for (const [c, k] of (process.env.CTL_V === '3' ? CTL_KIT3 : process.env.CTL_V === '2' ? CTL_KIT2 : CTL_KIT)) for (let i = 0; i < k; i++) d.main.push(c); while (d.main.length < 40) d.main.push(L15('skymoon')); d.main = d.main.slice(0, 40); }
+  const DK = +(process.env.DECK ?? 40); if (DK < 40) d.main = d.main.slice(0, DK);
+  return d;
+}
+function build0(name: string): { main: CardDef[]; extra: CardDef[] } {
   const r = R[name], main: CardDef[] = [], n: Record<string, number> = {}, put = (c: CardDef | undefined, k = 1) => { for (let i = 0; i < k; i++) { if (!c || (n[c.id] ?? 0) >= 3 || main.length >= 40) return; n[c.id] = (n[c.id] ?? 0) + 1; main.push(c); } };
   for (const k of r.chains) put(L15(k), 3);
   if (TIER === 'adv') { for (const k of r.chains) for (const s of SIG.filter(c => c.type !== 'character' && (c as any).support?.link === k).slice(0, 2)) put(s, 2); }   // Signature support linked to the deck's chains (up to 2 cards x2 copies per chain), the Advanced collection
