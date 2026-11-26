@@ -55,9 +55,10 @@ describe('Story runtime', () => {
     put(g, 0, 0, ch('A', 'a')); put(g, 0, 1, ch('B', 'b')); g.players[0].hand = [ch('Z', 'z')];
     g = act(g, { t: 'summon', hand: 0, slot: 2 }); expect(g.players[0].field[0]!.auraAtk).toBe(5);
   });
-  it('a fused unit counts both of its cards as present', () => {
+  it('a fused unit counts both of its cards as present PARTNERS for other units, but never as a partner for itself (P1, owner-approved 2026-11-26)', () => {
     const g = game([{ a: 'a', b: 'b', mods: [{ stat: 'atk', amount: 5 }] }]);
-    const ua = put(g, 0, 0, ch('A', 'a')); ua.fused = [ch('A', 'a'), ch('B', 'b')]; refreshAuras(g); expect(ua.auraAtk).toBe(5);
+    const ua = put(g, 0, 0, ch('A', 'a')); ua.fused = [ch('A', 'a'), ch('B', 'b')]; refreshAuras(g); expect(ua.auraAtk).toBe(0);   // used to be 5: Fusion fired its own Story row
+    const lone = put(g, 0, 1, ch('A2', 'a')); refreshAuras(g); expect(lone.auraAtk).toBe(5);                                       // the fused unit's b-half is a partner for a different a unit
   });
 });
 

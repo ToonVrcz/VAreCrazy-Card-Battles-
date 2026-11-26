@@ -294,9 +294,9 @@ export function refreshAuras(g: Game) {
     // Story: recomputed from the current field every time, so it starts/stops the moment a partner arrives/leaves and can never accumulate.
     const chains = (u: Unit) => [u.card.chain, ...(u.fused ?? []).map(c => c.chain)].filter((c): c is string => !!c);
     if (g.story?.length) for (const l of g.story) {
-      if (!us.some(x => chains(x).includes(l.b))) continue;
       for (const u of us) {
         if (!chains(u).includes(l.a)) continue;
+        if (!us.some(x => x !== u && chains(x).includes(l.b))) continue;   // the partner must be ANOTHER unit: a Fusion never triggers a Story row between its own two halves
         for (const m of l.mods) { const mm = m.stat === 'atk' ? atk : m.stat === 'hp' ? hp : def; mm.set(u, (mm.get(u) ?? 0) + m.amount); }
         names.set(u, [...(names.get(u) ?? []), l.name ?? `${l.a}+${l.b}`]);
       }
