@@ -32,4 +32,10 @@ describe('P1: Fusion does not trigger Story on itself', () => {
     const g = game([{ a: 'a', b: 'b', mods: [{ stat: 'hp', amount: 20 }] }]), f = put(g, 0, 0, ch('A', 'a', { hp: 80 }), [ch('B', 'b')]); refreshAuras(g);
     expect([f.maxHp, f.hp]).toEqual([80, 80]);
   });
+  it('same-chain rows (a == b; none exist in production today): need a SECOND unit of that chain, and a same-chain Fusion does not self-trigger', () => {
+    const g = game([{ a: 'a', b: 'a', mods: [{ stat: 'atk', amount: 5 }] }]);
+    const lone = put(g, 0, 0, ch('A', 'a')); refreshAuras(g); expect(lone.auraAtk).toBe(0);                    // a single unit is not its own partner (before P1 it was: +5)
+    const fused = put(g, 0, 1, ch('A2', 'a'), [ch('A3', 'a')]); refreshAuras(g); expect([lone.auraAtk, fused.auraAtk]).toEqual([5, 5]);   // two units of the chain trigger each other
+    g.players[0].field[0] = null; refreshAuras(g); expect(fused.auraAtk).toBe(0);                                 // a Fusion of two same-chain cards alone does not trigger itself
+  });
 });
