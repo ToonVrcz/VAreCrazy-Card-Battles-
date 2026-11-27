@@ -67,6 +67,11 @@ body.ingame #nx:disabled{border-color:#5a3a0e;box-shadow:none}
  body.ingame .hand{width:100%}body.ingame::before,body.ingame::after{height:var(--pt)}}
 @media(orientation:landscape) and (max-height:520px){body.ingame .bar{font-size:12px;padding:3px 6px}body.ingame .bar .lp{font-size:12px}body.ingame .avs{width:26px;height:26px;margin-right:4px}body.ingame .bar button{padding:2px 6px!important}}
 @media(prefers-reduced-motion:reduce){body.ingame .hand .c{transition:none}}
+
+.hf{position:fixed;z-index:18;transform:translate(-50%,0);text-align:center;font-weight:900;pointer-events:none;white-space:nowrap;text-shadow:0 0 3px #000,0 0 3px #000,0 2px 6px #000;animation:hfup 2.6s forwards}
+.hf b{display:block;font-size:24px;line-height:1.05}.hf i{display:block;font-style:normal;font-size:12px;line-height:1.25}.hf small{display:block;font-size:11px;font-weight:700;color:#e8d6ff}
+@keyframes hfup{0%{opacity:0;transform:translate(-50%,10px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px)}}
+@media(prefers-reduced-motion:reduce){.hf{animation:hfrd 2.6s forwards}@keyframes hfrd{0%,85%{opacity:1}100%{opacity:0}}}
 </style></head><body><div id="app"></div><div id="md"></div>
 <script>
 const E=VCZE.engine,DEFS=VCZE.defs,BY=Object.fromEntries(DEFS.map(d=>[d.id,d]));
@@ -128,8 +133,17 @@ const NC=(()=>{const MS={normal:1200,important:2000,special:2400};let key=null,N
 const ntSync=()=>{if(G&&!(ON&&ON.spec))NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
 let BOTCFG=null;const RL=()=>G&&G.cfg?G.cfg:E.RULES;function loadCfg(){try{fetch('/api/play/config').then(r=>r.ok?r.json():null).then(c=>{if(c&&c.lp)BOTCFG=c}).catch(()=>{})}catch(e){}}loadCfg();
-function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{storyLinks:VCZE.story,fusionPairs:PAIRS,interactive:true,cfg:BOTCFG||undefined,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});loadCfg();mode=null;sel=null;snap=take();render();drive()}
+function start(){HFK='';NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{storyLinks:VCZE.story,fusionPairs:PAIRS,interactive:true,cfg:BOTCFG||undefined,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});loadCfg();mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=+p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef+(u.auraDef||0)]})});return m}
+let HF=0,HFK='';
+/** Battle numbers: every hit_detail event shows the damage on the target, green = element advantage, red = disadvantage, with how much the element changed it and the ATK/DEF buffs/debuffs behind it. */
+function hitFloats(){if(!G)return;const k=ON?ON.code:'bot',evs=((ON?G.events:E.viewEvents(G.events,0))||[]);if(HFK!==k){HFK=k;HF=G.evSeq||0;return}
+ const sg=n=>(n>0?'+':'−')+Math.abs(n),col=n=>n>0?'#7dffa0':n<0?'#ff8a80':'#fff';let n=document.querySelectorAll('.hf').length;
+ evs.filter(e=>e.t==='hit_detail'&&e.id>HF&&e.hit).forEach(e=>{const h=e.hit,el=document.querySelector('[data-uid="'+h.tu+'"]')||document.querySelector('[data-uid="'+h.au+'"]');if(!el)return;const r=el.getBoundingClientRect();if(!r.width)return;
+  const c=h.m>1?'#7dffa0':h.m<1?'#ff8a80':'#fff',d=e.v-h.b,sp=document.createElement('span');sp.className='hf';sp.style.color=c;sp.style.left=Math.min(innerWidth-80,Math.max(80,r.left+r.width/2))+'px';sp.style.top=(r.top-n*46)+'px';
+  sp.innerHTML=`<b>-${esc(e.v)}</b>${h.m!==1?`<i>${h.m>1?'▲ ได้เปรียบธาตุ':'▼ เสียเปรียบธาตุ'} ×${esc(h.m)} (${esc(sg(d))})</i>`:''}<small>ATK ${esc(h.atk)}${h.ba?` <span style="color:${col(h.ba)}">(${esc(sg(h.ba))})</span>`:''} − DEF ${esc(h.def)}${h.bd?` <span style="color:${col(-h.bd)}">(${esc(sg(h.bd))})</span>`:''}</small>`;
+  document.body.appendChild(sp);setTimeout(()=>sp.remove(),2700);n++});
+ HF=Math.max(HF,G.evSeq||0,...evs.map(e=>e.id))}
 function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
  [[0,'❤'],[1,'⚔'],[2,'🛡']].forEach(([k,ic])=>{const d=b[k]-a[k];if(d)fl(el,(d>0?'+':'')+d+ic,d>0?'#7dffa0':'#ff8a80')})});
  [0,1].forEach(i=>{const d=n['lp'+i]-old['lp'+i];const el=document.querySelector('.lp[data-p="'+i+'"]');if(d&&el)fl(el,d,'#ff8a80')});snap=n}
@@ -165,7 +179,7 @@ function render(){const me=G.players[0],en=G.players[1],T=targets(),SP=!!(ON&&ON
  ntSync();
  if(G.winner!==null){const w=G.winner===0;$('#md').className='on';$('#md').innerHTML=`<div class="box" style="text-align:center"><h2>${SP?(w?'จบเกม: ฝั่งล่างชนะ':'จบเกม: ฝั่งบนชนะ'):w?'🎉 คุณชนะ!':'💀 คุณแพ้'}</h2>${WHY()&&!SP?`<p>${WHY()}</p>`:''}${SP?'':ON&&ON.reward?`<p style="color:#ffd54a">🎁 ได้ +${esc(ON.reward.points)} แต้ม${ON.reward.vrcoin?` และ +${esc(ON.reward.vrcoin)} Vrcoin 🪙`:''} (แมตช์ที่ ${esc(ON.reward.matches)})</p>`:ON&&G.winner!==null?'<p style="color:#bba;font-size:11px">แมตช์นี้ไม่ได้รับรางวัล (จบเร็วเกินไป หรือยังไม่มีโปรไฟล์)</p>':''}<button id="again">กลับหน้าหลัก</button></div>`;$('#again').onclick=()=>{clearRoom();location.href='/play'}}
  if(G.winner===null&&G.pending&&G.pending.responder===0&&!busy&&!SP)respModal();else if(G.pending===undefined&&$('#md .resp'))closeM();
- if(snap)floats(snap)}
+ if(snap)floats(snap);hitFloats()}
 const EV={on_attack:'ศัตรูโจมตี',on_attack_direct:'ศัตรูโจมตีตรงที่ผู้เล่น',on_summon:'ศัตรูเรียกตัวละคร',on_evolve:'ศัตรูกำลังวิวัฒนาการ',turn_start:'เทิร์นของศัตรูเริ่ม',turn_end:'เทิร์นของศัตรูกำลังจบ',on_destroyed:'ตัวละครของคุณกำลังจะถูกทำลาย',to_graveyard:'ตัวละครของคุณลงสุสาน',enemy_attack:'ศัตรูประกาศโจมตี',self_attacked:'ตัวละครของคุณถูกเลือกเป็นเป้าโจมตี',own_attack:'ตัวละครของคุณประกาศโจมตี',ally_grave:'ตัวละครพันธมิตรลงสุสาน',self_destroyed:'ตัวละครของคุณถูกทำลาย',kill_by_attack:'ตัวละครของคุณทำลายศัตรูด้วยการโจมตี',ally_battle_damage:'ตัวละครของคุณจะได้รับความเสียหายจากการต่อสู้',enemy_target:'ศัตรูเลือกตัวละครของคุณเป็นเป้าหมายของเอฟเฟกต์',effect_destroy:'เอฟเฟกต์ศัตรูกำลังจะทำลายตัวละครของคุณ'};
 function respModal(){const P=G.pending,b=G,ac=P.action;let more='';
  if(P.event==='effect_target'&&P.info){const I=P.info;$('#md').className='on';

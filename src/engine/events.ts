@@ -8,7 +8,9 @@ export type EventType =
   | 'trap_destroyed' | 'revive' | 'protect' | 'search_evo' | 'discard' | 'evolve' | 'evolve_cancelled' | 'hit_detail' | 'game_over';
 export type Level = 'normal' | 'important' | 'special';
 /** `p` = the player the event is about (actor, or owner of the thing that was hit). Numbers are real seats in the engine, viewer-relative after viewEvents. */
-export interface GameEvent { id: number; turn: number; t: EventType; p: 0 | 1; card?: string; to?: string | null; v?: number; stat?: string; src?: string; why?: string }
+export interface GameEvent { id: number; turn: number; t: EventType; p: 0 | 1; card?: string; to?: string | null; v?: number; stat?: string; src?: string; why?: string; hit?: HitInfo }
+/** hit_detail numbers for the UI: attacker/target unit uids, element multiplier, damage before the multiplier, effective ATK/DEF and how much of them is buff (+) / debuff (−). */
+export interface HitInfo { au: number; tu: number; m: number; b: number; atk: number; def: number; ba: number; bd: number }
 export const MAX_EVENTS = 60;
 
 /** Records one event on the game (called by the engine at the point where it really happens). */
