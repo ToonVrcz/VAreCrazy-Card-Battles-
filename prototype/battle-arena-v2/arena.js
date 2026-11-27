@@ -114,6 +114,19 @@
   $('#menuFx').addEventListener('click', () => { document.body.classList.toggle('lowfx'); toast(document.body.classList.contains('lowfx') ? 'โหมดประหยัดเครื่อง: เปิด' : 'โหมดประหยัดเครื่อง: ปิด'); });
   $('#lowfx').addEventListener('change', e => document.body.classList.toggle('lowfx', e.target.checked));
 
+
+  // ---- Dynamic avatar (mock) ----
+  // Production idea: URL comes from the player's real account profile (YOU = logged-in player, OPPONENT = the other seat).
+  // Only the image URL is used here: no name/id/email. Invalid, missing or failing URLs fall back to the default avatar.
+  const DEFAULT_AV = 'data:image/svg+xml,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='50%' cy='30%' r='80%'><stop offset='0' stop-color='#4a2a7a'/><stop offset='1' stop-color='#14082a'/></radialGradient></defs><rect width='100' height='100' fill='url(#g)'/><circle cx='50' cy='38' r='17' fill='#d8aa3f' opacity='.9'/><path d='M16 96c0-22 15-34 34-34s34 12 34 34z' fill='#d8aa3f' opacity='.9'/></svg>");
+  const okUrl = u => typeof u === 'string' && (/^https:\/\//i.test(u) || /^data:image\/(png|jpe?g|webp);/i.test(u));
+  function setAvatar(el, url) {
+    const img = el.querySelector('img'); img.onerror = () => { img.onerror = null; img.src = DEFAULT_AV; };
+    img.src = okUrl(url) ? url : DEFAULT_AV;
+  }
+  window.setAvatars = ({ you, opp } = {}) => { setAvatar($('#avYou'), you); setAvatar($('#avOpp'), opp); };
+  { const q = new URLSearchParams(location.search); window.setAvatars({ you: q.get('you'), opp: q.get('opp') }); }
+
   function fit() {
     const cv = $('#canvas'), w = innerWidth, h = innerHeight, force = new URLSearchParams(location.search).get('m');
     const wide = force ? force !== 'port' : w / h > 1.05;

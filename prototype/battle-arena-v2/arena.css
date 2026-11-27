@@ -90,9 +90,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0}
 .gold::before,.gold::after{content:"";position:absolute;width:12px;height:12px;background:linear-gradient(135deg,#ffe9a0,#b57e18);transform:rotate(45deg);top:-8px;box-shadow:0 0 6px #ffcf4a}
 .gold::before{left:14px}.gold::after{right:14px}
 .hud{z-index:6;background:#1a0a2e!important}
-.av{position:absolute;left:10px;top:10px;bottom:10px;width:80px;border-radius:8px;border:2px solid #d8aa3f;background:#0008 center/cover;box-shadow:0 0 10px #a05cff99}
-.av.opp{background-image:url(assets/av-opp.jpg)}
-.av.me{background-image:url(assets/av-me.jpg)}
+.av{position:absolute;left:10px;top:10px;bottom:10px;width:80px;border-radius:8px;border:2px solid #d8aa3f;background:#0b0414;overflow:hidden;box-shadow:0 0 10px #a05cff99}
+.av img{display:block;width:100%;height:100%;object-fit:cover;border-radius:6px}
+
 .who{position:absolute;left:104px;right:14px;top:10px;bottom:10px;display:flex;flex-direction:column;justify-content:center}
 .who>span{font-size:20px;font-weight:800;letter-spacing:1px;color:#ffe9a0}
 .lpline{display:flex;align-items:baseline;gap:8px}.lpn{font-size:46px;font-weight:900;line-height:1;color:#ffd96a;text-shadow:0 0 12px #ff9d1c88}.lpline small{font-size:22px;color:#cbb8ee}
