@@ -34,3 +34,6 @@
 - ตอนนี้ใช้โปรไฟล์ผู้เล่นแบบ guest (คีย์ลับในเบราว์เซอร์) เก็บแต้ม, Vrcoin, การ์ดที่ซื้อ, ประวัติธุรกรรม (`economy_ledger`)
 - ตอนเชื่อม Universe: Vrcoin ต้องใช้กระเป๋าจริงของ Universe ผ่าน bridge และผูก `players.id` กับบัญชีผู้เล่น (ยังไม่ได้อ่านเอกสาร bridge)
 - โมดูล `card_battle` ตอนนี้ให้ทุกร่าง (Lv.40/70) ใช้ได้ฟรีในเด็คอีโว จนกว่าจะต่อกับคลังการ์ดของ Universe
+
+## Avatar (optional)
+`ModuleSeat.avatarUrl?` (src/universe/contract.ts) is an optional profile picture URL from Universe. It is unused until Universe is connected. When it is: https only, allow-listed host, and the CSP (`img-src 'self' data: blob:`) needs a decision (proxy via `/media/*` or extend the allow-list). Until then the game uses its own `players.avatar_id` (migration 034) and falls back to a default avatar.

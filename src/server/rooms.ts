@@ -284,12 +284,19 @@ export class Rooms {
     return full ? { ...base, game: spectator ? viewSpectator(row.state as Game) : viewFor(row.state as Game, seat) } : { ...base, unchanged: true };
   }
 
+  /** Adds both seats' avatar image paths (indexed by seat, absolute) to a full game view. Picture paths only. */
+  private async withAvatars(row: any, v: any) {
+    if (v?.unchanged) return v;
+    try { v.avatars = await this.eco.avatarPaths(row.profiles ?? []); } catch { v.avatars = [null, null]; }   // avatars are cosmetic: never break a game view
+    return v;
+  }
+
   /** What everyone in a not-yet-started room sees (waiting / lobby). */
   private async lobbyShape(code: string, row: any, who: { seat?: 0 | 1; spectator?: boolean }, now: number) {
-    const nm = await this.names(row.profiles), meta = (row.meta ?? {}) as any, here = (s: 0 | 1) => !!meta.seen?.[s] && now - meta.seen[s] < ROOM.lobbyPresenceMs;
+    const nm = await this.names(row.profiles), av = await this.eco.avatarPaths(row.profiles ?? []).catch(() => [null, null] as (string | null)[]), meta = (row.meta ?? {}) as any, here = (s: 0 | 1) => !!meta.seen?.[s] && now - meta.seen[s] < ROOM.lobbyPresenceMs;
     return { status: row.status, seat: who.seat ?? 0, version: row.version, spectator: !!who.spectator, serverNow: now,
       room: { code, name: row.name ?? null, isPublic: !!row.is_public, turnSec: Math.round((row.turn_ms ?? TIMING.turnMs) / 1000), ready: row.ready ?? [false, false],
-        players: [{ name: nm[0] ?? 'ผู้เล่น', here: here(0) }, row.tokens?.[1] ? { name: nm[1] ?? 'ผู้เล่น', here: here(1) } : null],
+        players: [{ name: nm[0] ?? 'ผู้เล่น', avatar: av[0], here: here(0) }, row.tokens?.[1] ? { name: nm[1] ?? 'ผู้เล่น', avatar: av[1], here: here(1) } : null],
         spectators: (row.spectators ?? []).length, spectatorMax: ROOM.spectatorMax } };
   }
 
@@ -332,7 +339,7 @@ export class Rooms {
     if (seatIdx < 0) {
       if ((row.spectators ?? []).includes(token)) {                                   // spectator: read-only
         if (row.status === 'waiting' || row.status === 'lobby') return this.lobbyShape(code, row, { spectator: true }, now);
-        return this.shape(row, 0, now, since !== row.version, true);
+        return this.withAvatars(row, this.shape(row, 0, now, since !== row.version, true));
       }
       if (((row.meta as any)?.kicked ?? []).includes(token)) return { status: 'kicked', seat: 0, version: row.version };
       throw new AppError(403, 'โทเค็นห้องไม่ถูกต้อง');
@@ -344,7 +351,7 @@ export class Rooms {
       return this.lobbyShape(code, row, { seat }, now);
     }
     if (row.status === 'playing' && needsTick(row.state as Game, row.meta as RoomMeta, seat, now)) row = await this.tick(code, seat, now);
-    return this.shape(row, seat, now, since !== row.version);
+    return this.withAvatars(row, this.shape(row, seat, now, since !== row.version));
   }
 
   async act(code: string, token: string, action: Action) {

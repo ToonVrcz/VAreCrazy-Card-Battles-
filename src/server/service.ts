@@ -393,6 +393,53 @@ export class CardService {
     return r.rows[0] as { id: string; storage_path: string };
   }
 
+  // ---- player avatars (gallery the players choose from: reused Lv.15 character art + uploaded images) ----
+  async listAvatars(u: User) {
+    need(u, 'read');
+    const rows = (await this.db.query<any>(`SELECT a.id, a.label, a.card_id, a.media_id, a.sort_order, a.active, COALESCE(um.storage_path, cm.storage_path) path,
+        (SELECT count(*)::int FROM players p WHERE p.avatar_id=a.id) used
+      FROM avatars a LEFT JOIN media_assets um ON um.id=a.media_id LEFT JOIN cards c ON c.character_id=a.card_id LEFT JOIN media_assets cm ON cm.id=c.media_id
+      ORDER BY a.sort_order, a.label`)).rows;
+    return { items: rows.map((r: any) => ({ id: r.id, label: r.label, source: r.card_id ? 'card' : 'upload', card_id: r.card_id, sort_order: r.sort_order, active: r.active, used: r.used, path: r.path ? '/' + r.path : null })) };
+  }
+  async addAvatar(u: User, b: { label?: unknown; media_id?: unknown }) {
+    need(u, 'write');
+    const label = String(b.label ?? '').trim().slice(0, 40), mid = String(b.media_id ?? '');
+    if (!label) throw new AppError(400, 'ต้องตั้งชื่ออวาตาร์');
+    if (!/^[0-9a-f-]{36}$/i.test(mid) || !(await this.db.query<any>(`SELECT 1 FROM media_assets WHERE id=$1::uuid`, [mid])).rows[0]) throw new AppError(400, 'ไม่พบไฟล์รูป');
+    const r = await this.db.query<any>(`INSERT INTO avatars(label, media_id, sort_order) VALUES ($1,$2::uuid,(SELECT COALESCE(max(sort_order),0)+1 FROM avatars)) RETURNING id`, [label, mid]);
+    await this.audit(u, 'avatar:add', r.rows[0].id, { label }, 'avatar');
+    return { ok: true, id: r.rows[0].id };
+  }
+  async updateAvatar(u: User, id: string, b: { label?: unknown; active?: unknown; sort_order?: unknown }) {
+    need(u, 'write');
+    const cur = (await this.db.query<any>(`SELECT label, active, sort_order FROM avatars WHERE id=$1::uuid`, [id])).rows[0];
+    if (!cur) throw new AppError(404, 'ไม่พบอวาตาร์');
+    const label = b.label === undefined ? cur.label : String(b.label).trim().slice(0, 40), active = b.active === undefined ? cur.active : !!b.active;
+    const so = b.sort_order === undefined ? cur.sort_order : Math.max(0, Math.min(9999, Math.floor(Number(b.sort_order)) || 0));
+    if (!label) throw new AppError(400, 'ชื่อห้ามว่าง');
+    await this.db.query(`UPDATE avatars SET label=$2, active=$3, sort_order=$4 WHERE id=$1::uuid`, [id, label, active, so]);
+    await this.audit(u, 'avatar:update', id, { label, active, sort_order: so }, 'avatar');
+    return { ok: true };
+  }
+  async deleteAvatar(u: User, id: string) {
+    need(u, 'write');
+    const r = await this.db.query<any>(`DELETE FROM avatars WHERE id=$1::uuid RETURNING label`, [id]);   // players using it fall back to the default (FK ON DELETE SET NULL)
+    if (!r.rows[0]) throw new AppError(404, 'ไม่พบอวาตาร์');
+    await this.audit(u, 'avatar:delete', id, { label: r.rows[0].label }, 'avatar');
+    return { ok: true };
+  }
+  /** Adds an avatar for every published Lv.15 character that has none yet (new cards appear in the gallery). */
+  async syncCardAvatars(u: User) {
+    need(u, 'write');
+    const r = await this.db.query<any>(`INSERT INTO avatars(label, card_id, sort_order)
+      SELECT c.name, c.character_id, (SELECT COALESCE(max(sort_order),0) FROM avatars) + (row_number() OVER (ORDER BY c.character_id))::int
+      FROM cards c WHERE c.card_type='character' AND c.level=15 AND c.status='published' AND c.media_id IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM avatars a WHERE a.card_id=c.character_id) RETURNING id`);
+    await this.audit(u, 'avatar:sync-cards', 'cards', { added: r.rows.length }, 'avatar');
+    return { ok: true, added: r.rows.length };
+  }
+
   // ---- card frames (per type: "type:spell", per character level: "level:40|70|99", per card: "card:<character_id>") ----
   // Read-only list for the public play screen (frames are not secret).
   async publicFrames() {

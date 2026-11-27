@@ -2,7 +2,7 @@
 // Kept structural and dependency-free so this repo never imports the Universe code. When connecting, copy
 // src/universe/module.ts into apps/game/src/games/card-battle/ and import these types from '../types' instead.
 export interface Tri { en: string; th: string; key?: string }
-export interface ModuleSeat { id: string; displayName: string; seatNumber: number }
+export interface ModuleSeat { id: string; displayName: string; seatNumber: number; /** Optional profile picture URL from the Universe account (https, allow-listed host). Not used until the Universe is connected. */ avatarUrl?: string }
 export interface ModuleCtx { now: number; random: () => number; content?: unknown; live?: unknown }
 export type ActResult = { ok: true } | { ok: false; error: string; save?: boolean };
 export interface ModuleOutcome {

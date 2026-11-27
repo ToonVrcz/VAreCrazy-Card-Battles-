@@ -1,0 +1,2 @@
+ALTER TABLE players DROP COLUMN IF EXISTS avatar_id;
+DROP TABLE IF EXISTS avatars;

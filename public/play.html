@@ -4,7 +4,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#120620;color:#f3e2b0;font:13px system-ui,sans-serif;touch-action:manipulation}
 #app{max-width:520px;margin:0 auto;padding:6px;display:flex;flex-direction:column;gap:5px;min-height:100vh}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:6px;background:#2a1244;border:1px solid #6b4a9a;border-radius:8px;padding:5px 8px}
-.lp{cursor:default;font-weight:700}.lp.tg{outline:2px solid #ffd54a;animation:pl 1s infinite}
+.lp{cursor:default;font-weight:700}.avs{width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;border:2px solid #e2b440;background:#120620;box-shadow:0 0 6px #e2b44088}.avp{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #e2b440}.avg{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px;margin-top:6px}.avg img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;border:2px solid #6b4a9a;cursor:pointer}.avg img.on{border-color:#ffd54a;box-shadow:0 0 8px #ffd54a}.lp.tg{outline:2px solid #ffd54a;animation:pl 1s infinite}
 .row{display:grid;gap:3px;position:relative}.f{grid-template-columns:repeat(7,1fr)}.b{grid-template-columns:repeat(5,1fr);width:72%;margin:0 auto}
 .c{position:relative;aspect-ratio:2/3;background:#1e0d33;border:1px solid #4a3270;border-radius:5px;overflow:visible}
 .c img{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
@@ -44,6 +44,11 @@ const img=c=>esc(BY[c.id]?.img||'');
 const DK={size:40,max:3,min15:3,slots:10,evoMax:15};
 let ME={inv:{},points:0,vrcoin:0,matches:0,matchesToVrcoin:10,ok:false},PK=null;try{PK=localStorage.getItem('vcz_pk')}catch(e){}
 const API=(p,o={},h={})=>fetch('/api/play'+p,{...o,headers:{'content-type':'application/json',...(PK?{'x-player-key':PK}:{}),...h}}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'เกิดข้อผิดพลาด');return j});
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&(t.classList.contains('avs')||t.classList.contains('avp'))&&t.src!==DEF_AV)t.src=DEF_AV;else if(t&&t.tagName==='IMG'&&t.closest&&t.closest('#avg'))t.style.visibility='hidden'},true);
+const DEF_AV="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2a1240"/><circle cx="32" cy="24" r="11" fill="#8a6bbd"/><path d="M10 58c2-14 12-20 22-20s20 6 22 20z" fill="#8a6bbd"/></svg>');
+const avOk=u=>typeof u==='string'&&/^\/media\/[\w./-]+$/.test(u)?u:DEF_AV;
+const avImg=u=>`<img class="avs" src="${esc(avOk(u))}" alt="" referrerpolicy="no-referrer">`;
+function seatAv(i){if(ON&&ON.av){const s=typeof ON.seatV==='number'?ON.seatV:0;return ON.av[(s+i)%2]}return i===0?(ME.avatar&&ME.avatar.path):null}
 async function refreshMe(){try{if(!PK){const p=await API('/profile',{method:'POST',body:'{}'});PK=p.key;try{localStorage.setItem('vcz_pk',PK)}catch(e){}}
  const m=await API('/me');ME={...m,inv:m.inventory||{},ok:true}}catch(e){if(/คีย์|โปรไฟล์/.test(e.message)&&PK){PK=null;try{localStorage.removeItem('vcz_pk')}catch(x){}}ME.ok=false}return ME}
 const uid=()=>Math.random().toString(36).slice(2,8);
@@ -112,12 +117,12 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
 function render(){const me=G.players[0],en=G.players[1],T=targets(),SP=!!(ON&&ON.spec),my=!SP&&G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${esc(mode.sac.length)}/${+mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'สลับ 1/2: เลือกตัวละครของคุณ':'สลับ 2/2: เลือกตัวละครของศัตรูที่จะสลับด้วย'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
  $('#app').innerHTML=`<div class="bar"><span>${SP?'👁 ผู้ชม · ':''}เทิร์น ${esc(G.turn)} · ${SP?(G.active===0?'ฝั่งล่าง':'ฝั่งบน'):G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?` <button id="lv" class="r" style="padding:3px 8px;font-size:12px">${SP?'ออก':'ยอมแพ้'}</button>`:''}</span></div>
- <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">${SP?'ฝั่งบน':'👾 ศัตรู'} LP ${esc(en.lp)}</span><span>มือ ${esc(en.hand.length)} · เด็ค ${esc(en.deck.length)} · <button data-g="1" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(en.grave.length)}</button>${en.extra?` · อีโว ${esc(en.extra.length)}`:''}</span></div>
+ <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">${avImg(seatAv(1))}${SP?'ฝั่งบน':'👾 ศัตรู'} LP ${esc(en.lp)}</span><span>มือ ${esc(en.hand.length)} · เด็ค ${esc(en.deck.length)} · <button data-g="1" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(en.grave.length)}</button>${en.extra?` · อีโว ${esc(en.extra.length)}`:''}</span></div>
  <div class="row b">${en.back.map((b,i)=>`<div class="c ${T.b1.includes(i)?'tg':''}" data-z="b" data-s="1" data-i="${i}">${b?`<img src="/assets/card-back.jpg">`:''}</div>`).join('')}</div>
  <div class="row f">${en.field.map((u,i)=>cell(u,1,i,T.f1.includes(i)?'tg'+advCls(u):'')).join('')}</div>
  <div class="row f">${me.field.map((u,i)=>cell(u,0,i,T.f0.includes(i)?'tg':'')).join('')}</div>
  <div class="row b">${me.back.map((b,i)=>`<div class="c" data-z="b" data-s="0" data-i="${i}">${b?`<img src="${SP?'/assets/card-back.jpg':img(b.card)}" style="opacity:.8">`:''}</div>`).join('')}</div>
- <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">${SP?'ฝั่งล่าง':'🧑 คุณ'} LP ${esc(me.lp)}</span><span>เด็ค ${esc(me.deck.length)} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(me.grave.length)}</button>${me.extra&&!SP?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${esc(me.extra.length)}</button>`:''}</span></div>
+ <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">${avImg(seatAv(0))}${SP?'ฝั่งล่าง':'🧑 คุณ'} LP ${esc(me.lp)}</span><span>เด็ค ${esc(me.deck.length)} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(me.grave.length)}</button>${me.extra&&!SP?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${esc(me.extra.length)}</button>`:''}</span></div>
  ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${SP?'/assets/card-back.jpg':img(c)}"></div>`).join('')}</div>
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
  ${showLog?`<div id="lg">${NC.history(8).map(esc).join('<br>')||'ยังไม่มีเหตุการณ์'}</div>`:''}`;
@@ -155,7 +160,7 @@ function tickTm(){const el=$('#tm');if(!el)return;if(!ON||!ON.deadline||!G||G.wi
  el.textContent=(mine?'⏱ คุณ ':'⏱ ศัตรู ')+left+' วิ';el.style.color=left<=15?'#ff8a80':'#f3e2b0'}
 setInterval(tickTm,500);
 const OA=(p,o={})=>API('/rooms'+p,o,ON?{authorization:'Bearer '+ON.token}:{});
-async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;ON.spec=r.spectator===true;
+async function pollNow(){if(!ON)return;try{const r=await OA('/'+ON.code+'?since='+(ON.version??-1));ON.version=r.version;if(typeof r.seat==='number')ON.seatV=r.seat;if(r.avatars)ON.av=r.avatars;if(r.serverNow){ON.deadline=r.deadline;ON.skew=r.serverNow-Date.now()}ON.endReason=r.endReason||null;ON.forfeitedYou=r.forfeitedYou;ON.reward=r.reward||null;ON.spec=r.spectator===true;
  if(r.status==='kicked'){clearInterval(poll);clearRoom();ON=null;lobby('คุณถูกเชิญออกจากห้อง');return}
  if(r.status==='waiting'||r.status==='lobby'){ON.started=false;const k=JSON.stringify([r.status,r.room]);if(ON.lk!==k){ON.lk=k;ON.room=r.room;ON.rs=r.status;roomLobby()}return}
  if(r.unchanged||!r.game)return;
@@ -169,7 +174,7 @@ function roomGuide(){const R=ON.room,host=ON.seat===0&&!ON.spec,g=R.players[1],o
  return R.ready[1]?'คุณพร้อมแล้ว รอเจ้าของห้องกดเริ่มเกม (กด "ยกเลิกพร้อม" ได้ถ้ายังไม่พร้อม)':'ตรวจเด็คของคุณให้เรียบร้อย แล้วกด "พร้อม" เพื่อบอกเจ้าของห้อง'}
 function roomLobby(){const R=ON.room,host=ON.seat===0&&!ON.spec,spec=ON.spec,link=location.origin+'/play?join='+ON.code,g=R.players[1],ok=g&&R.ready[1]&&g.here;
  const why=host&&!ok?(!g?'ยังไม่มีผู้เล่นอีกคน':!g.here?'ผู้เล่นอีกคนหลุดการเชื่อมต่อ':'ผู้เล่นอีกคนยังไม่กดพร้อม'):'';
- const pl=(x,k)=>x?`<div class="tile" style="display:flex;justify-content:space-between"><span>${k===0?'👑':'🧑'} ${esc(x.name)}${k===0?' (เจ้าของห้อง)':''}</span><span>${x.here?'🟢':'⚪ หลุด'}${k===1?(R.ready[1]?' · ✅ พร้อม':' · ⏳ ยังไม่พร้อม'):''}</span></div>`:'<div class="tile" style="color:#bba">⌛ รอผู้เล่นอีกคน…</div>';
+ const pl=(x,k)=>x?`<div class="tile" style="display:flex;justify-content:space-between"><span>${avImg(x.avatar)}${k===0?'👑':'🧑'} ${esc(x.name)}${k===0?' (เจ้าของห้อง)':''}</span><span>${x.here?'🟢':'⚪ หลุด'}${k===1?(R.ready[1]?' · ✅ พร้อม':' · ⏳ ยังไม่พร้อม'):''}</span></div>`:'<div class="tile" style="color:#bba">⌛ รอผู้เล่นอีกคน…</div>';
  $('#md').className='on';$('#md').innerHTML=`<div class="box wait" style="text-align:center"><h3 style="margin:2px 0">${spec?'👁 ห้อง':'🌐 ห้อง'}${R.name?` “${esc(R.name)}”`:''}</h3><div style="font-size:30px;letter-spacing:6px;font-weight:900">${esc(ON.code)}</div>
  <p style="margin:2px 0;font-size:12px;color:#bba">${R.isPublic?'🌍 สาธารณะ (มีผู้ชมได้)':'🔒 ส่วนตัว'} · ⏱ ${esc(R.turnSec)} วิ/เทิร์น · 👁 ผู้ชม ${esc(R.spectators)}/${esc(R.spectatorMax)}</p>
  ${host&&!g?`<p style="word-break:break-all;color:#bba;font-size:11px;margin:2px 0">${esc(link)}</p><div class="acts" style="margin:2px 0"><button id="cpy">คัดลอกลิงก์</button></div>`:''}
@@ -237,12 +242,17 @@ async function profile(msg=''){$('#md').className='on';$('#md').innerHTML='<div 
  let mt=null;try{await refreshMe();if(ME.ok)mt=await API('/matches?limit=1')}catch(e){}
  if(!ME.ok){$('#md').innerHTML=`<div class="box">${subHead('👤 โปรไฟล์')}<p style="color:#f99">เชื่อมต่อโปรไฟล์ไม่ได้ในตอนนี้ ลองใหม่อีกครั้ง (เล่นกับบอทได้ตามปกติ)</p>${NAV('more')}</div>`;wireNav();$('#sbk').onclick=more;return}
  $('#md').innerHTML=`<div class="box">${subHead('👤 โปรไฟล์')}<p style="color:#ffd54a;margin:2px 0">${esc(msg)}</p>
- <div class="tile"><small style="color:#bba">ชื่อผู้เล่น</small><div style="display:flex;gap:6px;margin-top:4px"><input id="pnm" maxlength="24" value="${esc(ME.name||'')}" style="flex:1;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="psv" class="g">บันทึก</button></div></div>
+ <div class="tile"><small style="color:#bba">รูปโปรไฟล์</small><div style="display:flex;gap:10px;align-items:center;margin:4px 0"><img class="avp" src="${esc(avOk(ME.avatar&&ME.avatar.path))}" alt=""><div id="avg" class="avg" style="flex:1"><small style="color:#bba">กำลังโหลด…</small></div></div></div>
+ <div class="tile" style="margin-top:6px"><small style="color:#bba">ชื่อผู้เล่น</small><div style="display:flex;gap:6px;margin-top:4px"><input id="pnm" maxlength="24" value="${esc(ME.name||'')}" style="flex:1;min-width:0;font-size:16px;padding:8px;border-radius:8px;border:1px solid #6b4a9a;background:#120620;color:#fff"><button id="psv" class="g">บันทึก</button></div></div>
  <div class="tile" style="margin-top:6px">💰 ${esc(ME.points)} แต้ม · 🪙 ${esc(ME.vrcoin)} Vrcoin<br>แมตช์ PvP: ${mt?`${esc(mt.total)} (ชนะ ${esc(mt.wins)} · แพ้ ${esc(mt.losses)})`:esc(ME.matches)}<br>การ์ดอีโวที่มี: ${ownedForms()} ชนิด</div>
  <div class="tile" style="margin-top:6px"><b>สถานะบัญชี: แขก (Guest)</b><br><small style="color:#f99">บัญชีนี้ผูกกับเบราว์เซอร์เครื่องนี้ ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่อง แต้ม การ์ด และเด็คอาจหายและกู้คืนไม่ได้ (สำรองเด็คได้ด้วยปุ่ม "ส่งออก" ในหน้าเด็ค)</small><br><small style="color:#bba">การผูกบัญชี VAreCrazy Universe — เร็ว ๆ นี้ (ยังไม่เปิดใช้งาน)</small></div>
  <div class="acts"><button id="ph">📜 ประวัติแมตช์</button><button id="pp">🧾 ประวัติการซื้อ</button></div>${NAV('more')}</div>`;
  wireNav();$('#sbk').onclick=more;$('#ph').onclick=matchHistory;$('#pp').onclick=purchases;
+ loadAvatars();
  $('#psv').onclick=async()=>{const v=$('#pnm').value.trim();if(!v){toast('ชื่อห้ามว่าง');return}try{await API('/profile',{method:'PUT',body:JSON.stringify({name:v})});await refreshMe();profile('บันทึกชื่อแล้ว ✅')}catch(e){profile('⚠ '+e.message)}}}
+async function loadAvatars(){const g=$('#avg');if(!g)return;try{const l=await API('/avatars'),cur=ME.avatar&&ME.avatar.id;
+ g.innerHTML=l.items.filter(a=>avOk(a.path)!==DEF_AV).map(a=>`<img data-av="${esc(a.id)}" class="${a.id===cur?'on':''}" src="${esc(a.path)}" alt="${esc(a.label)}" title="${esc(a.label)}" loading="lazy">`).join('')+`<button data-av="" style="grid-column:1/-1;font-size:12px;padding:3px">ใช้รูปเริ่มต้น</button>`;
+ g.querySelectorAll('[data-av]').forEach(e=>e.onclick=async()=>{try{await API('/profile/avatar',{method:'PUT',body:JSON.stringify({avatarId:e.dataset.av||null})});await refreshMe();profile('เปลี่ยนรูปแล้ว ✅')}catch(x){profile('⚠ '+x.message)}})}catch(e){g.innerHTML='<small style="color:#f99">โหลดรูปไม่ได้</small>'}}
 async function matchHistory(){$('#md').className='on';$('#md').innerHTML='<div class="box" style="text-align:center">กำลังโหลด…</div>';
  let r;try{await refreshMe();r=await API('/matches?limit=30')}catch(e){$('#md').innerHTML=`<div class="box">${subHead('📜 ประวัติแมตช์')}<p style="color:#f99">โหลดไม่ได้: ${esc(e.message)}</p>${NAV('more')}</div>`;wireNav();$('#sbk').onclick=more;return}
  const RS={normal:'จบปกติ',surrender:'ยอมแพ้',timeout:'หมดเวลา',disconnect:'หลุดการเชื่อมต่อ'};

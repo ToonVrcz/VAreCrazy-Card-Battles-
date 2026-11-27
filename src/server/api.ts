@@ -26,6 +26,8 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       if (path === '/api/play/profile' && m === 'POST') { const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 201, await new Economy(svc).createProfile(b.name)); }
       if (path === '/api/play/me' && m === 'GET') return send(res, 200, await new Economy(svc).me(pkey));
       if (path === '/api/play/profile' && m === 'PUT') return send(res, 200, await new Economy(svc).rename(pkey, JSON.parse((await body(req)).toString() || '{}').name));
+      if (path === '/api/play/avatars' && m === 'GET') return send(res, 200, await new Economy(svc).avatars());
+      if ((path === '/api/profile/avatar' || path === '/api/play/profile/avatar') && m === 'PUT') return send(res, 200, await new Economy(svc).setAvatar(pkey, JSON.parse((await body(req)).toString() || '{}').avatarId));
       if (path === '/api/play/ledger' && m === 'GET') return send(res, 200, await new Economy(svc).ledger(pkey, Number(url.searchParams.get('limit') ?? 50)));
       if (path === '/api/play/matches' && m === 'GET') return send(res, 200, await new Economy(svc).matches(pkey, Number(url.searchParams.get('limit') ?? 30)));
       if (path === '/api/play/frames' && m === 'GET') return send(res, 200, await svc.publicFrames());
@@ -69,6 +71,13 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
       if (path === '/api/media' && m === 'POST') {
         const mode = req.headers['x-render-mode'] === 'full' ? 'full' : 'art_only';
         return send(res, 201, await svc.uploadMedia(u, String(req.headers['x-filename'] ?? 'file'), String(req.headers['content-type'] ?? ''), await body(req), mode));
+      }
+      if (path === '/api/avatars' && m === 'GET') return send(res, 200, await svc.listAvatars(u));
+      if (path === '/api/avatars' && m === 'POST') return send(res, 201, await svc.addAvatar(u, JSON.parse((await body(req)).toString())));
+      if (path === '/api/avatars/sync-cards' && m === 'POST') return send(res, 200, await svc.syncCardAvatars(u));
+      if ((a = path.match(/^\/api\/avatars\/([0-9a-f-]{36})$/i))) {
+        if (m === 'PUT') return send(res, 200, await svc.updateAvatar(u, a[1], JSON.parse((await body(req)).toString())));
+        if (m === 'DELETE') return send(res, 200, await svc.deleteAvatar(u, a[1]));
       }
       if (path === '/api/frames' && m === 'GET') return send(res, 200, await svc.listFrames(u));
       if ((a = path.match(/^\/api\/frames\/([\w:-]+)$/))) {

@@ -73,8 +73,8 @@ export class Economy {
 
   async me(key: string | undefined) {
     const id = await this.need(key);
-    const w = this.wallet((await this.db.query(`SELECT * FROM players WHERE id=$1`, [id])).rows[0]);
-    return { ...w, inventory: Object.fromEntries(await this.inventory(id)), rules: { matchPoints: ECONOMY.matchPoints, vrcoinEvery: ECONOMY.vrcoinEvery, vrcoinBatch: ECONOMY.vrcoinBatch, maxCopies: ECONOMY.maxCopies } };
+    const row = (await this.db.query(`SELECT * FROM players WHERE id=$1`, [id])).rows[0], w = this.wallet(row);
+    return { ...w, avatar: await this.avatarOf(row.avatar_id), inventory: Object.fromEntries(await this.inventory(id)), rules: { matchPoints: ECONOMY.matchPoints, vrcoinEvery: ECONOMY.vrcoinEvery, vrcoinBatch: ECONOMY.vrcoinBatch, maxCopies: ECONOMY.maxCopies } };
   }
 
   async prices() { return (await this.db.query(`SELECT level, currency, price FROM shop_prices ORDER BY level`)).rows; }
@@ -128,6 +128,42 @@ export class Economy {
     if (!nm) throw new AppError(400, 'ชื่อห้ามว่าง');
     await this.db.query(`UPDATE players SET name=$2 WHERE id=$1`, [id, nm]);
     return { ok: true, name: nm };
+  }
+
+  // ---- avatars (picture only; a player's avatar is public to the people in the same room, nothing else about them is) ----
+  private async avatarOf(avatarId: string | null | undefined) {
+    if (!avatarId) return null;
+    const r = (await this.db.query(`SELECT a.id, a.label, COALESCE(um.storage_path, cm.storage_path) path FROM avatars a
+      LEFT JOIN media_assets um ON um.id=a.media_id LEFT JOIN cards c ON c.character_id=a.card_id LEFT JOIN media_assets cm ON cm.id=c.media_id
+      WHERE a.id=$1::uuid AND a.active`, [avatarId])).rows[0];
+    return r?.path ? { id: r.id as string, label: r.label as string, path: '/' + r.path } : null;
+  }
+  /** Gallery the player chooses from (active avatars only). Public: avatars are not secret. */
+  async avatars() {
+    const rows = (await this.db.query(`SELECT a.id, a.label, COALESCE(um.storage_path, cm.storage_path) path FROM avatars a
+      LEFT JOIN media_assets um ON um.id=a.media_id LEFT JOIN cards c ON c.character_id=a.card_id AND c.status='published' LEFT JOIN media_assets cm ON cm.id=c.media_id
+      WHERE a.active ORDER BY a.sort_order, a.label`)).rows;
+    return { items: rows.filter((r: any) => r.path).map((r: any) => ({ id: r.id, label: r.label, path: '/' + r.path })) };
+  }
+  /** Chooses the caller's avatar (null = default). Only an id from the active gallery is accepted; touches nothing else on the profile. */
+  async setAvatar(key: string | undefined, avatarId: unknown) {
+    const id = await this.need(key);
+    if (avatarId === null || avatarId === undefined || avatarId === '') { await this.db.query(`UPDATE players SET avatar_id=NULL WHERE id=$1`, [id]); return { ok: true, avatar: null }; }
+    const aid = String(avatarId);
+    if (!/^[0-9a-f-]{36}$/i.test(aid)) throw new AppError(400, 'อวาตาร์ไม่ถูกต้อง');
+    const av = await this.avatarOf(aid);
+    if (!av) throw new AppError(404, 'ไม่พบอวาตาร์นี้');
+    await this.db.query(`UPDATE players SET avatar_id=$2::uuid WHERE id=$1`, [id, aid]);
+    return { ok: true, avatar: av };
+  }
+  /** Avatar image paths for two profile ids (room seats). Returns the path only: never an id, name, key or any other profile data. */
+  async avatarPaths(ids: (string | null | undefined)[]): Promise<(string | null)[]> {
+    const a = ids[0] ?? null, b = ids[1] ?? null;
+    if (!a && !b) return [null, null];
+    const rows = (await this.db.query(`SELECT p.id, COALESCE(um.storage_path, cm.storage_path) path FROM players p JOIN avatars a ON a.id=p.avatar_id AND a.active
+      LEFT JOIN media_assets um ON um.id=a.media_id LEFT JOIN cards c ON c.character_id=a.card_id LEFT JOIN media_assets cm ON cm.id=c.media_id
+      WHERE p.id=$1::uuid OR p.id=$2::uuid`, [a, b])).rows;
+    return [a, b].map(id => { const r = id ? rows.find((x: any) => x.id === id) : null; return r?.path ? '/' + r.path : null; });
   }
 
   /** The caller's own ledger (newest first). kind 'buy' rows carry the card name; nothing here can change a balance. */
