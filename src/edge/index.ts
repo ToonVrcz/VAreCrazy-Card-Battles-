@@ -6,7 +6,11 @@ import { CardService } from '../server/service.ts';
 import { dispatch } from '../server/api.ts';
 
 const env = (k: string) => (globalThis as any).Deno.env.get(k) as string;
-const sql = postgres(env('SUPABASE_DB_URL'), { max: 3, prepare: false });
+// postgres.js JSON.stringify()s every value bound to a jsonb parameter. Our code already passes JSON text (JSON.stringify(x) + `$n::jsonb`, which is what PGlite expects), so jsonb columns were stored as a JSON *string* (double-encoded): rooms (tokens/profiles/meta) came back as strings and every room poll / join failed. Pass text through unchanged, stringify only real objects.
+const jsonText = (x: unknown) => (typeof x === 'string' ? x : JSON.stringify(x));
+const sql = postgres(env('SUPABASE_DB_URL'), { max: 3, prepare: false, types: {
+  json: { to: 114, from: [114, 3802], serialize: jsonText, parse: (x: string) => JSON.parse(x) },
+  jsonb: { to: 3802, from: [], serialize: jsonText } } });
 const wrap = (q: any): any => ({
   query: async (text: string, params: unknown[] = []) => {
     const r = await q.unsafe(text, params as any);
