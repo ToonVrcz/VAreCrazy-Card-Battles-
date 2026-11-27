@@ -166,5 +166,13 @@ export class Economy {
     await this.db.query(`INSERT INTO shop_prices(level,currency,price) VALUES ($1,$2,$3) ON CONFLICT (level) DO UPDATE SET currency=$2, price=$3`, [level, currency, price]);
     return { ok: true };
   }
+  /** Signature Spell/Trap cards sell at their own per-card price in Points (null = not for sale). */
+  async adminSignatures() { return (await this.db.query(`SELECT character_id id, name, card_type, status, shop_price_points price FROM cards WHERE support IS NOT NULL AND status<>'archived' ORDER BY character_id`)).rows; }
+  async adminSetSignaturePrice(id: string, price: number | null) {
+    if (price !== null && (!Number.isInteger(price) || price < 0 || price > 1e7)) throw new AppError(400, 'ราคาไม่ถูกต้อง');
+    const r = await this.db.query(`UPDATE cards SET shop_price_points=$2 WHERE character_id=$1 AND support IS NOT NULL AND status<>'archived' RETURNING character_id`, [id, price]);
+    if (!r.rows.length) throw new AppError(404, 'ไม่พบการ์ด Signature นี้');
+    return { ok: true };
+  }
   async adminRemovePrice(level: number) { await this.db.query(`DELETE FROM shop_prices WHERE level=$1`, [level]); return { ok: true }; }
 }

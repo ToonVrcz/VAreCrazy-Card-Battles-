@@ -48,9 +48,10 @@ export async function dispatch(svc: CardService, rq: Rq): Promise<Rs> {
         return send(res, 200, await svc.login(String(b.email ?? ''), String(b.password ?? '')));
       }
       const u = await svc.auth(token);
-      if (path === '/api/admin/economy' && m === 'GET') { need(u, 'users'); const e = new Economy(svc); return send(res, 200, { players: await e.adminPlayers(), prices: await e.prices() }); }
+      if (path === '/api/admin/economy' && m === 'GET') { need(u, 'users'); const e = new Economy(svc); return send(res, 200, { players: await e.adminPlayers(), prices: await e.prices(), signatures: await e.adminSignatures() }); }
       if (path === '/api/admin/economy/grant' && m === 'POST') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminGrant(String(b.playerId ?? ''), Number(b.points ?? 0), Number(b.vrcoin ?? 0), b.note)); }
       if (path === '/api/admin/economy/price' && m === 'PUT') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminSetPrice(Number(b.level), String(b.currency), Number(b.price))); }
+      if (path === '/api/admin/economy/signature-price' && m === 'PUT') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminSetSignaturePrice(String(b.id ?? ''), b.price === null || b.price === '' || b.price === undefined ? null : Number(b.price))); }
       if (path === '/api/admin/economy/price' && m === 'DELETE') { need(u, 'users'); const b = JSON.parse((await body(req)).toString() || '{}'); return send(res, 200, await new Economy(svc).adminRemovePrice(Number(b.level))); }
       if (path === '/api/me') return send(res, 200, u);
       if (path === '/api/logout' && m === 'POST') { await svc.logout(token); return send(res, 200, { ok: true }); }

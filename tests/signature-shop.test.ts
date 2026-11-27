@@ -14,6 +14,18 @@ async function world() {
   const svc = new CardService(db, '/tmp/vcz-test-storage');
   return { db, svc, eco: new Economy(svc), rooms: new Rooms(svc) };
 }
+describe('CMS shop page: Signature prices', () => {
+  it('lists the 39 Signature cards, sets/clears a per-card price and validates', async () => {
+    const { db, eco } = await world(); const l = await eco.adminSignatures();
+    expect(l.length).toBe(39); expect(l.every((c: any) => c.price === 300)).toBe(true);
+    await eco.adminSetSignaturePrice(l[0].id, 450); expect((await eco.adminSignatures())[0].price).toBe(450);
+    await eco.adminSetSignaturePrice(l[0].id, null); expect((await eco.adminSignatures())[0].price).toBeNull();
+    for (const bad of [-1, 1.5, 1e9]) await expect(eco.adminSetSignaturePrice(l[0].id, bad)).rejects.toThrow(/ราคา/);
+    await expect(eco.adminSetSignaturePrice('SPL-001', 10)).rejects.toThrow(/ไม่พบ/);   // base cards are not Signature cards
+    await db.query(`UPDATE cards SET status='published' WHERE support IS NOT NULL`);
+    const p: any = await eco.createProfile('t'); expect((await eco.shop(p.key ?? p.secret)).items.find((x: any) => x.id === l[0].id)?.price ?? null).toBeNull();   // price cleared = not for sale
+  });
+});
 describe('migration 029 + seed + shop', () => {
   it('adds 39 draft cards at 300 Point with an engine support config; draft cards are not sold', async () => {
     const { db, eco } = await world();

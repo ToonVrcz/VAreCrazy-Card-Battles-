@@ -6,6 +6,17 @@ const els = (u: Unit) => (u.card.element ?? 'neutral') as Element;
 const dmg = (a: Unit, d: Unit) => Math.max(1, Math.floor(Math.max(1, atk(a) - def(d)) * elementMultiplier(els(a), els(d))));
 const worth = (u: Unit) => atk(u) + u.hp / 2 + ((u.card.level ?? 15) - 15);
 const atk = (u: Unit) => Math.max(0, u.atk + u.bonusAtk + (u.auraAtk ?? 0)), def = (u: Unit) => Math.max(0, u.def + u.bonusDef + (u.auraDef ?? 0));
+/** Game Synergy value of putting `card` on the field next to what is already there, in rough ATK points (max HP counts 0.5, DEF 3, summed over every unit that benefits). */
+export function synergyGain(g: Game, field: (Unit | null)[], card: { id: string }): number {
+  const S = g.cfg?.synergy; if (!S) return 0;
+  const mine = S.members[card.id] ?? []; let gain = 0;
+  for (const gr of mine) {
+    const n = field.filter(u => u && [u.card, ...(u.fused ?? [])].some(c => (S.members[c.id] ?? []).includes(gr))).length, tiers = S.groups[gr] ?? [];
+    const amt = (stat: 'hp' | 'def', m: number) => { const t = tiers.filter(x => x.stat === stat && x.min <= m).sort((a, b) => b.min - a.min)[0]; return t ? t.amount * Math.min(t.stacks, Math.floor(m / t.min)) : 0; };
+    gain += (amt('hp', n + 1) * (n + 1) - amt('hp', n) * n) * 0.5 + (amt('def', n + 1) * (n + 1) - amt('def', n) * n) * 3;
+  }
+  return gain;
+}
 export function botPick(g: Game): Action {
   if (g.pending?.event === 'effect_target') {   // choose the ability's target: hit the strongest enemy, heal the most hurt ally, buff the strongest ally
     const p = g.pending, cs = p.info?.choices ?? [], kind = p.info?.kind;
@@ -22,7 +33,7 @@ export function botPick(g: Game): Action {
   if (g.phase === 'main') {
     const ev = pick('evolve')[0]; if (ev) return ev;
     const fu = pick('fuse')[0]; if (fu) return fu;
-    const su = pick<Extract<Action, { t: 'summon' }>>('summon').sort((a, b) => (me.hand[b.hand].atk ?? 0) - (me.hand[a.hand].atk ?? 0))[0]; if (su) return su;
+    const su = pick<Extract<Action, { t: 'summon' }>>('summon').sort((a, b) => ((me.hand[b.hand].atk ?? 0) + synergyGain(g, me.field, me.hand[b.hand])) - ((me.hand[a.hand].atk ?? 0) + synergyGain(g, me.field, me.hand[a.hand])))[0]; if (su) return su;
     const st = pick('set')[0]; if (st) return st;
     // Swap spell: trade my weakest unit for their strongest only when it is clearly a gain.
     const val = (u: Unit) => atk(u) + u.hp / 2; let sw: Action | null = null, gain = 19;
