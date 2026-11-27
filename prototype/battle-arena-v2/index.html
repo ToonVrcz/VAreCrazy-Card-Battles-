@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VAreCrazy Card Battle — Battle Arena Visual Prototype v2</title>
+<link rel="stylesheet" href="arena.css">
+</head><body>
+<!-- VISUAL PROTOTYPE ONLY: mock data, no engine/API/DB. Not for production. -->
+<div id="vp"><div id="canvas" class="land">
+
+  <!-- layer 0: spectators (image layer from the owner's reference) -->
+  <div id="band"><div class="bandimg"></div><div class="bandfade"></div></div>
+  <div id="brand">VAreCrazy <small>CARD BATTLE</small></div>
+
+  <!-- layer 1: 3D-perspective battlefield (HTML/CSS) -->
+  <div id="persp"><div id="plane">
+    <div class="rune"></div>
+    <div class="row opp back" id="oBack"></div>
+    <div class="row opp chars" id="oChars"></div>
+    <div class="row me chars" id="mChars"></div>
+    <div class="row me back" id="mBack"></div>
+    <div class="pile" id="oGrave" style="left:190px;top:34px"><i class="pbk"></i><b>0</b><em>สุสาน</em></div>
+    <div class="pile" id="oDeck"  style="right:190px;top:34px"><i class="pbk"></i><b>31</b><em>เด็ค</em></div>
+    <div class="pile" id="oEvo"   style="left:30px;top:244px"><i class="pbk evo"></i><b>5</b><em>วิวัฒนาการ</em></div>
+    <div class="pile" id="mEvo"   style="right:30px;top:548px"><i class="pbk evo"></i><b>6</b><em>วิวัฒนาการ</em></div>
+    <div class="pile" id="mGrave" style="left:190px;top:784px"><i class="pbk"></i><b>2</b><em>สุสาน</em></div>
+    <div class="pile" id="mDeck"  style="right:190px;top:784px"><i class="pbk"></i><b>28</b><em>เด็ค</em></div>
+  </div></div>
+  <div id="floorglow"></div>
+
+  <!-- layer 2: HUD (real HTML) -->
+  <div id="opp" class="hud gold"><div class="av opp"></div><div class="who"><span>OPPONENT</span><div class="lpline"><b class="lpn" id="oLP">100</b><small>/ 100</small></div><div class="lpbar red"><i id="oBar" style="width:100%"></i></div></div></div>
+  <div id="banner" class="gold"><span id="turnTxt">TURN 04</span><b id="phaseTxt">BATTLE PHASE</b></div>
+  <div id="phases" class="gold"><h4>TURN PHASE</h4>
+    <button data-p="main" class="ph"><i class="ic ic-main"></i>Main Phase</button>
+    <button data-p="battle" class="ph on"><i class="ic ic-battle"></i>Battle Phase</button>
+    <button data-p="end" class="ph"><i class="ic ic-end"></i>End Phase</button>
+    <p class="phn">เทิร์นแรกโจมตีไม่ได้</p></div>
+  <div id="menu"><button class="gb"><i class="ic ic-book"></i>ดูการ์ด/ข้อมูล</button><button class="gb"><i class="ic ic-gear"></i>ตั้งค่า</button><button class="gb"><i class="ic ic-flag"></i>ยอมแพ้</button><button class="gb"><i class="ic ic-home"></i>กลับหน้าหลัก</button><button class="gb" id="menuFx"><i class="ic ic-gear"></i>ประหยัดเครื่อง</button></div>
+  <button id="menuBtn" class="gb">☰</button>
+  <div id="me" class="hud gold"><div class="av me"></div><div class="who"><span>YOU</span><div class="lpline"><b class="lpn" id="mLP">80</b><small>/ 100</small></div><div class="lpbar blue"><i id="mBar" style="width:80%"></i></div></div></div>
+  <div id="detail" class="gold"><div class="dart" id="dArt"></div><div class="dtx"><h3 id="dName">มังกรอัคคี</h3><div class="dlv" id="dLv">★ 15</div><div class="dst" id="dSt"></div><p id="dDesc"></p></div></div>
+  <div id="hand"></div>
+  <div id="actions"><button class="gb"><i class="ic ic-summon"></i>อัญเชิญ</button><button class="gb"><i class="ic ic-set"></i>ตั้งการ์ด</button><button class="gb"><i class="ic ic-evo"></i>วิวัฒนาการ</button><button class="gb"><i class="ic ic-fuse"></i>ผสาน<small>(Fusion)</small></button></div>
+  <button id="endTurn" class="gold">จบเทิร์น</button>
+  <div id="toast"></div>
+  <div id="fx"></div>
+  <div id="vig"></div>
+</div></div>
+<div id="tools"><label><input type="checkbox" id="lowfx"> โหมดประหยัดเครื่อง (ปิดเอฟเฟกต์)</label> <span>Prototype v2 · mock data · ไม่เชื่อม Production</span></div>
+<script src="arena.js"></script>
+</body></html>
