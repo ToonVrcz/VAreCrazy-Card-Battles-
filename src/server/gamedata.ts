@@ -1,5 +1,6 @@
 import { CardService, AppError, User, can } from './service.ts';
-import { validateRuleValue, resolveConfig, CONFIG_RULE_KEYS } from '../engine/config.ts';
+import { validateRuleValue, CONFIG_RULE_KEYS } from '../engine/config.ts';
+import { loadPlayConfig } from './play-config.ts';
 
 const STATS = ['hp', 'atk', 'def'];
 const MATCH = ['class', 'affiliation', 'element', 'story'];
@@ -14,7 +15,7 @@ export class GameData {
   // ---- game rules ----
   async rules(u: User) { need(u, 'read'); return (await this.db.query<any>(`SELECT key,label,value,status,note FROM game_rules ORDER BY key`)).rows; }
   /** The rules snapshot a NEW game would start with (bot games in the browser use this; online rooms read it server-side). */
-  async playConfig() { return resolveConfig((await this.db.query<any>(`SELECT key,value FROM game_rules WHERE key = ANY($1)`, [[...CONFIG_RULE_KEYS]])).rows); }
+  async playConfig() { return loadPlayConfig(this.db); }
   async ruleValue(key: string) { return (await this.db.query<any>(`SELECT value FROM game_rules WHERE key=$1`, [key])).rows[0]?.value; }
   async setRule(u: User, key: string, value: unknown, status?: string) {
     need(u, 'users');

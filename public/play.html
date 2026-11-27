@@ -281,6 +281,7 @@ function cardInfo(d){if(!d||d.type!=='character')return[];const o=[],el=d.elemen
  else{const n=(CF.sacrifice||{})[d.level];o.push(`⚡ วิวัฒนาการจาก Lv.${PV[d.level]}${n?` · ต้องเสียสละ ${n} ใบ (Lv.${PV[d.level]})`:''} · ใช้การ์ด Evolution 1 ใบ`)}
  (VCZE.story||[]).filter(x=>x.a===d.chain).forEach(x=>o.push(`📖 Story: ${x.name||''} — เมื่อ ${chName(x.b)} อยู่ในสนาม: ${mod(x)}`));
  (VCZE.story||[]).filter(x=>x.b===d.chain).forEach(x=>o.push(`📖 Story ที่เกี่ยวข้อง: ${x.name||''} — สาย ${chName(x.a)} ได้ ${mod(x)} เมื่อการ์ดสายนี้อยู่ในสนาม`));
+ {const S=CF.synergy||{},gs=(S.members||{})[d.id]||[];if(gs.length)o.push(`🎮 Game Synergy: ${gs.map(k=>`${k} (${((S.groups||{})[k]||[]).map(x=>`${x.stat==='hp'?'Max HP':'DEF'} +${x.amount}`).join(', ')})`).join(' · ')} — เมื่อมีตัวกลุ่มเดียวกันอย่างน้อย 2 ใบอยู่ในสนาม`)}
  const fp=PAIRS.filter(x=>x.a===d.chain||x.b===d.chain).map(x=>chName(x.a===d.chain?x.b:x.a));if(fp.length)o.push(`⛓ ฟิวชั่นกับสาย: ${fp.join(', ')}`);
  return o}
 function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;

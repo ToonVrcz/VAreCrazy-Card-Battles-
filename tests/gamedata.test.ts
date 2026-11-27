@@ -125,12 +125,13 @@ describe('per-card story links and fusion partners', () => {
 });
 
 describe('seeded games and import meta', () => {
-  it('seeds the 9 games with tiered synergy (highest tier only)', async () => {
+  it('seeds the 9 games with Game Synergy rows (migration 033: Max HP + DEF at 2 members, no ATK)', async () => {
     const af = await g.affiliations(viewer);
     expect(af.map((x: any) => x.key)).toEqual(expect.arrayContaining(['among-us', 'goose-goose-duck', 'rov', 'warz', 'ragnarok', 'roblox', 'ghost-story', 'fivem', 'board-game']));
     for (const c of ['GUIDE-015', 'PING-015', 'BOB-015']) await g.setCardMeta(ed, c, { affiliations: ['among-us'] });
-    expect(await g.synergyBonus(['GUIDE-015', 'PING-015'])).toEqual([{ affiliation: 'among-us', stat: 'atk', amount: 5 }]);
-    expect(await g.synergyBonus(['GUIDE-015', 'PING-015', 'BOB-015'])).toEqual([{ affiliation: 'among-us', stat: 'atk', amount: 10 }]);
+    const bs = async (ids: string[]) => (await g.synergyBonus(ids)).sort((a: any, b: any) => a.stat.localeCompare(b.stat));
+    expect(await bs(['GUIDE-015', 'PING-015'])).toEqual([{ affiliation: 'among-us', stat: 'def', amount: 1 }, { affiliation: 'among-us', stat: 'hp', amount: 3 }]);
+    expect(await bs(['GUIDE-015', 'PING-015', 'BOB-015'])).toEqual([{ affiliation: 'among-us', stat: 'def', amount: 1 }, { affiliation: 'among-us', stat: 'hp', amount: 3 }]);   // flat: no extra tiers
     expect((await g.rules(viewer)).find((x: any) => x.key === 'gender_pair_bonus').value).toMatchObject({ stat: 'atk', amount: 5 });
   });
   it('import applies meta fields and reports bad rows', async () => {

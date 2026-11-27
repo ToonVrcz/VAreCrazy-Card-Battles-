@@ -57,7 +57,7 @@ describe('server: migration 030, rule validation, playConfig', () => {
     const db = new PGlite(); await migrateUp(db); const svc = new CardService(db, '/tmp/vcz-test-storage'), gd = new GameData(svc);
     await svc.createUser('a@x.com', 'password123', 'super_admin'); const u = (await svc.login('a@x.com', 'password123')).user as User;
     const row = (await db.query<any>(`SELECT value FROM game_rules WHERE key='element_matrix'`)).rows[0].value;
-    expect(row.fire).toEqual(DEFAULT_CONFIG.elements.fire); expect(await gd.playConfig()).toEqual(DEFAULT_CONFIG);
+    expect(row.fire).toEqual(DEFAULT_CONFIG.elements.fire); const pc = await gd.playConfig(); expect({ ...pc, synergy: DEFAULT_CONFIG.synergy }).toEqual(DEFAULT_CONFIG); expect(Object.keys(pc.synergy.groups).length).toBe(9);   // Game Synergy comes from migration 033
     await expect(gd.setRule(u, 'hand_max', 99)).rejects.toThrow(AppError);
     await gd.setRule(u, 'hand_max', 8); expect((await gd.playConfig()).handMax).toBe(8);
     await gd.setRule(u, 'element_matrix', { fire: ['water'] }); expect((await gd.playConfig()).elements).toEqual({ fire: ['water'] });

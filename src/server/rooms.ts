@@ -2,7 +2,7 @@
 // send actions. Polling transport: GET room every ~1.5s. Opponent hand/deck/face-down traps are never sent.
 import { randomBytes, randomUUID } from 'node:crypto';
 import { parseEffect, type Effect } from '../engine/effects.ts';
-import { resolveConfig, CONFIG_RULE_KEYS } from '../engine/config.ts';
+import { loadPlayConfig } from './play-config.ts';
 import { createGame, act, EngineError, STATS_VERSION, type Action, type CardDef, type Game, type FusionPair, type StoryLink } from '../engine/game.ts';
 import { buildDeck, buildSet, viewFor, viewSpectator, validateDeck, validateEvoDeck, deckFromIds, EVO_RULES } from '../engine/deck-view.ts';
 import { Economy, ECONOMY } from './economy.ts';
@@ -151,7 +151,7 @@ export class Rooms {
           sets.push({ main, extra: evoOk ? deckFromIds(sd.e!, byId) : auto(chains).map(c => ({ ...c })) });
         } else { const b = buildSet(pool, pairs, Math.random, auto); sets.push({ main: b.main, extra: evoOk ? deckFromIds(sd.e!, byId) : b.extra }); }
       }
-      const g = createGame([sets[0].main, sets[1].main], Date.now() % 1e9, first, { storyLinks: story, fusionPairs: pairs, interactive: true, extras: [sets[0].extra, sets[1].extra], cfg: resolveConfig((await tx.query<any>(`SELECT key,value FROM game_rules WHERE key = ANY($1)`, [[...CONFIG_RULE_KEYS]])).rows) });
+      const g = createGame([sets[0].main, sets[1].main], Date.now() % 1e9, first, { storyLinks: story, fusionPairs: pairs, interactive: true, extras: [sets[0].extra, sets[1].extra], cfg: await loadPlayConfig(tx) });
       const meta = { ...newMeta(now, row.turn_ms ?? undefined), matchId: randomUUID(), startedAt: now, kicked: meta0.kicked ?? [] };
       await tx.query(`UPDATE play_rooms SET status='playing', state=$2::jsonb, meta=$3::jsonb, version=1, updated_at=now() WHERE code=$1`, [code, JSON.stringify(g), JSON.stringify(meta)]);
       return { ok: true };

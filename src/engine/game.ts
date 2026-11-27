@@ -30,7 +30,7 @@ export class EngineError extends Error {}
 /** Story link: while a unit of chain `a` and a unit of chain `b` are on the SAME side's field, every unit of chain `a` gets the modifiers (directional: one row = one side of the story). Never stacked per duplicate copy of `b`. */
 export interface StoryLink { a: string; b: string; name?: string; mods: { stat: 'hp' | 'atk' | 'def'; amount: number }[] }
 export interface FusionPair { a: string; b: string; hp: number; atk: number; def: number }
-export interface Unit { nextAtk?: { amount: number; turn: number }; untargetableTurn?: number; tempAtk?: number; tempDef?: number; splTurn?: Record<string, number>; timed?: { stat: 'atk' | 'def'; amount: number; until: number }[]; auraAtk?: number; auraDef?: number; auraHp?: number; storyNames?: string[]; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
+export interface Unit { nextAtk?: { amount: number; turn: number }; untargetableTurn?: number; tempAtk?: number; tempDef?: number; splTurn?: Record<string, number>; timed?: { stat: 'atk' | 'def'; amount: number; until: number }[]; auraAtk?: number; auraDef?: number; auraHp?: number; synHp?: number; synDef?: number; synGroups?: string[]; storyNames?: string[]; used?: Record<string, number>; stacks?: Record<string, number>; fused?: CardDef[]; uid: number; card: CardDef; hp: number; maxHp: number; atk: number; def: number; bonusAtk: number; bonusDef: number; summonedTurn: number; attacked: boolean; lockedUntil: number; poison: number }
 export interface Player { extra?: CardDef[]; lp: number; deck: CardDef[]; hand: CardDef[]; field: (Unit | null)[]; back: ({ card: CardDef; setTurn: number } | null)[]; grave: CardDef[]; summoned: boolean; evolved: boolean; noAttackUntil: number }
 export interface TargetInfo { side: 'ally' | 'enemy'; kind: 'atk' | 'heal' | 'damage' | 'discard'; amount: number; text: string; source: string; choices: { slot: number; id: string; name: string; hp: number; maxHp: number; atk: number }[] }   // choices = the candidates as they are at the moment of the question (the board shown is the state before the action)
 export interface Pending { responder: 0 | 1; event: string; options: number[]; base: Game; action: Action; answers: number[]; info?: TargetInfo }
@@ -78,7 +78,7 @@ const hit = (a: Unit, d: Unit) => Math.max(1, Math.floor(Math.max(1, effAtk(a) -
 const log = (g: Game, m: string) => { g.log.push(`T${g.turn}: ${m}`); };
 /** Combat-log breakdown (display only): where an attack number came from, so a big hit can be explained. */
 const atkParts = (u: Unit) => `ATK ${effAtk(u)} (ฐาน ${u.atk}${u.bonusAtk ? ` ${u.bonusAtk > 0 ? '+' : '−'} บัฟ ${Math.abs(u.bonusAtk)}` : ''}${u.auraAtk ? ` ${u.auraAtk > 0 ? '+' : '−'} Story ${Math.abs(u.auraAtk)}` : ''})`;
-const defParts = (u: Unit) => `DEF ${effDef(u)} (ฐาน ${u.def}${u.bonusDef ? ` ${u.bonusDef > 0 ? '+' : '−'} บัฟ ${Math.abs(u.bonusDef)}` : ''}${u.auraDef ? ` ${u.auraDef > 0 ? '+' : '−'} Story ${Math.abs(u.auraDef)}` : ''})`;
+const defParts = (u: Unit) => `DEF ${effDef(u)} (ฐาน ${u.def}${u.bonusDef ? ` ${u.bonusDef > 0 ? '+' : '−'} บัฟ ${Math.abs(u.bonusDef)}` : ''}${u.auraDef - (u.synDef ?? 0) ? ` ${u.auraDef - (u.synDef ?? 0) > 0 ? '+' : '−'} Story ${Math.abs(u.auraDef - (u.synDef ?? 0))}` : ''}${u.synDef ? ` + Synergy ${u.synDef}` : ''})`;
 const hitDetail = (a: Unit, d: Unit, dealt: number) => `  ↳ ${atkParts(a)} − ${defParts(d)} × ธาตุ ${elementMultiplier(els(a), els(d))} = ${dealt}`;
 const mk = (g: Game, c: CardDef, hp?: number): Unit => ({ uid: ++g.uid, card: c, hp: hp ?? c.hp ?? 1, maxHp: c.hp ?? 1, atk: c.atk ?? 0, def: c.def ?? 0, bonusAtk: 0, bonusDef: 0, summonedTurn: g.turn, attacked: false, lockedUntil: 0, poison: 0 });
 const units = (p: Player) => p.field.filter((u): u is Unit => !!u);
@@ -301,9 +301,24 @@ export function refreshAuras(g: Game) {
         names.set(u, [...(names.get(u) ?? []), l.name ?? `${l.a}+${l.b}`]);
       }
     }
+    // Game Synergy (B7): >= tier.min DISTINCT units of this side sharing a game group get max-HP / DEF; recomputed every time, per-unit cap, never accumulates.
+    const S = g.cfg?.synergy, syn = new Map<Unit, { hp: number; def: number; gr: string[] }>();
+    if (S && Object.keys(S.groups).length) {
+      const by = new Map<string, Unit[]>();
+      for (const u of us) for (const gr of new Set([u.card, ...(u.fused ?? [])].flatMap(c => S.members[c.id] ?? []))) (by.get(gr) ?? by.set(gr, []).get(gr)!).push(u);
+      for (const [gr, ms] of by) for (const stat of ['hp', 'def'] as const) {
+        const t = (S.groups[gr] ?? []).filter(x => x.stat === stat && x.min <= ms.length).sort((a, b) => b.min - a.min)[0];
+        if (!t) continue;
+        const add = t.amount * Math.min(t.stacks, Math.floor(ms.length / t.min));
+        for (const u of ms) { const x = syn.get(u) ?? { hp: 0, def: 0, gr: [] }; x[stat] += add; if (!x.gr.includes(gr)) x.gr.push(gr); syn.set(u, x); }
+      }
+    }
     for (const u of us) if (u.timed?.length) { u.timed = u.timed.filter(x => x.until >= g.turn); for (const x of u.timed) { const mm = x.stat === 'atk' ? atk : def; mm.set(u, (mm.get(u) ?? 0) + x.amount); } }   // Signature buffs with a duration
     for (const u of us) {
-      u.auraAtk = atk.get(u) ?? 0; u.auraDef = def.get(u) ?? 0; u.storyNames = names.get(u);
+      const sy = syn.get(u), sd = sy ? Math.min(sy.def, g.cfg!.synergy.cap.def) : 0, sh = sy ? Math.min(sy.hp, g.cfg!.synergy.cap.hp) : 0;
+      u.auraAtk = atk.get(u) ?? 0; u.auraDef = (def.get(u) ?? 0) + sd; u.storyNames = names.get(u); u.synDef = sd; u.synGroups = sy?.gr;
+      const dh = sh - (u.synHp ?? 0);   // max HP only: no instant heal; when it drops, current HP is clamped
+      if (dh) { u.maxHp += dh; if (dh < 0) u.hp = Math.max(1, Math.min(u.hp, u.maxHp)); u.synHp = sh; }
       const want = hp.get(u) ?? 0, d = want - (u.auraHp ?? 0);
       if (d) { u.maxHp += d; u.hp = d > 0 ? u.hp + d : Math.max(1, Math.min(u.hp, u.maxHp)); u.auraHp = want; }
     }
@@ -408,7 +423,7 @@ function step(g: Game, a: Action): Game {
       sendTo(evo); me.evolved = true; active(g, pi, 'evolve');
       if (fire(g, opp, 'on_evolve')) { (ex ?? me.hand).push(form); log(g, 'การวิวัฒนาการถูกยกเลิก'); emit(g, { t: 'evolve_cancelled', p: pi, card: u.card.name }); return g; }
       sac.forEach(s => { toGrave(g, pi, me.field[s]!); me.field[s] = null; });
-      const nu = mk(g, form, evolveHp(u.maxHp, u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef - (u.tempDef ?? 0); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`); emit(g, { t: 'evolve', p: pi, card: u.card.name, to: form.name });
+      const nu = mk(g, form, evolveHp(u.maxHp - (u.synHp ?? 0), u.hp, form.hp ?? 1)); nu.bonusAtk = u.bonusAtk - (u.tempAtk ?? 0); nu.bonusDef = u.bonusDef - (u.tempDef ?? 0); me.field[a.slot] = nu; toGrave(g, pi, u); log(g, `${u.card.name} วิวัฒนาการเป็น ${form.name}`); emit(g, { t: 'evolve', p: pi, card: u.card.name, to: form.name });
       runEffects(g, pi, nu, 'on_evolve');
       return g;
     }

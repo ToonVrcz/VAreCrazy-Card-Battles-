@@ -6,14 +6,21 @@ export const ELEMENT_KEYS = Object.keys(elementsJson.elements);
 export interface GameConfig {
   lp: number; handMax: number; sacrifice: Record<number, number>; sacrificeSameLevel: boolean;
   strong: number; weak: number; elements: Record<string, string[]>;     // elements: attacker -> elements it is strong against
+  synergy: SynergyConfig;
 }
+/** Game Synergy (variant B7): units of one side that share a game group get max-HP / DEF bonuses while >= min distinct units of that group are on the field.
+ *  HP raises the MAX only (no instant heal); no ATK. groups = tiers per group (highest tier reached applies), members = card id -> its groups, cap = per-unit ceiling. Empty groups = off. */
+export interface SynergyTier { min: number; stat: 'hp' | 'def'; amount: number; stacks: number }
+export interface SynergyConfig { cap: { hp: number; def: number }; groups: Record<string, SynergyTier[]>; members: Record<string, string[]> }
+export const DEFAULT_SYNERGY: SynergyConfig = { cap: { hp: 10, def: 4 }, groups: {}, members: {} };
 export const DEFAULT_CONFIG: GameConfig = {
   lp: 100, handMax: 10, sacrifice: { 40: 1, 70: 2, 99: 3 }, sacrificeSameLevel: true,
   strong: elementsJson.multiplier_strong, weak: elementsJson.multiplier_weak,
   elements: Object.fromEntries(Object.entries(elementsJson.elements as Record<string, { strong: string[] }>).map(([k, v]) => [k, [...v.strong]])),
+  synergy: DEFAULT_SYNERGY,
 };
 /** Keys of game_rules that feed a game, with the shape check used when an admin edits them. Returns an error message or null. */
-export const CONFIG_RULE_KEYS = ['starting_lp', 'hand_max', 'evolution_sacrifice', 'evolution_sacrifice_same_level', 'element_multiplier', 'element_matrix'] as const;
+export const CONFIG_RULE_KEYS = ['starting_lp', 'hand_max', 'evolution_sacrifice', 'evolution_sacrifice_same_level', 'element_multiplier', 'element_matrix', 'synergy_cap'] as const;
 
 const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN);
 const int = (v: unknown, lo: number, hi: number) => { const x = num(v); return Number.isInteger(x) && x >= lo && x <= hi ? x : null; };
@@ -44,12 +51,17 @@ export function validateRuleValue(key: string, value: unknown): string | null {
       }
       return null;
     }
+    case 'synergy_cap': {
+      const o = value as any;
+      return int(o?.hp, 0, 100) !== null && int(o?.def, 0, 50) !== null ? null : 'ต้องเป็น {"hp":10,"def":4} (HP 0–100, DEF 0–50 ต่อใบ)';
+    }
   }
   return null;
 }
+export interface SynergyInput { synergies: { aff: string; min: number; stat: string; amount: number; stacks: number }[]; members: { card: string; aff: string }[] }
 
 /** Build the snapshot from game_rules rows. Any missing or invalid row falls back to the default (never throws), so a bad edit cannot break new games. */
-export function resolveConfig(rows: { key: string; value: unknown }[]): GameConfig {
+export function resolveConfig(rows: { key: string; value: unknown }[], syn?: SynergyInput): GameConfig {
   const m = new Map(rows.map(r => [r.key, r.value])), ok = (k: string) => m.has(k) && validateRuleValue(k, m.get(k)) === null;
   const c: GameConfig = structuredClone(DEFAULT_CONFIG);
   if (ok('starting_lp')) c.lp = int(m.get('starting_lp'), 1, 9999)!;
@@ -58,5 +70,14 @@ export function resolveConfig(rows: { key: string; value: unknown }[]): GameConf
   if (ok('evolution_sacrifice')) { const o = m.get('evolution_sacrifice') as any; c.sacrifice = { 40: num(o['40']), 70: num(o['70']), 99: num(o['99']) }; }
   if (ok('element_multiplier')) { const o = m.get('element_multiplier') as any; c.strong = num(o.strong); c.weak = num(o.weak); }
   if (ok('element_matrix')) c.elements = Object.fromEntries(Object.entries(m.get('element_matrix') as Record<string, string[]>).map(([k, v]) => [k, [...v]]));
+  c.synergy = structuredClone(DEFAULT_SYNERGY);
+  if (ok('synergy_cap')) { const o = m.get('synergy_cap') as any; c.synergy.cap = { hp: num(o.hp), def: num(o.def) }; }
+  if (syn) {
+    for (const r of syn.synergies) {
+      if (!Number.isInteger(r.min) || r.min < 2 || (r.stat !== 'hp' && r.stat !== 'def') || !Number.isInteger(r.amount) || !Number.isInteger(r.stacks) || r.stacks < 1) continue;   // ATK rows and bad rows are ignored: B7 has no ATK
+      (c.synergy.groups[r.aff] ??= []).push({ min: r.min, stat: r.stat, amount: r.amount, stacks: r.stacks });
+    }
+    for (const r of syn.members) if (c.synergy.groups[r.aff]) { const l = (c.synergy.members[r.card] ??= []); if (!l.includes(r.aff)) l.push(r.aff); }
+  }
   return c;
 }

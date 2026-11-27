@@ -44,6 +44,14 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
 
+## Status (2026-11-27)
+Deployed (main = 7d7f187; edge function `api` v20 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s6` (commit cf515b7); rollback references, do not delete: `s5` (v19), `s4` (v18), `s3` (v17)). Migrations 031-032 applied to production (next new migration = 034 once 033 is applied).
+- 031: Lv15 DEF rebalance (DEF by ATK tier +12/+10/+0 plus chain delta; sim 6/6 archetypes in band; games ~2.6x longer, owner accepted, no damage floor). 032: repair of double-encoded jsonb (`card_effects.config`, `play_rooms.tokens`).
+- Root cause of the broken online rooms: the edge postgres.js driver double-encoded jsonb passed through `unsafe()` with a `$n::jsonb` cast; fixed by a custom `types` serializer in `src/edge/index.ts`. PvP rooms work again (owner confirmed 2026-11-27).
+- P1 (a Fusion never triggers a Story row between its own two halves) and the element advantage/disadvantage UI on attack targets (green/red) are deployed.
+- Branch `feature/game-synergy-real` (NOT merged, NOT deployed): Game Synergy B7 live. Migration `033_game_synergy` (HP/DEF rows replace the proposal ATK rows, `game_rules.synergy_cap` {hp:10,def:4}, Lv40+ inherit the chain's Lv15 groups). Data-driven: `src/server/play-config.ts` builds `g.cfg.synergy` (tiers + members) at game creation; `refreshAuras` applies it (>=2 distinct units of a group on one side; max HP only, no instant heal; DEF; per-unit cap). Among Us = HP+3/DEF+1 (it is on ~80% of chains), others HP+3/DEF 1-2. Deploy order when Toon says "Deploy": apply 033 -> deploy edge (rebuild bundle) -> merge to main -> verify.
+- Not on main on purpose: `feature/hardening-1` (login throttle already shipped differently on main with its own migration 018; the branch's 018 would clash; at most cherry-pick the reflect-trap wording). OG-1 backup decrypt test skipped (owner: only if necessary). The 18 missing EVO/FUS images: owner uploads them in the CMS.
+
 ## Status (2026-11-26)
 Deployed: main = see git log (Bot AI round 2: element-aware, focus-fire, lethal by value, Signature spells; `hit_detail` combat-log event; direct attack cap 60). Edge function `api` v18 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s4` (commit 2279022); rollback references, do not delete: `tmp-edge-bundle-s3` (v17). No migrations. Balance B1/B2/B4/B6 not done (owner chose B3 only). Simulation report: `docs/balance/BOT_AI_COMBO_SIMULATION_RESULTS_2026-11-26.md` (audit branch).
 
