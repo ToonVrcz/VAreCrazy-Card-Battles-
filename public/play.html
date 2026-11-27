@@ -127,7 +127,7 @@ const NC=(()=>{const MS={normal:1200,important:2000,special:2400};let key=null,N
   idle(max){return q.length||cur?new Promise(r=>{waiters.push(r);setTimeout(r,max)}):Promise.resolve()}}})();
 const ntSync=()=>{if(G&&!(ON&&ON.spec))NC.ingest(ON?G.events:E.viewEvents(G.events,0),G.evSeq||0)};
 function toast(m){const t=document.createElement('div');t.className='t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
-let BOTCFG=null;const RL=()=>G&&G.cfg?G.cfg:E.RULES;function loadCfg(){try{fetch('/api/play/config').then(r=>r.ok?r.json():null).then(c=>{if(c&&c.lp)BOTCFG=c}).catch(()=>{})}catch(e){}}loadCfg();
+let BOTCFG=null;fetch('/api/play/fusion-pairs').then(r=>r.ok?r.json():null).then(j=>{if(j&&Array.isArray(j.pairs)&&j.pairs.length){PAIRS.length=0;j.pairs.forEach(x=>PAIRS.push({a:x.a,b:x.b,hp:+x.hp||0,atk:+x.atk||0,def:+x.def||0}))}}).catch(()=>{});const RL=()=>G&&G.cfg?G.cfg:E.RULES;function loadCfg(){try{fetch('/api/play/config').then(r=>r.ok?r.json():null).then(c=>{if(c&&c.lp)BOTCFG=c}).catch(()=>{})}catch(e){}}loadCfg();
 function start(){NC.reset('bot'+Date.now(),0);const mm=myCards(),bm=deck();G=E.createGame([mm,bm],Date.now()%1e9,Math.random()<.5?0:1,{storyLinks:VCZE.story,fusionPairs:PAIRS,interactive:true,cfg:BOTCFG||undefined,extras:[myExtra(mm),formsOf(chainsOf(bm),false)]});loadCfg();mode=null;sel=null;snap=take();render();drive()}
 function take(){const m={};G.players.forEach((p,i)=>{m['lp'+i]=+p.lp;p.field.forEach(u=>{if(u)m[u.uid]=[u.hp,u.atk+u.bonusAtk+(u.auraAtk||0),u.def+u.bonusDef+(u.auraDef||0)]})});return m}
 function floats(old){const n=take();document.querySelectorAll('[data-uid]').forEach(el=>{const a=old[el.dataset.uid],b=n[el.dataset.uid];if(!a||!b)return;
@@ -319,6 +319,10 @@ const DEFF='/assets/frame/frame.webp';let FR={};fetch('/api/play/frames').then(r
 const frameOf=d=>FR['card:'+d.id]||(d.type==='character'&&[40,70,99].includes(+d.level)&&FR['level:'+d.level])||FR['type:'+d.type]||DEFF;
 const STN={atk:'ATK',hp:'HP',def:'DEF'},ELN={fire:'ไฟ',water:'น้ำ',wind:'ลม',earth:'ดิน',lightning:'สายฟ้า',nature:'ธรรมชาติ',poison:'พิษ',holy:'แสง',dark:'มืด',alchemy:'เล่นแร่แปรธาตุ',neutral:'กลาง',physical:'กายภาพ'};
 const chName=k=>{const x=DEFS.find(c=>c.chain===k&&c.chainName);return x?x.chainName:k};
+/** Fusion partners of a character card: every card of the partner chains (Lv.15 forms), tappable. Symmetric like the engine (a pair works from either side). */
+function fusionBlock(d){if(!d||d.type!=='character'||!PAIRS.length)return'';const m=new Map();PAIRS.forEach(x=>{const o=x.a===d.chain?x.b:x.b===d.chain?x.a:null;if(!o||o===d.chain)return;const q=m.get(o)||{hp:0,atk:0,def:0};m.set(o,{hp:Math.max(q.hp,x.hp||0),atk:Math.max(q.atk,x.atk||0),def:Math.max(q.def,x.def||0)})});
+ if(!m.size)return'<p>⛓ ยังไม่มีคู่ Fusion ของสายนี้</p>';
+ return`<p>⛓ Fusion ได้กับ (แตะเพื่อดูการ์ด):</p><div class="acts" style="margin:2px 0">${[...m].map(([k,b])=>{const c=DEFS.find(x=>x.chain===k&&x.type==='character'&&x.level===15)||DEFS.find(x=>x.chain===k&&x.type==='character');if(!c)return'';const bo=[b.hp?`♥+${b.hp}`:'',b.atk?`⚔+${b.atk}`:'',b.def?`◈+${b.def}`:''].filter(Boolean).join(' ');return`<button data-fp="${esc(c.id)}" style="font-size:12px;padding:6px 8px;background:#2a1244;outline:1px solid #e2b440">${esc(chName(k))}${bo?`<br><small>${esc(bo)}</small>`:''}</button>`}).join('')}</div>`}
 /** Extra card facts for the detail view: element matchup, Story and Fusion partners (all text escaped). */
 function cardInfo(d){if(!d||d.type!=='character')return[];const o=[],el=d.element,en=k=>ELN[k]||k,CF=BOTCFG||RL()||{},EM=CF.elements||{},adv=el&&EM[el]||[],weak=Object.keys(EM).filter(k=>(EM[k]||[]).includes(el)),PV={40:15,70:40,99:70},mod=x=>(x.mods||[]).map(y=>`${STN[y.stat]||y.stat} ${y.amount>0?'+':''}${y.amount}`).join(', ');
  o.push(`📋 สาย ${chName(d.chain)} · Lv.${d.level} · ♥${d.hp??'-'} ⚔${d.atk??'-'} ◈${d.def??0}`);
@@ -328,10 +332,10 @@ function cardInfo(d){if(!d||d.type!=='character')return[];const o=[],el=d.elemen
  (VCZE.story||[]).filter(x=>x.a===d.chain).forEach(x=>o.push(`📖 Story: ${x.name||''} — เมื่อ ${chName(x.b)} อยู่ในสนาม: ${mod(x)}`));
  (VCZE.story||[]).filter(x=>x.b===d.chain).forEach(x=>o.push(`📖 Story ที่เกี่ยวข้อง: ${x.name||''} — สาย ${chName(x.a)} ได้ ${mod(x)} เมื่อการ์ดสายนี้อยู่ในสนาม`));
  {const S=CF.synergy||{},gs=(S.members||{})[d.id]||[];if(gs.length)o.push(`🎮 Game Synergy: ${gs.map(k=>`${k} (${((S.groups||{})[k]||[]).map(x=>`${x.stat==='hp'?'Max HP':'DEF'} +${x.amount}`).join(', ')})`).join(' · ')} — เมื่อมีตัวกลุ่มเดียวกันอย่างน้อย 2 ใบอยู่ในสนาม`)}
- const fp=PAIRS.filter(x=>x.a===d.chain||x.b===d.chain).map(x=>chName(x.a===d.chain?x.b:x.a));if(fp.length)o.push(`⛓ ฟิวชั่นกับสาย: ${fp.join(', ')}`);
  return o}
+let FPREV=null;
 function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=frameOf(d),card=view(c,{frame:fr});VCZ.ref.frame=fr;
- const me=(z==='shop'||z==='col')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&!(ON&&ON.spec)&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&G.phase==='battle',b=[];
+ const me=(z==='shop'||z==='col'||z==='p')?{hand:[],field:[],back:[]}:G.players[0],can=z!=='shop'&&z!=='col'&&z!=='p'&&!(ON&&ON.spec)&&G.active===0&&!busy&&!G.winner,main=z!=='shop'&&z!=='col'&&z!=='p'&&G.phase==='main',bt=z!=='shop'&&z!=='col'&&z!=='p'&&G.phase==='battle',b=[];
  if(can&&z==='h'){if(d.type==='character'&&d.level===15&&main)b.push(['เรียก',()=>go({t:'summon',hand:i,slot:Math.max(0,me.field.findIndex(x=>!x))})]);
   if(d.type==='trap'&&main)b.push(['วางกับดัก',()=>go({t:'set',hand:i})]);
   if(d.type==='spell'&&main)b.push(['ใช้เวทมนตร์',()=>castStart(i,d.id)]);
@@ -339,9 +343,9 @@ function detail(c,z,i){if(c&&c.type==='hidden')return;const d=BY[c.id]||c,fr=fra
  if(can&&z==='f'){if(main){const u=me.field[i],nx={15:40,40:70,70:99}[u.card.level],e=me.hand.findIndex(x=>x.type==='evolution'),f=(me.extra||me.hand).findIndex(x=>x.type==='character'&&x.chain===u.card.chain&&x.level===nx);
    if(e>=0&&f>=0&&!me.evolved)b.push(['วิวัฒนาการ',()=>{mode={k:'evo',slot:i,evo:e,form:f,need:RL().sacrifice[nx],sac:[]};closeM();render()}])}
   if(bt)b.push(['โจมตี',()=>{mode={k:'attack',from:i};closeM();render()}])}
- $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${esc(d.name)}</b> ${d.type!=='character'?'· '+esc(d.type):''}</p><p>${esc(d.text||'')}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${esc(u.fused.map(x=>x.name).join(' + '))}</p>`:''})():''}${cardInfo(d).map(t=>`<p>${esc(t)}</p>`).join('')}${(d.fx||[]).map(x=>`<p>• ${esc(x.t)}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${esc(d.flavor)}</i></p>`:''}
+ $('#md').className='on';$('#md').innerHTML=`<div class="box">${VCZ.svg(card,{})}<p><b>${esc(d.name)}</b> ${d.type!=='character'?'· '+esc(d.type):''}</p><p>${esc(d.text||'')}</p>${z==='f'||z==='x'?(()=>{const u=(G.players[z==='f'?0:1]).field[i];return u&&u.fused?`<p>⛓ ฟิวชั่น: ${esc(u.fused.map(x=>x.name).join(' + '))}</p>`:''})():''}${cardInfo(d).map(t=>`<p>${esc(t)}</p>`).join('')}${fusionBlock(d)}${(d.fx||[]).map(x=>`<p>• ${esc(x.t)}${x.ok?'':' <span style="color:#f3e2b0;font-size:11px">⚠ ยังไม่เปิดใช้งานในช่วงทดสอบ</span>'}</p>`).join('')}${d.flavor?`<p style="color:#bba"><i>${esc(d.flavor)}</i></p>`:''}
  <div class="acts">${b.map((x,k)=>`<button data-k="${k}">${esc(x[0])}</button>`).join('')}<button class="r" id="cl">ปิด</button></div></div>`;
- $('#cl').onclick=z==='shop'?()=>shop(d.level>15?d.level:'sig'):z==='col'?()=>collection():z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()})}
+ $('#cl').onclick=z==='p'?()=>{const q=FPREV;FPREV=null;q?detail(...q):closeM()}:z==='shop'?()=>shop(d.level>15?d.level:'sig'):z==='col'?()=>collection():z[0]==='g'?()=>graveView(+z[1]):z==='e'?extraView:closeM;document.querySelectorAll('[data-k]').forEach(el=>el.onclick=()=>{closeM();b[el.dataset.k][1]()});document.querySelectorAll('[data-fp]').forEach(el=>el.onclick=()=>{const c=BY[el.dataset.fp];if(c){FPREV=[d,z,i];detail(c,'p',0)}})}
 const TN={character:'ตัวละคร',evolution:'Evolution',fusion:'Fusion',spell:'เวทมนตร์',trap:'กับดัก',item:'ไอเทม'},TORD={character:0,evolution:1,fusion:2,spell:3,trap:4,item:5};
 function summ(cards){const n={};cards.forEach(id=>{const t=BY[id].type;n[t]=(n[t]||0)+1});return Object.keys(n).sort((x,y)=>(TORD[x]??9)-(TORD[y]??9)).map(t=>`${esc(TN[t]||t)} ${esc(n[t])}`).join(' · ')||'ยังไม่มีการ์ด'}
 function deckList(msg=''){if(!ME.ok&&!deckList.tried){deckList.tried=1;refreshMe().then(()=>deckList(msg));}const row=d=>{const pr=deckProblem(d.cards)||evoProblem(d.evo),on=DS.active===d.id&&!pr;

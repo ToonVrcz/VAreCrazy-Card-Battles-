@@ -16,6 +16,11 @@ export class GameData {
   async rules(u: User) { need(u, 'read'); return (await this.db.query<any>(`SELECT key,label,value,status,note FROM game_rules ORDER BY key`)).rows; }
   /** The rules snapshot a NEW game would start with (bot games in the browser use this; online rooms read it server-side). */
   async playConfig() { return loadPlayConfig(this.db); }
+  /** Fusion pairs ticked in the CMS (chain keys + bonus). Public: same data the game rooms use. Published cards only. */
+  async fusionPairs() {
+    return (await this.db.query<any>(`SELECT a.key a, b.key b, f.hp_bonus hp, f.atk_bonus atk, f.def_bonus def FROM card_fusion_partners f
+      JOIN cards c ON c.id=f.card_id AND c.status='published' JOIN evolution_chains a ON a.id=c.chain_id JOIN evolution_chains b ON b.id=f.partner_chain_id ORDER BY a.key, b.key`)).rows;
+  }
   async ruleValue(key: string) { return (await this.db.query<any>(`SELECT value FROM game_rules WHERE key=$1`, [key])).rows[0]?.value; }
   async setRule(u: User, key: string, value: unknown, status?: string) {
     need(u, 'users');
