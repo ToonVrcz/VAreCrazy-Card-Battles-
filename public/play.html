@@ -33,6 +33,40 @@ a.bl{display:block;background:#5b2d90;color:#fff;border-radius:8px;padding:10px 
 .chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:4px 0}.chip{padding:6px 9px;font-size:12px;background:#2a1244}.chip.on{background:#5b2d90;outline:2px solid #ffd54a}.chip.soon{opacity:.55}
 .dash{display:flex;flex-direction:column;gap:6px;text-align:left}.tile{background:#2a1244;border:1px solid #4a3270;border-radius:8px;padding:6px 8px;font-size:12px}.hintl{background:#3b2a00;border:1px solid #e2b440;border-radius:8px;padding:6px 8px;font-size:12px}
 .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.cgrid>div{position:relative;text-align:center;font-size:10px}.cgrid img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:5px;border:1px solid #4a3270}.cgrid .bd{position:absolute;top:2px;right:2px;background:#000c;border-radius:6px;padding:0 4px;font-size:10px}
+
+/* ===== Battle Arena skin (game screen only: body.ingame). Pure presentation: same DOM, handlers and data attributes. ===== */
+body.ingame{background:#0b0414;overflow-x:hidden}
+body.ingame::before{content:"";position:fixed;left:0;right:0;top:0;height:clamp(70px,22vh,230px);z-index:0;pointer-events:none;background:url(/assets/arena/spectators.jpg) center top/100% 100% no-repeat}
+body.ingame::after{content:"";position:fixed;left:0;right:0;top:0;height:clamp(70px,22vh,230px);z-index:0;pointer-events:none;background:linear-gradient(transparent 55%,#0b0414)}
+body.ingame #app{position:relative;z-index:1;max-width:min(1040px,100vw,calc(100vh*1.12));padding:calc(clamp(40px,14vh,150px)) 8px 10px;gap:6px}
+body.ingame .bar{background:linear-gradient(180deg,#2b1248f2,#150826f2);border:2px solid transparent;border-radius:12px;background-clip:padding-box;box-shadow:0 0 0 2px #d8aa3f,0 0 0 4px #5a3a0e,inset 0 0 18px #a05cff33,0 4px 14px #000a;margin:2px 4px}
+body.ingame .bar .lp{font-size:15px;color:#ffd96a;text-shadow:0 0 10px #ff9d1c66;display:inline-flex;align-items:center}
+body.ingame .avs{width:40px;height:40px;border-width:3px;border-color:#d8aa3f;box-shadow:0 0 10px #a05cffaa,0 0 0 2px #5a3a0e;margin-right:8px}
+body.ingame .pers{perspective:1000px;perspective-origin:50% 0;margin:2px 0}
+body.ingame .pln{display:flex;flex-direction:column;gap:6px;padding:10px 8px;border-radius:14px;transform:rotateX(24deg);transform-origin:50% 100%;
+ background:radial-gradient(60% 45% at 50% 52%,#a05cff2a,transparent 70%),linear-gradient(#0a0414cc,transparent 24%),url(/assets/arena/floor.jpg) center/100% 100% no-repeat;
+ box-shadow:0 0 0 6px #2a1646,0 0 0 9px #b78a2e,0 0 60px 6px #7a2bd055}
+body.ingame .pln .row{gap:6px}
+body.ingame .pln .c{background:radial-gradient(circle,#2a1448,#140826 72%);border:2px solid #c99a2e;border-radius:7px;box-shadow:inset 0 0 14px #000b,0 0 8px #a05cff66}
+body.ingame .pln .row.b .c{border-color:#a77bd8}
+body.ingame .pln .c img{border-radius:5px}
+body.ingame .c.tg{outline:3px solid #ffe27a;outline-offset:1px;box-shadow:0 0 18px #ffd54a}
+body.ingame .c.sel{outline:3px solid #ffe27a;box-shadow:0 0 22px #ffd54a}
+body.ingame .hand{width:min(100%,640px);margin:0 auto;gap:6px}
+body.ingame .hand .c{border:2px solid #e2b440;border-radius:8px;box-shadow:0 4px 12px #000b,0 0 10px #e2b44055;transition:transform .15s}
+body.ingame .hand .c:hover{transform:translateY(-8px)}
+body.ingame .hint{background:linear-gradient(#3b2a00,#2a1d00);border:2px solid #e2b440;border-radius:10px;box-shadow:0 0 12px #e2b44066}
+body.ingame #nx{border:2px solid #ffe27a;background:linear-gradient(#2f9a3f,#1d6a2a);box-shadow:0 0 14px #5bd36a66}
+body.ingame #nx:disabled{border-color:#5a3a0e;box-shadow:none}
+@media(max-width:600px){body.ingame::before,body.ingame::after{height:clamp(60px,11vh,110px)}body.ingame::before{background-image:url(/assets/arena/spectators-m.jpg);background-size:auto 100%;background-position:42% top}
+ body.ingame #app{padding-top:clamp(34px,8vh,80px)}body.ingame .pln{transform:rotateX(14deg);padding:6px 4px;gap:4px}body.ingame .pln .row{gap:3px}body.ingame .bar .lp{font-size:13px}body.ingame .avs{width:32px;height:32px}}
+@media(orientation:landscape) and (min-aspect-ratio:3/2){body.ingame{--pt:clamp(34px,13vh,140px)}
+ body.ingame #app{max-width:100vw;padding:var(--pt) 10px 6px;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,min(34vw,440px));grid-auto-flow:dense;align-content:start;align-items:start;gap:6px 14px}
+ body.ingame .pers{grid-column:1;grid-row:1/9;width:min(100%,calc((100vh - var(--pt) - 14px)*1.18));margin:0 auto}
+ body.ingame #app>.bar,body.ingame .hand,body.ingame .hint,body.ingame #lg{grid-column:2}body.ingame .pln{transform:rotateX(14deg);padding:6px}
+ body.ingame .hand{width:100%}body.ingame::before,body.ingame::after{height:var(--pt)}}
+@media(orientation:landscape) and (max-height:520px){body.ingame .bar{font-size:12px;padding:3px 6px}body.ingame .bar .lp{font-size:12px}body.ingame .avs{width:26px;height:26px;margin-right:4px}body.ingame .bar button{padding:2px 6px!important}}
+@media(prefers-reduced-motion:reduce){body.ingame .hand .c{transition:none}}
 </style></head><body><div id="app"></div><div id="md"></div>
 <script>
 const E=VCZE.engine,DEFS=VCZE.defs,BY=Object.fromEntries(DEFS.map(d=>[d.id,d]));
@@ -116,12 +150,14 @@ function targets(){const t={f1:[],f0:[],b1:[],h:[],lp1:false};if(!mode)return t;
  if(mode.k==='evo')me.field.forEach((u,i)=>u&&i!==mode.slot&&!mode.sac.includes(i)&&(!RL().sacrificeSameLevel||u.card.level===me.field[mode.slot].card.level)&&t.f0.push(i));return t}
 function render(){const me=G.players[0],en=G.players[1],T=targets(),SP=!!(ON&&ON.spec),my=!SP&&G.active===0&&!G.winner&&!busy&&!G.pending;
  const hint=mode?`<div class="hint">${mode.k==='attack'?'เลือกเป้าหมายโจมตี':mode.k==='fuse'?(mode.picks.length?'เลือกการ์ดใบล่าง (คู่ Fusion)':'เลือกการ์ดใบบน'):mode.k==='evo'?`เลือกตัวละครที่จะสังเวย (${esc(mode.sac.length)}/${+mode.need})`:mode.id==='SPL-007'?(mode.a===undefined?'สลับ 1/2: เลือกตัวละครของคุณ':'สลับ 2/2: เลือกตัวละครของศัตรูที่จะสลับด้วย'):'เลือกเป้าหมาย'} <button class="r" id="cx" style="padding:3px 10px">ยกเลิก</button></div>`:'';
- $('#app').innerHTML=`<div class="bar"><span>${SP?'👁 ผู้ชม · ':''}เทิร์น ${esc(G.turn)} · ${SP?(G.active===0?'ฝั่งล่าง':'ฝั่งบน'):G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?` <button id="lv" class="r" style="padding:3px 8px;font-size:12px">${SP?'ออก':'ยอมแพ้'}</button>`:''}</span></div>
+ document.body.classList.add('ingame');$('#app').innerHTML=`<div class="bar"><span>${SP?'👁 ผู้ชม · ':''}เทิร์น ${esc(G.turn)} · ${SP?(G.active===0?'ฝั่งล่าง':'ฝั่งบน'):G.active===0?'ของคุณ':'ศัตรู'} · ${PH[G.phase]} <b id="tm"></b></span><span>${FB(1)} <button id="lgb" style="padding:3px 8px;font-size:12px">บันทึก</button>${ON&&G.winner===null?` <button id="lv" class="r" style="padding:3px 8px;font-size:12px">${SP?'ออก':'ยอมแพ้'}</button>`:''}</span></div>
  <div class="bar"><span class="lp ${T.lp1?'tg':''}" data-z="lp" data-s="1" data-p="1" style="position:relative">${avImg(seatAv(1))}${SP?'ฝั่งบน':'👾 ศัตรู'} LP ${esc(en.lp)}</span><span>มือ ${esc(en.hand.length)} · เด็ค ${esc(en.deck.length)} · <button data-g="1" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(en.grave.length)}</button>${en.extra?` · อีโว ${esc(en.extra.length)}`:''}</span></div>
+ <div class="pers"><div class="pln">
  <div class="row b">${en.back.map((b,i)=>`<div class="c ${T.b1.includes(i)?'tg':''}" data-z="b" data-s="1" data-i="${i}">${b?`<img src="/assets/card-back.jpg">`:''}</div>`).join('')}</div>
  <div class="row f">${en.field.map((u,i)=>cell(u,1,i,T.f1.includes(i)?'tg'+advCls(u):'')).join('')}</div>
  <div class="row f">${me.field.map((u,i)=>cell(u,0,i,T.f0.includes(i)?'tg':'')).join('')}</div>
  <div class="row b">${me.back.map((b,i)=>`<div class="c" data-z="b" data-s="0" data-i="${i}">${b?`<img src="${SP?'/assets/card-back.jpg':img(b.card)}" style="opacity:.8">`:''}</div>`).join('')}</div>
+ </div></div>
  <div class="bar"><span class="lp" data-z="lp" data-s="0" data-p="0" style="position:relative">${avImg(seatAv(0))}${SP?'ฝั่งล่าง':'🧑 คุณ'} LP ${esc(me.lp)}</span><span>เด็ค ${esc(me.deck.length)} · <button data-g="0" style="padding:2px 8px;font-size:12px">⚰ สุสาน ${esc(me.grave.length)}</button>${me.extra&&!SP?` · <button id="exb" style="padding:2px 8px;font-size:12px">🧬 อีโว ${esc(me.extra.length)}</button>`:''}</span></div>
  ${hint}<div class="hand">${me.hand.map((c,i)=>`<div class="c ${T.h.includes(i)?'tg':''}" data-z="h" data-s="0" data-i="${i}"><img src="${SP?'/assets/card-back.jpg':img(c)}"></div>`).join('')}</div>
  <div class="bar"><button id="nx" class="g" ${my&&!mode?'':'disabled'} style="flex:1">${G.phase==='main'?'ไปเฟสต่อสู้ ▶':'จบเทิร์น ⏭'}</button></div>
@@ -211,7 +247,7 @@ const NAVS=[['home','🏠','หน้าหลัก'],['deck','🃏','เด็
 const NAV=on=>`<div class="nav">${NAVS.map(n=>`<button data-nav="${n[0]}" class="${n[0]===on?'on':''}">${n[1]}<br>${n[2]}</button>`).join('')}</div>`;
 function wireNav(){document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>({home:()=>lobby(),deck:()=>deckList(),col:()=>collection(),shop:()=>shop(),more:()=>more()})[el.dataset.nav]())}
 const ownedForms=()=>DEFS.filter(c=>isForm(c)&&(ME.inv[c.id]||0)>0).length;
-function lobby(msg=''){$('#md').className='on';
+function lobby(msg=''){document.body.classList.remove('ingame');$('#md').className='on';
  const ad=activeDeck(),hint=!ME.ok?'ยังเชื่อมต่อโปรไฟล์ไม่ได้ จึงยังซื้อการ์ดและรับรางวัลไม่ได้ (เล่นกับบอทได้ตามปกติ)':!ad?'ยังไม่ได้เลือกเด็ค ระบบจะสุ่มเด็คให้ — จัดเด็คของคุณเองได้ที่แท็บ "เด็ค"':ME.points>0&&!ownedForms()?'ยังไม่มีการ์ดอีโว ลองดูที่ร้านค้าได้ (ซื้อด้วยแต้มหรือ Vrcoin)':'';
  $('#md').innerHTML=`<div class="box"><div class="dash"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">VAreCrazy Card Battle</h3><button id="lgd" style="padding:4px 10px;font-size:13px" aria-label="คู่มือ">❓</button></div>
  ${msg?`<p style="color:#f99;margin:0">${esc(msg)}</p>`:''}
