@@ -106,7 +106,7 @@ async function playBot(page, tag, maxMs = 240000) {
         const nt = await p.evaluate(() => window.__nt); return { r, again, p, nt }; }));
       ok(`bot: ${BOT_GAMES} games played to the end without hanging`, outs.every(o => o.r === 'finished'), outs.map(o => o.r).join(','));
       ok('Notify bot: notices appear, are Thai, perspective-correct and never repeat a turn-start', outs.every(o => o.nt.length > 3 && o.nt.every(t => !/ผู้เล่น \d|Player [12]|มอนสเตอร์|undefined|NaN/.test(t)) && o.nt.some(t => /คุณ/.test(t)) && o.nt.some(t => /ฝ่ายตรงข้าม/.test(t)) && new Set(o.nt.filter(t => /เริ่มแล้ว/.test(t))).size === o.nt.filter(t => /เริ่มแล้ว/.test(t)).length), outs.map(o => o.nt.length).join(','));
-      await Promise.all(outs.map(async o => { await o.p.waitForTimeout(9000); o.nt = await o.p.evaluate(() => window.__nt); }));
+      await Promise.all(outs.map(async o => { await o.p.waitForTimeout(+(process.env.NOTE_WAIT || 9000)); o.nt = await o.p.evaluate(() => window.__nt); }));
       ok('Notify bot: a win/lose notice is shown at the end', outs.every(o => o.nt.some(t => /ชนะ|แพ้/.test(t))));
       ok('game-over button says "กลับหน้าหลัก"', outs.every(o => o.again === 'กลับหน้าหลัก'), outs.map(o => o.again).join(','));
       const o = outs[0]; if (o.r === 'finished') { await o.p.click('#again'); await o.p.waitForSelector('#lb'); ok('"กลับหน้าหลัก" returns to the lobby (no new game started)', (await o.p.locator('#nx').count()) === 0); }
