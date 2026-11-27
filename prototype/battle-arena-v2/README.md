@@ -8,5 +8,5 @@ Visual-only prototype. Mock data. No engine / API / DB / CMS connection. Not for
 - Cards, HUD, hand, buttons: real HTML/CSS (clickable). Card art is cropped from the reference (placeholder, low-res).
 - Card back: owner's supplied back design (`assets/card-back.jpg`).
 - Phases shown: Main / Battle / End only (matches game rules).
-- Layouts: landscape 1672x941 and portrait 430x932, scaled to fit. Low-effects toggle and prefers-reduced-motion supported.
+- Layouts: desktop landscape 1672x941, phone portrait 430x932, phone landscape 940x430 (auto-picked by screen; force with ?m=land|port|pl), all scaled to fit. Low-effects toggle and prefers-reduced-motion supported.
 - Run: open `index.html` (local file works). `?m=port` / `?m=land` forces a layout.

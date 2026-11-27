@@ -43,7 +43,7 @@
     st.hand.forEach((id, i) => {
       const w = document.createElement('div'); w.className = 'hc' + (st.sel === i ? ' sel' : ''); w.dataset.i = i;
       const k = i - (st.hand.length - 1) / 2;
-      const step = $('#canvas').classList.contains('port') ? 62 : 98, half = $('#canvas').classList.contains('port') ? 36 : 66;
+      const cl = $('#canvas').classList, step = cl.contains('port') ? 62 : cl.contains('pl') ? 54 : 98, half = cl.contains('port') ? 36 : cl.contains('pl') ? 28 : 66;
       w.style.left = `calc(50% - ${half}px + ${k * step}px)`; w.style.transform = `rotate(${k * 5}deg) translateY(${Math.abs(k) * 9 - (st.sel === i ? 34 : 0)}px)`; w.style.zIndex = i;
       w.appendChild(cardEl(id)); h.appendChild(w);
     });
@@ -116,10 +116,11 @@
 
   function fit() {
     const cv = $('#canvas'), w = innerWidth, h = innerHeight, force = new URLSearchParams(location.search).get('m');
-    const land = force ? force === 'land' : w / h > 1.05;
-    cv.className = land ? 'land' : 'port'; document.body.classList.toggle('isport', !land);
-    const cw = land ? 1672 : 430, ch = land ? 941 : 932, s = Math.min(w / cw, (h - 0) / ch);
+    const wide = force ? force !== 'port' : w / h > 1.05;
+    const mode = !wide ? 'port' : (force ? force : (h <= 520 ? 'pl' : 'land'));
+    cv.className = mode; document.body.classList.toggle('isphone', mode !== 'land'); document.body.classList.toggle('isport', mode !== 'land');
+    const cw = { land: 1672, port: 430, pl: 940 }[mode], ch = { land: 941, port: 932, pl: 430 }[mode], s = Math.min(w / cw, (h - 0) / ch);
     cv.style.transform = `scale(${s})`; cv.style.left = (w - cw * s) / 2 + 'px'; cv.style.top = (h - ch * s) / 2 + 'px';
   }
-  addEventListener('resize', fit); fit(); render(); info('dragon');
+  addEventListener('resize', () => { fit(); render(); }); fit(); render(); info('dragon');
 })();

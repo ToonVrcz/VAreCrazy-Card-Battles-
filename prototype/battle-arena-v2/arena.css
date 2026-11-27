@@ -190,3 +190,43 @@ button{font:inherit;color:inherit;cursor:pointer;border:0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .lowfx .slot,.lowfx .gold,.lowfx .gb,.lowfx #plane,.lowfx #endTurn,.lowfx .hc{box-shadow:none!important;filter:none!important;animation:none!important}
 .lowfx #floorglow,.lowfx #vig,.lowfx #plane::after{display:none}
+
+/* ---------- phone landscape (.pl) : 940x430 canvas ---------- */
+#canvas.pl{width:940px;height:430px}
+.pl #band{left:120px;right:120px;height:80px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.pl .bandimg{background-image:url(assets/spectators-m.jpg);background-size:100% 100%}
+.pl .bandfade{height:30px}
+.pl #persp{left:0;top:68px;width:940px;height:274px;perspective:900px}
+.pl #plane{transform:rotateX(50deg) scale(.45)}
+.pl .opp.back{top:34px}.pl .opp.chars{top:244px}.pl .me.chars{top:548px}.pl .me.back{top:784px}
+.pl #floorglow{top:60px;height:280px;left:120px;right:120px}
+.pl .gold::before,.pl .gold::after{width:7px;height:7px;top:-4px}
+.pl .gold{box-shadow:0 0 0 1.5px #d8aa3f,0 0 0 3px #5a3a0e,inset 0 0 12px #a05cff33,0 4px 10px #000a;border-radius:8px}
+.pl #opp{left:826px;top:6px;width:108px;height:64px}
+.pl #me{left:6px;top:360px;width:108px;height:64px}
+.pl .av{left:6px;top:6px;bottom:auto;width:32px;height:32px}
+.pl .who{left:44px;right:6px;top:4px;bottom:auto;height:40px;display:block}
+.pl .who>span{font-size:9px;min-width:0;display:block}.pl .lpn{font-size:22px}.pl .lpline small{font-size:9px}.pl .lpline{display:flex;white-space:nowrap;gap:3px}.pl .lpline small{font-size:8px}
+.pl .lpbar{position:absolute;left:6px;right:6px;top:48px;margin:0;height:8px}
+.pl #banner{left:50%;top:48px;transform:translateX(-50%);width:230px;height:22px;font-size:12px;gap:8px;letter-spacing:1px;background:linear-gradient(#2b1248,#150826);border:1.5px solid #d8aa3f;border-radius:12px;box-shadow:none;z-index:8}
+.pl #banner::before,.pl #banner::after{display:none}
+.pl #phases{left:6px;top:6px;width:108px;height:96px;padding:5px}
+.pl #phases h4,.pl .phn{display:none}
+.pl .ph{height:26px;margin:3px 0;font-size:10px;gap:6px;padding:0 6px;border-radius:7px}
+.pl .ic{width:14px;height:14px}
+.pl #detail{left:6px;top:108px;width:108px;height:246px;padding:6px;z-index:6}
+.pl .dart{position:relative;left:auto;top:auto;bottom:auto;width:100%;height:80px}
+.pl .dtx{position:relative;left:auto;right:auto;top:auto;bottom:auto;margin-top:5px;overflow:hidden;height:128px}
+.pl .dtx h3{font-size:12px}.pl .dlv{font-size:10px}.pl .dst{font-size:10px;gap:6px;flex-wrap:wrap}.pl .dtx p{font-size:9px;line-height:1.25}
+.pl #menuBtn{display:flex;left:826px;top:74px;width:108px;height:26px;font-size:15px;padding:0;z-index:20}
+.pl #menu{display:none;left:790px;top:102px;width:144px;z-index:30;background:#150826f5;border:2px solid #d8aa3f;border-radius:10px;padding:6px;gap:5px}
+.pl #menu.on{display:flex}.pl #menu .gb{height:28px;font-size:11px;justify-content:flex-start;padding:0 8px;gap:6px}
+.pl #hand{left:200px;top:338px;width:540px;height:92px}
+.pl .hc{width:56px;height:84px;top:6px}
+.pl #actions{left:826px;top:196px;width:108px;grid-template-columns:1fr 1fr;gap:4px}
+.pl #actions .gb{height:44px;font-size:9px;flex-direction:column;gap:0;padding:0;border-radius:8px}.pl #actions .gb small{display:none}
+.pl #endTurn{left:826px;top:310px;width:108px;height:112px;font-size:20px;border-radius:10px;box-shadow:0 0 0 2px #f3cf6a,0 0 16px #ffb52e88}
+.pl #toast{top:100px;font-size:13px;padding:6px 14px}.pl .dmg{font-size:26px}
+.pl #vig{background:radial-gradient(130% 100% at 50% 45%,transparent 62%,#05010a88)}
+.pl .pile{width:100px}.pl .pile .pbk{width:96px;height:140px}.pl .pile b{font-size:26px;top:46px}.pl .pile em{font-size:16px}
+.isphone #tools{display:none}
