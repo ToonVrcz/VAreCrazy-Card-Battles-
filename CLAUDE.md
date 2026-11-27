@@ -44,6 +44,9 @@ A web card game (`/play`) plus Admin CMS (`/`) to be plugged into varecrazy.com/
 - Online: per-seat tokens, 90 s turn timer (auto end turn; 3 timeouts = loss), absent > 2 min = loss, resign button.
 - Rules in the Admin rules table are mostly Claude proposals Toon accepted ("ตกลง"); element matrix is a proposal.
 
+## Status (2026-11-27, evening)
+Player Avatar deployed (main = see git log; edge `api` v23 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s9` (commit 5ed08c0); rollback refs, do not delete: `s8` (v22), `s7`..`s3`). Migration 034 (`avatars` + `players.avatar_id`, seeded with the 39 Lv15 character cards) applied; next new migration = 035. Profile picker in `/play`, avatars beside LP + lobby (path only, same-origin `/media|/assets`, default SVG fallback), Admin "อวาตาร์" page (upload, active, delete, sync from cards), `GET /api/play/avatars`, `PUT /api/profile/avatar` (+ `/api/play/profile/avatar`). Universe: optional `avatarUrl?` on `ModuleSeat`, unused.
+
 ## Status (2026-11-27)
 Deployed (main = 7d7f187; edge function `api` v20 via stub -> `edge-bundle.js` on `tmp-edge-bundle-s6` (commit cf515b7); rollback references, do not delete: `s5` (v19), `s4` (v18), `s3` (v17)). Migrations 031-033 applied to production (next new migration = 034).
 - 031: Lv15 DEF rebalance (DEF by ATK tier +12/+10/+0 plus chain delta; sim 6/6 archetypes in band; games ~2.6x longer, owner accepted, no damage floor). 032: repair of double-encoded jsonb (`card_effects.config`, `play_rooms.tokens`).
